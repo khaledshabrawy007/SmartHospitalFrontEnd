@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital - Clinical HR Portal</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .metric-card {
+      background-color: white;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .mc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 20px;
+    }
+    
+    .mc-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+    
+    .mc-tag {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+    
+    .mc-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: var(--color-text-muted);
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    
+    .mc-value {
+      font-size: 2.25rem;
+      font-weight: 700;
+    }
+    .mc-value span { font-size: 1rem; color: var(--color-text-muted); font-weight: 600; }
+    
+    .graph-layout {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    
+    .chart-card {
+      background-color: white;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .chart-title {
+      font-size: 1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .chart-mockup {
+      width: 100%;
+      height: 200px;
+      position: relative;
+    }
+    
+    /* Creating a pure CSS wavy line using borders to fake a chart */
+    .css-chart-line {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      width: 100%;
+      height: 100px;
+      border-bottom: 3px solid var(--color-primary);
+      border-radius: 50% 50% 0 0 / 100px 100px 0 0;
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+    
+    .chart-axes {
+      position: absolute;
+      bottom: -10px; left: 0; right: 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+    }
+    
+    .needs-item {
+      background-color: var(--color-bg-light);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    
+    .needs-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .needs-top h4 { font-size: 0.9rem; font-weight: 700; }
+    .needs-tag { font-size: 0.65rem; font-weight: 700; color: var(--color-primary); }
+    .needs-desc { font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.4; }
+    
+    .alert-container {
+      background-color: var(--color-bg-light);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+    }
+    
+    .alert-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    
+    .alert-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .alert-card {
+      background-color: white;
+      border-radius: var(--radius-md);
+      padding: 20px;
+      display: flex;
+      gap: 16px;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .alert-icon {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background-color: #fee2e2;
+      color: #ef4444;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <span style="display:block;">SmartHospital</span>
+        <span style="font-size: 0.6rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Clinical HR Portal</span>
+      </div>
+      
+      <div class="nav-menu">
+        <a href="hr-dashboard.html" class="nav-item active">
+          <i class="ph-fill ph-squares-four"></i> Dashboard
+        </a>
+        <a href="hr-staff.html" class="nav-item">
+          <i class="ph ph-users-three"></i> Staff Management
+        </a>
+        <a href="hr-shifts.html" class="nav-item">
+          <i class="ph ph-clock-time-three"></i> Shifts
+        </a>
+        <a href="hr-wards.html" class="nav-item">
+          <i class="ph ph-buildings"></i> Wards
+        </a>
+      </div>
+      
+      <div class="sidebar-bottom">
+        <div class="user-profile-sm">
+          <img src="https://ui-avatars.com/api/?name=HR+Manager&background=0f172a&color=fff" alt="HR Manager">
+          <div class="info">
+            <span class="name">HR Manager</span>
+            <span class="role">Admin Access</span>
+          </div>
+        </div>
+        
+        <a href="#" class="bottom-nav-item">
+          <i class="ph ph-headphones"></i> Support
+        </a>
+        <a href="index.html" class="bottom-nav-item">
+          <i class="ph ph-sign-out"></i> Log Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="dr-toolbar">
+        <div class="header-title">
+          <h1>Clinical Overview</h1>
+          <p>Performance metrics and AI operational forecasting</p>
+        </div>
+        
+        <div class="dr-actions">
+          <button class="btn-filter" style="background:var(--color-bg-light); border:none;">
+            <i class="ph-fill ph-calendar-blank"></i> Today: Oct 24
+          </button>
+        </div>
+      </div>
+      
+      <span class="sub-header-text" style="color:#111827; margin-bottom:16px;">
+        <i class="ph-fill ph-chart-line-up" style="color:var(--color-primary); margin-right:4px;"></i> Doctor Performance Metrics
+      </span>
+      
+      <div class="metric-row">
+        <div class="metric-card">
+          <div class="mc-top">
+            <div class="mc-icon" style="background:#5eead4; color:#0f766e;"><i class="ph-fill ph-stopwatch"></i></div>
+            <div class="mc-tag" style="background:#5eead4; color:#0f766e;">-1.2m vs avg</div>
+          </div>
+          <div class="mc-label">Avg. Consultation Time</div>
+          <div class="mc-value">14.5<span>min</span></div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="mc-top">
+            <div class="mc-icon" style="background:#1e293b; color:white;"><i class="ph-fill ph-smiley"></i></div>
+            <div class="mc-tag" style="background:#5eead4; color:#0f766e;">+4%</div>
+          </div>
+          <div class="mc-label">Patient Satisfaction</div>
+          <div class="mc-value">4.8<span>/5</span></div>
+        </div>
+        
+        <div class="metric-card">
+          <div class="mc-top">
+            <div class="mc-icon" style="background:var(--color-bg-light); color:#111827;"><i class="ph ph-check-square-offset"></i></div>
+            <div class="mc-tag" style="background:var(--color-bg-light); color:var(--color-text-muted);">Optimal</div>
+          </div>
+          <div class="mc-label">Appt. Completion Rate</div>
+          <div class="mc-value">96.2<span>%</span></div>
+        </div>
+      </div>
+      
+      <div class="graph-layout">
+        <div class="chart-card">
+          <div class="chart-header">
+            <div class="chart-title"><i class="ph-fill ph-sparkle" style="color:var(--color-primary);"></i> AI Bed Occupancy Forecast (7-Day)</div>
+            <div style="display:flex; gap:16px; font-size:0.75rem; font-weight:600; color:var(--color-text-muted);">
+              <span><i class="ph-fill ph-circle" style="color:var(--color-primary);"></i> Predicted</span>
+              <span><i class="ph-fill ph-circle" style="color:#cbd5e1;"></i> Actual</span>
+            </div>
+          </div>
+          <div class="chart-mockup">
+            <!-- Simulated sine wave line representing forecast -->
+            <svg viewBox="0 0 500 150" width="100%" height="150" preserveAspectRatio="none">
+              <path d="M0,120 C100,100 150,50 200,90 C250,130 300,10 350,140 C400,20 450,10 500,70" fill="none" stroke="#0a6f56" stroke-width="3" />
+            </svg>
+            <div class="chart-axes">
+              <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="chart-card">
+          <div class="chart-title" style="margin-bottom:24px;"><i class="ph-fill ph-users" style="color:var(--color-primary);"></i> Staff Needs Prediction</div>
+          
+          <div class="needs-item">
+            <div class="needs-top">
+              <h4>Emergency Dept.</h4>
+              <span class="needs-tag">+3 Nurses</span>
+            </div>
+            <div class="needs-desc">Projected surge in admissions starting 20:00 tonight.</div>
+          </div>
+          <div class="needs-item">
+            <div class="needs-top">
+              <h4>General Surgery</h4>
+              <span class="needs-tag" style="color:var(--color-text-dark);">Stable</span>
+            </div>
+            <div class="needs-desc">Sufficient staffing levels forecasted for the next 48h.</div>
+          </div>
+          <div class="needs-item">
+            <div class="needs-top">
+              <h4>Pediatrics</h4>
+              <span class="needs-tag">+1 Specialist</span>
+            </div>
+            <div class="needs-desc">Recommended addition for morning clinic rotation.</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="alert-container">
+        <div class="alert-header">
+          <h3 style="font-size:1.125rem; font-weight:700; display:flex; align-items:center; gap:8px;">
+            <i class="ph-fill ph-bell-ringing" style="color:#ef4444;"></i> Operational Alerts
+          </h3>
+          <span class="tag-red-pill">3 CRITICAL</span>
+        </div>
+        
+        <div class="alert-grid">
+          <div class="alert-card">
+            <div class="alert-icon"><i class="ph-fill ph-warning"></i></div>
+            <div>
+              <h4 style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">ICU at Capacity <span style="font-size:0.6rem; font-weight:600; color:var(--color-text-muted); background:var(--color-bg-light); padding:2px 6px; border-radius:4px; margin-left:6px;">2m ago</span></h4>
+              <p style="font-size:0.85rem; color:var(--color-text-dark); line-height:1.4;">98% occupancy. Redirect non-critical admissions immediately.</p>
+            </div>
+          </div>
+          
+          <div class="alert-card" style="border-color: rgba(52, 211, 153, 0.4);">
+            <div class="alert-icon" style="background:#a7f3d0; color:#059669;"><i class="ph-fill ph-user-minus"></i></div>
+            <div>
+              <h4 style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">Staffing Shortage <span style="font-size:0.6rem; font-weight:600; color:var(--color-text-muted); background:var(--color-bg-light); padding:2px 6px; border-radius:4px; margin-left:6px;">15m ago</span></h4>
+              <p style="font-size:0.85rem; color:var(--color-text-dark); line-height:1.4;">Ward B-4 needs 2 RNs for night shift. Redeploy staff.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

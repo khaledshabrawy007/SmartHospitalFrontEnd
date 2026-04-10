@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital - Ward & Bed Capacity</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+  <!-- New Patient Admission Modal (Using visible toggle for demonstration) -->
+  <div class="modal-overlay" id="admissionModal">
+    <div class="modal-container">
+      <button class="modal-close" onclick="document.getElementById('admissionModal').style.display='none'"><i class="ph ph-x"></i></button>
+      
+      <div class="modal-header">
+        <h2>New Patient Admission</h2>
+        <p>Register a new patient into the clinical workflow.</p>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Patient ID</label>
+        <div class="input-outline">
+          <i class="ph-fill ph-identification-card" style="margin-right:12px; color:var(--color-text-muted); align-self:center;"></i>
+          <input type="text" placeholder="Ex: PH-2024-8842">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Admission Date</label>
+        <div class="input-outline">
+          <i class="ph-fill ph-calendar-blank" style="margin-right:12px; color:var(--color-text-muted); align-self:center;"></i>
+          <input type="date" style="color:var(--color-text-dark);">
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Reason for Visit</label>
+        <div class="input-outline" style="height:auto; align-items:flex-start;">
+          <textarea placeholder="Detail clinical symptoms or scheduled procedure..." style="width:100%; min-height:100px; border:none; background:transparent; font-family:inherit; outline:none; resize:none;"></textarea>
+        </div>
+      </div>
+      
+      <div class="ai-insight-box" style="margin-bottom:0; background:#f0fdf4; border-left-color:#16a34a; padding:12px 16px; flex-direction:row; margin-bottom:24px;">
+        <i class="ph-fill ph-info" style="color:#16a34a; font-size:1.25rem;"></i>
+        <div style="font-size:0.85rem; color:#166534; font-weight:600;">Allocating North Wing Bed B-102 automatically upon registration.</div>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="document.getElementById('admissionModal').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" onclick="document.getElementById('admissionModal').style.display='none'">Register Admission</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container" style="filter: blur(2px);">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <span style="display:block;">SmartHospital</span>
+        <span style="font-size: 0.6rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Clinical HR Portal</span>
+      </div>
+      
+      <div class="nav-menu">
+        <a href="hr-dashboard.html" class="nav-item">
+          <i class="ph ph-squares-four"></i> Dashboard
+        </a>
+        <a href="hr-staff.html" class="nav-item">
+          <i class="ph ph-users-three"></i> Staff Management
+        </a>
+        <a href="hr-shifts.html" class="nav-item">
+          <i class="ph ph-clock-time-three"></i> Shifts
+        </a>
+        <a href="hr-wards.html" class="nav-item active">
+          <i class="ph-fill ph-buildings"></i> Wards
+        </a>
+      </div>
+      
+      <div class="sidebar-bottom">
+        <div class="user-profile-sm">
+          <img src="https://ui-avatars.com/api/?name=HR+Manager&background=0f172a&color=fff" alt="HR Manager">
+          <div class="info">
+            <span class="name">HR Manager</span>
+            <span class="role">Admin Access</span>
+          </div>
+        </div>
+        
+        <a href="#" class="bottom-nav-item">
+          <i class="ph ph-headphones"></i> Support
+        </a>
+        <a href="index.html" class="bottom-nav-item">
+          <i class="ph ph-sign-out"></i> Log Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="dr-toolbar">
+        <div class="header-title">
+          <h1 style="font-size:2rem; font-weight:700; margin-bottom:8px;">Ward & Bed Capacity</h1>
+          <p style="color:var(--color-text-dark); font-size:1.05rem;">Real-time clinical occupancy and predictive resource forecasting</p>
+        </div>
+        
+        <div class="dr-actions">
+          <button class="btn btn-primary" onclick="document.getElementById('admissionModal').style.display='flex'">
+            <i class="ph-bold ph-plus"></i> Add Admission
+          </button>
+        </div>
+      </div>
+      
+      <div class="data-table-card" style="padding: 32px; margin-bottom: 32px;">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px;">
+          <div>
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+              <span class="tag-green-pill">ACTIVE</span>
+              <h2 style="font-size:1.5rem; font-weight:700;">Pediatrics</h2>
+            </div>
+            <p style="color:var(--color-text-muted);">North Pavilion, Level 1</p>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-size:0.75rem; font-weight:700; color:var(--color-text-muted); text-transform:uppercase;">Occupancy</div>
+            <div style="font-size:1.25rem; font-weight:700; color:var(--color-primary);">72 / 80 Beds</div>
+          </div>
+        </div>
+        
+        <div style="display:flex; gap:16px; margin-bottom:24px; font-size:0.75rem; font-weight:700; text-transform:uppercase;">
+          <span style="display:flex; align-items:center; gap:6px;"><i class="ph-fill ph-circle w-green"></i> Available (8)</span>
+          <span style="display:flex; align-items:center; gap:6px;"><i class="ph-fill ph-circle" style="color:#f59e0b;"></i> Maintenance (0)</span>
+        </div>
+        
+        <div class="bed-grid">
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-01</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-02</span></div>
+            <div class="bed-cubicle" style="background:#e2e8f0; color:#111827;"><i class="ph ph-bed"></i><span>PH A-03</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-04</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-05</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-06</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-07</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-08</span></div>
+            
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-09</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-10</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-11</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-12</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-13</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-14</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-15</span></div>
+            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-16</span></div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <script>
+    // Ensure modal interacts properly based on background blur preference
+    document.querySelector('.modal-close').addEventListener('click', () => {
+      document.querySelector('.app-container').style.filter = 'none';
+      document.getElementById('admissionModal').style.display = 'none';
+    });
+    document.querySelectorAll('.btn-primary, .btn-ghost').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if(btn.closest('.modal-actions')) {
+            document.querySelector('.app-container').style.filter = 'none';
+        }
+      });
+    });
+    
+    // Add Admission click
+    const addBtn = document.querySelector('.dr-actions .btn-primary');
+    if(addBtn) {
+        addBtn.addEventListener('click', () => {
+             document.querySelector('.app-container').style.filter = 'blur(2px)';
+        });
+    }
+  </script>
+</body>
+</html>

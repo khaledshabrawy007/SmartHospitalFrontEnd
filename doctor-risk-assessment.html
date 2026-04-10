@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital - AI Risk Assessment</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        SmartHospital
+      </div>
+      
+      <div class="nav-menu">
+        <a href="doctor-patients.html" class="nav-item">
+          <i class="ph ph-user"></i> Patients
+        </a>
+        <a href="doctor-appointments.html" class="nav-item">
+          <i class="ph ph-calendar-blank"></i> Appointments
+        </a>
+      </div>
+      
+      <div class="sidebar-bottom">
+        <div class="user-profile-sm">
+          <img src="https://ui-avatars.com/api/?name=Alexander+West&background=0f172a&color=fff" alt="Dr. Alexander West">
+          <div class="info">
+            <span class="name">Dr. Alexander West</span>
+            <span class="role">Clinical Lead</span>
+          </div>
+        </div>
+        
+        <a href="#" class="bottom-nav-item">
+          <i class="ph ph-headphones"></i> Support
+        </a>
+        <a href="index.html" class="bottom-nav-item">
+          <i class="ph ph-sign-out"></i> Log Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="page-header" style="margin-bottom: 32px;">
+        <div class="header-title" style="max-width: 800px;">
+          <h1>AI Readmission Risk Assessment</h1>
+          <p>Leverage high-precision machine learning models to predict the 30-day readmission risk for patients based on historical clinical data and current admission metrics.</p>
+        </div>
+      </div>
+
+      <div class="settings-layout">
+        <!-- Left Column: Forms -->
+        <div class="ai-forms">
+          <!-- Patient Info -->
+          <div class="group-box">
+            <div class="group-header">
+              <i class="ph-fill ph-user"></i> Patient Information
+            </div>
+            <div class="form-grid-3">
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Race</label>
+                <div class="input-outline">
+                  <select><option>Caucasian</option></select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Gender</label>
+                <div class="toggle-group">
+                  <div class="toggle-btn active">Male</div>
+                  <div class="toggle-btn">Female</div>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Age Bracket</label>
+                <div class="input-outline">
+                  <select><option>[0-10)</option></select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Admission Details -->
+          <div class="group-box">
+            <div class="group-header">
+              <i class="ph-fill ph-ticket"></i> Admission Details
+            </div>
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Admission Type</label>
+                <div class="input-outline">
+                  <select><option>Emergency</option></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Discharge Disposition</label>
+                <div class="input-outline">
+                  <select><option>Discharged to home</option></select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Admission Source</label>
+                <div class="input-outline">
+                  <select><option>Emergency Room</option></select>
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Time in Hospital (Days)</label>
+                <div class="input-outline">
+                  <input type="text" placeholder="e.g. 5">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:20px;">
+            <!-- Medical Activity -->
+            <div class="group-box" style="flex:1;">
+              <div class="group-header">
+                <i class="ph-fill ph-microscope"></i> Medical Activity
+              </div>
+              
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span class="text-sm"># Lab Procedures</span>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="text" value="0" class="input-num"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span class="text-sm"># Procedures</span>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="text" value="0" class="input-num"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="text-sm"># Medications</span>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="text" value="0" class="input-num"></div>
+              </div>
+            </div>
+
+            <!-- Visit History -->
+            <div class="group-box" style="flex:1;">
+              <div class="group-header">
+                <i class="ph-fill ph-clock-counter-clockwise"></i> Visit History
+              </div>
+              
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span class="text-sm"># Outpatient</span>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="text" value="0" class="input-num"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span class="text-sm"># Emergency</span>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="text" value="0" class="input-num"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span class="text-sm"># Inpatient</span>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="text" value="0" class="input-num"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Diagnosis -->
+          <div class="group-box">
+            <div class="group-header">
+              <i class="ph-fill ph-stethoscope"></i> Diagnosis
+            </div>
+            
+            <div class="input-outline" style="align-items:center; justify-content:space-between; margin-bottom:20px; font-weight:600; font-size:0.85rem;">
+              <span>Total Number of Diagnoses</span>
+              <div style="background:white; padding:4px 16px; border-radius:4px;">1</div>
+            </div>
+            
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Primary Group</label>
+                <div class="input-outline">
+                  <select><option>Circulatory</option></select>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Secondary Group</label>
+                <div class="input-outline">
+                  <select><option>None</option></select>
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Tertiary Group</label>
+              <div class="input-outline">
+                <select><option>None</option></select>
+              </div>
+            </div>
+          </div>
+          
+          <div style="display:flex; justify-content:center; gap:24px; margin-top:40px; margin-bottom:40px;">
+            <button class="btn btn-outline" style="width:200px;">Reset Form</button>
+            <button class="btn btn-primary" style="width:200px;">
+              <i class="ph-fill ph-lightning"></i> Run AI Prediction
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Right Column: AI Output -->
+        <div>
+          <div class="dark-diagnostic-card">
+            <div class="ddc-header">
+              <i class="ph-fill ph-sparkle"></i> AI Diagnostic Output
+            </div>
+            
+            <div class="dashed-awaiting">
+              <i class="ph-fill ph-chart-bar"></i>
+              <h4>Awaiting Data Entry</h4>
+              <p>Submit the clinical assessment form to generate a 30-day readmission risk score.</p>
+            </div>
+            
+            <div style="display:flex; justify-content:space-between; margin-top:24px; padding:0 12px;">
+              <div style="height:40px; width:45%; background:rgba(255,255,255,0.05); border-radius:var(--radius-md);"></div>
+              <div style="height:40px; width:45%; background:rgba(255,255,255,0.05); border-radius:var(--radius-md);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+</body>
+</html>

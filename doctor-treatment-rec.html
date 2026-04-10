@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital - Treatment Recommendation</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        SmartHospital
+      </div>
+      
+      <div class="nav-menu">
+        <a href="doctor-patients.html" class="nav-item">
+          <i class="ph ph-user"></i> Patients
+        </a>
+        <a href="doctor-appointments.html" class="nav-item">
+          <i class="ph ph-calendar-blank"></i> Appointments
+        </a>
+      </div>
+      
+      <div class="sidebar-bottom">
+        <div class="user-profile-sm">
+          <img src="https://ui-avatars.com/api/?name=Alexander+West&background=0f172a&color=fff" alt="Dr. Alexander West">
+          <div class="info">
+            <span class="name">Dr. Alexander West</span>
+            <span class="role">Clinical Lead</span>
+          </div>
+        </div>
+        
+        <a href="#" class="bottom-nav-item">
+          <i class="ph ph-headphones"></i> Support
+        </a>
+        <a href="index.html" class="bottom-nav-item">
+          <i class="ph ph-sign-out"></i> Log Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="page-header" style="margin-bottom: 32px;">
+        <div class="header-title" style="max-width: 800px;">
+          <h1>Chronic Disease Treatment Recommendation</h1>
+          <p>Harnessing neural networks to optimize long-term patient therapy protocols.</p>
+        </div>
+      </div>
+
+      <div class="settings-layout">
+        <!-- Left Column: Form -->
+        <div>
+          <div class="group-box">
+            <div class="group-header">
+              <i class="ph-fill ph-address-book"></i>
+              <div>
+                <span style="display:block;">Patient Vitals & Data</span>
+                <span style="font-size: 0.75rem; color:var(--color-text-muted); font-weight:400;">Update clinical parameters for generation</span>
+              </div>
+            </div>
+            
+            <div class="form-grid-2" style="margin-bottom: 20px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Age</label>
+                <div class="input-outline">
+                  <input type="text" value="58">
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Gender</label>
+                <div class="input-outline">
+                  <select><option>Male</option></select>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid-2" style="margin-bottom: 20px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Blood Pressure</label>
+                <div class="input-outline">
+                  <input type="text" value="145/92">
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Sugar Level</label>
+                <div class="input-outline">
+                  <input type="text" value="115">
+                </div>
+              </div>
+            </div>
+
+            <div class="form-grid-2" style="margin-bottom: 20px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Cholesterol</label>
+                <div class="input-outline">
+                  <input type="text" value="210">
+                </div>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">BMI</label>
+                <div class="input-outline">
+                  <input type="text" value="28.4">
+                </div>
+              </div>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 32px;">
+              <label class="form-label">Physical Activity Level</label>
+              <div class="input-outline">
+                <select><option>Sedentary (Little to no exercise)</option></select>
+              </div>
+            </div>
+            
+            <div class="switch-bg-row">
+              <div class="s-label">
+                <i class="ph-fill ph-cigarette-slash" style="color:var(--color-text-muted); font-size:1.25rem;"></i> Smoking Status
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox">
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <div class="switch-bg-row" style="margin-bottom: 32px;">
+              <div class="s-label">
+                <i class="ph-fill ph-git-branch" style="color:var(--color-text-dark); font-size:1.25rem;"></i> Family History
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            
+            <button class="btn btn-primary btn-full">
+              <i class="ph-fill ph-brain"></i> Generate Recommendation
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Column: Outputs -->
+        <div>
+          <div class="treatment-grid-wrapper" style="margin-bottom:24px;">
+            <div class="treat-card tc-center">
+              <div class="tc-icon-lg">
+                <i class="ph-fill ph-first-aid-kit"></i>
+              </div>
+              <div class="tc-subtitle">PREDICTED DISEASE</div>
+              <h3 style="font-size:1.25rem; font-weight:700;">Hypertension<br>Type II</h3>
+              <div class="confidence-text">94% CONFIDENCE</div>
+            </div>
+            
+            <div class="treat-card" style="display:flex; flex-direction:column; justify-content:center;">
+              <div class="tc-header-split">
+                <h3>Recommended<br>Medication</h3>
+                <span class="first-line-pill">First-line<br>Defense</span>
+              </div>
+              
+              <div class="med-card">
+                <div class="med-icon">
+                  <i class="ph-fill ph-pill"></i>
+                </div>
+                <div>
+                  <h4>Lisinopril 10mg</h4>
+                  <p>Take once daily in the morning with food. Monitor BP bi-weekly for initial 14-day titration period.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="treatment-grid-wrapper" style="margin-bottom:24px;">
+            <div class="treat-card">
+              <h4 style="font-size:1.05rem; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                <i class="ph-fill ph-arrows-left-right" style="color:var(--color-text-muted);"></i> Alternative Medication
+              </h4>
+              <div class="alt-row">
+                <div class="alt-info">
+                  <h5>Amlodipine Besylate</h5>
+                  <p>Calcium Channel Blocker</p>
+                </div>
+                <i class="ph ph-caret-right" style="color:var(--color-text-muted);"></i>
+              </div>
+              <div class="alt-row">
+                <div class="alt-info">
+                  <h5>Hydrochlorothiazide</h5>
+                  <p>Diuretic / Water Pill</p>
+                </div>
+                <i class="ph ph-caret-right" style="color:var(--color-text-muted);"></i>
+              </div>
+            </div>
+            
+            <div class="treat-card">
+              <h4 style="font-size:1.05rem; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                <i class="ph-fill ph-person-simple-walk" style="color:var(--color-text-muted);"></i> Lifestyle Advice
+              </h4>
+              <div class="life-item">
+                <i class="ph-fill ph-check-circle"></i>
+                <p>Reduce sodium intake to < 2,300 mg per day.</p>
+              </div>
+              <div class="life-item">
+                <i class="ph-fill ph-check-circle"></i>
+                <p>Engage in 150 min of moderate aerobic activity weekly.</p>
+              </div>
+              <div class="life-item">
+                <i class="ph-fill ph-check-circle"></i>
+                <p>DASH diet (Dietary Approaches to Stop Hypertension).</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="treat-card">
+            <h4 style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-primary); font-weight:700; margin-bottom:16px;">
+              Clinician Narrative
+            </h4>
+            <div class="narrative-block">
+              "The patient presents with compounding risk factors (BMI 28.4 and sedentary habits). Given the BP of 145/92, Lisinopril is the optimal starting point. If BP doesn't stabilize in 3 weeks, consider combining with a low-dose diuretic."
+            </div>
+            
+            <button class="btn btn-primary" style="padding:12px 24px;">
+              <i class="ph-fill ph-clipboard-text"></i> Finalize Protocol
+            </button>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+</body>
+</html>

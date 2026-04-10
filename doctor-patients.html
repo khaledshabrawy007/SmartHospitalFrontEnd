@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital - Patients History</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        SmartHospital
+      </div>
+      
+      <div class="nav-menu">
+        <a href="doctor-patients.html" class="nav-item active">
+          <i class="ph-fill ph-user"></i> Patients
+        </a>
+        <a href="doctor-appointments.html" class="nav-item">
+          <i class="ph ph-calendar-blank"></i> Appointments
+        </a>
+      </div>
+      
+      <div class="sidebar-bottom">
+        <div class="user-profile-sm">
+          <img src="https://ui-avatars.com/api/?name=Alexander+West&background=0f172a&color=fff" alt="Dr. Alexander West">
+          <div class="info">
+            <span class="name">Dr. Alexander West</span>
+            <span class="role">Clinical Lead</span>
+          </div>
+        </div>
+        
+        <a href="#" class="bottom-nav-item">
+          <i class="ph ph-headphones"></i> Support
+        </a>
+        <a href="index.html" class="bottom-nav-item">
+          <i class="ph ph-sign-out"></i> Log Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="dr-toolbar">
+        <div class="header-title">
+          <h1>Patients History</h1>
+          <p>Review and manage active patient files across departments.</p>
+        </div>
+        
+        <div class="dr-actions">
+          <button class="btn-filter">
+            <i class="ph ph-faders"></i> Filter
+          </button>
+          <button class="btn-filter">
+            <i class="ph ph-sort-ascending"></i> Sort by Risk
+          </button>
+        </div>
+      </div>
+
+      <div class="patient-grid">
+        <!-- Patient 1 -->
+        <div class="patient-card">
+          <div class="pc-top">
+            <div class="pc-profile">
+              <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=2dd4bf&color=fff" alt="Sarah Jenkins">
+              <div class="pc-name">
+                <h3>Sarah Jenkins</h3>
+                <div class="pc-tags">
+                  <span class="tag-sm tag-gray">54Y</span>
+                  <span class="tag-sm tag-gray">Female</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <span class="tag-sm tag-orange" style="align-self: center;">CHRONIC</span>
+              <span class="tag-green-pill">STABLE</span>
+            </div>
+          </div>
+          
+          <div class="patient-info-box">
+            <div class="info-section">
+              <span class="label">Diagnosis</span>
+              <span class="value">Hypertension, Type 2 Diabetes</span>
+            </div>
+            <div class="info-section">
+              <span class="label">Treatment</span>
+              <span class="value">Lisinopril 10mg, Metformin 500mg</span>
+            </div>
+            <div class="info-section">
+              <span class="label">Symptoms</span>
+              <span class="value">Mild dizziness, occasional fatigue</span>
+            </div>
+            <div class="info-section italic">
+              <span class="label">Notes</span>
+              <span class="value">Monitoring blood pressure stability during morning hours.</span>
+            </div>
+          </div>
+          
+          <div class="dr-card-actions">
+            <button class="btn btn-primary btn-full" onclick="window.location.href='doctor-risk-assessment.html'">
+              Readmission Risk Score <i class="ph ph-trend-up"></i>
+            </button>
+            <button class="btn btn-outline btn-full" onclick="window.location.href='doctor-treatment-rec.html'">
+              Chronic Treatment Recommendation
+            </button>
+          </div>
+        </div>
+
+        <!-- Patient 2 -->
+        <div class="patient-card">
+          <div class="pc-top">
+            <div class="pc-profile">
+              <img src="https://ui-avatars.com/api/?name=Arthur+Miller&background=1e293b&color=fff" alt="Arthur Miller">
+              <div class="pc-name">
+                <h3>Arthur Miller</h3>
+                <div class="pc-tags">
+                  <span class="tag-sm tag-gray">72Y</span>
+                  <span class="tag-sm tag-gray">Male</span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <span class="tag-red-pill">CRITICAL</span>
+            </div>
+          </div>
+          
+          <div class="patient-info-box">
+            <div class="info-section">
+              <span class="label">Diagnosis</span>
+              <span class="value">Acute Myocardial Infarction</span>
+            </div>
+            <div class="info-section">
+              <span class="label">Treatment</span>
+              <span class="value">PCI, Antiplatelet Therapy</span>
+            </div>
+            <div class="info-section">
+              <span class="label">Symptoms</span>
+              <span class="value">Chest pain, shortness of breath</span>
+            </div>
+            <div class="info-section italic">
+              <span class="label">Notes</span>
+              <span class="value">Immediate post-op observation. Stable but high risk.</span>
+            </div>
+          </div>
+          
+          <div class="dr-card-actions">
+            <button class="btn btn-primary btn-full" onclick="window.location.href='doctor-risk-assessment.html'">
+              Readmission Risk Score <i class="ph ph-trend-up"></i>
+            </button>
+            <button class="btn btn-outline btn-full" onclick="window.location.href='doctor-treatment-rec.html'">
+              Chronic Treatment Recommendation
+            </button>
+          </div>
+        </div>
+
+        <!-- Patient 3 -->
+        <div class="patient-card">
+          <div class="pc-top">
+            <div class="pc-profile">
+              <img src="https://ui-avatars.com/api/?name=Robert+Chen&background=991b1b&color=fff" alt="Robert Chen">
+              <div class="pc-name">
+                <h3>Robert Chen</h3>
+                <div class="pc-tags">
+                  <span class="tag-sm tag-gray">41Y</span>
+                  <span class="tag-sm tag-gray">Male</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <span class="tag-sm tag-orange" style="align-self: center;">CHRONIC</span>
+              <span class="tag-green-pill">STABLE</span>
+            </div>
+          </div>
+          
+          <div class="patient-info-box">
+            <div class="info-section">
+              <span class="label">Diagnosis</span>
+              <span class="value">Asthma (Moderate Persistent)</span>
+            </div>
+            <div class="info-section">
+              <span class="label">Treatment</span>
+              <span class="value">Advair Inhaler, Salbutamol PRN</span>
+            </div>
+            <div class="info-section">
+              <span class="label">Symptoms</span>
+              <span class="value">Wheezing upon exertion</span>
+            </div>
+            <div class="info-section italic">
+              <span class="label">Notes</span>
+              <span class="value">Patient education on peak flow monitoring completed.</span>
+            </div>
+          </div>
+          
+          <div class="dr-card-actions">
+            <button class="btn btn-primary btn-full" onclick="window.location.href='doctor-risk-assessment.html'">
+              Readmission Risk Score <i class="ph ph-trend-up"></i>
+            </button>
+            <button class="btn btn-outline btn-full" onclick="window.location.href='doctor-treatment-rec.html'">
+              Chronic Treatment Recommendation
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

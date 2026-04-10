@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital - Doctor Registration</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    .split-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    .split-dark {
+      flex: 0 0 50%;
+      background-color: #0f172a;
+      display: flex;
+      flex-direction: column;
+      color: white;
+      padding: 40px 60px;
+      position: relative;
+    }
+    
+    .dr-logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 40px;
+    }
+    
+    .dr-logo-icon {
+      background: rgba(255,255,255,0.15);
+      padding: 8px;
+      border-radius: var(--radius-md);
+      display: flex;
+      color: var(--color-primary-light);
+    }
+    
+    .graphic-photo {
+      flex: 1;
+      width: 100%;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(0deg, rgba(8, 145, 178, 0.4), rgba(8, 145, 178, 0.4)), url('https://images.unsplash.com/photo-1516549655169-df83a0774514?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80') center/cover;
+      border: 4px solid rgba(255, 255, 255, 1);
+      margin-bottom: 40px;
+    }
+    
+    .dark-content h2 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    
+    .dark-content p {
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.6;
+      font-size: 1.05rem;
+      max-width: 90%;
+      margin-bottom: 32px;
+    }
+    
+    .stats-row {
+      display: flex;
+      gap: 40px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 24px;
+    }
+    
+    .stat h3 {
+      color: var(--color-primary-light);
+      font-size: 1.75rem;
+      margin-bottom: 4px;
+    }
+    
+    .stat p {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 0;
+      color: rgba(255, 255, 255, 0.5);
+    }
+    
+    .split-white {
+      flex: 1;
+      background-color: var(--color-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .form-container {
+      width: 100%;
+      max-width: 480px;
+      padding: 0 40px;
+    }
+    
+    .form-header {
+      margin-bottom: 40px;
+    }
+    
+    .form-header h2 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+    
+    .form-header p {
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+    
+    .highlight-text {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+    
+    .input-icon-left {
+      background-color: #e5e7eb;
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .input-icon-left i {
+      color: var(--color-text-muted);
+      font-size: 1.25rem;
+    }
+    
+    .input-icon-left input,
+    .input-icon-left select {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--color-text-dark);
+    }
+
+    .form-group { margin-bottom: 24px; }
+    
+    .form-agreement {
+      margin-top: 24px;
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      line-height: 1.5;
+    }
+    
+    .form-agreement a {
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+    
+    .footer-bar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 24px 60px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--color-border);
+      background-color: var(--color-bg-light);
+    }
+    
+    .secure-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-text-muted);
+      letter-spacing: 0.05em;
+    }
+    
+    .secure-badge i {
+      color: var(--color-primary);
+      font-size: 1.25rem;
+    }
+    
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="split-layout">
+    <div class="split-dark">
+      <div class="dr-logo">
+        <div class="dr-logo-icon">
+          <i class="ph-fill ph-first-aid"></i>
+        </div>
+        SmartHospital
+      </div>
+      
+      <div class="graphic-photo"></div>
+      
+      <div class="dark-content">
+        <h2>Elevating Clinical Standards</h2>
+        <p>Join a network of over 5,000 board-certified specialists using advanced AI insights to deliver better patient outcomes every day.</p>
+        
+        <div class="stats-row">
+          <div class="stat">
+            <h3>99.9%</h3>
+            <p>Accuracy</p>
+          </div>
+          <div class="stat">
+            <h3>24/7</h3>
+            <p>HR Support</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="split-white">
+      <div class="form-container">
+        <div class="form-header">
+          <h2>Join our Medical Team</h2>
+          <p>Register your credentials for HR verification. Approval typically takes <span class="highlight-text">24-48 hours.</span></p>
+        </div>
+        
+        <form action="doctor-patients.html">
+          <div class="form-group">
+            <label class="form-label" style="text-transform:none; letter-spacing:0; color:#374151;">Full Name</label>
+            <div class="input-icon-left">
+              <i class="ph-fill ph-user"></i>
+              <input type="text" placeholder="Dr. Jane Smith" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" style="text-transform:none; letter-spacing:0; color:#374151;">Medical Email</label>
+            <div class="input-icon-left">
+              <i class="ph-fill ph-envelope-simple"></i>
+              <input type="email" placeholder="j.smith@hospital.org" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" style="text-transform:none; letter-spacing:0; color:#374151;">Specialization</label>
+            <div class="input-icon-left">
+              <i class="ph ph-stethoscope"></i>
+              <select required>
+                <option value="" disabled selected>Select Area</option>
+                <option value="cardio">Cardiology</option>
+                <option value="neuro">Neurology</option>
+                <option value="pediatrics">Pediatrics</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" style="text-transform:none; letter-spacing:0; color:#374151;">Password</label>
+            <div class="input-icon-left">
+              <i class="ph-fill ph-lock-key"></i>
+              <input type="password" placeholder="••••••••••••" required>
+            </div>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-full">
+            Submit Credentials <i class="ph ph-arrow-right"></i>
+          </button>
+          
+          <div class="form-agreement">
+            By registering, you agree to our <a href="#">Terms of Clinical Service</a> and <a href="#">Privacy Protocol.</a>
+          </div>
+        </form>
+      </div>
+      
+      <div class="footer-bar">
+        <div class="secure-badge">
+          <i class="ph-fill ph-shield-check"></i> SECURE HIPAA-COMPLIANT ENVIRONMENT
+        </div>
+        <div class="footer-links">
+          <span>HELP CENTER</span>
+          <span>CONTACT HR</span>
+          <span>SYSTEM STATUS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

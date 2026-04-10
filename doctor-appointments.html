@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital - My Appointments (Dr)</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        SmartHospital
+      </div>
+      
+      <div class="nav-menu">
+        <a href="doctor-patients.html" class="nav-item">
+          <i class="ph ph-user"></i> Patients
+        </a>
+        <a href="doctor-appointments.html" class="nav-item active">
+          <i class="ph-fill ph-calendar-blank"></i> Appointments
+        </a>
+      </div>
+      
+      <div class="sidebar-bottom">
+        <div class="user-profile-sm">
+          <img src="https://ui-avatars.com/api/?name=Alexander+West&background=0f172a&color=fff" alt="Dr. Alexander West">
+          <div class="info">
+            <span class="name">Dr. Alexander West</span>
+            <span class="role">Clinical Lead</span>
+          </div>
+        </div>
+        
+        <a href="#" class="bottom-nav-item">
+          <i class="ph ph-headphones"></i> Support
+        </a>
+        <a href="index.html" class="bottom-nav-item">
+          <i class="ph ph-sign-out"></i> Log Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="dr-toolbar" style="margin-bottom: 24px;">
+        <div class="header-title">
+          <h1>My Appointments</h1>
+          <p>Manage your clinical schedule and patient records.</p>
+        </div>
+      </div>
+      
+      <div class="dr-toolbar">
+        <div class="history-tabs">
+          <div class="history-tab active">Upcoming</div>
+          <div class="history-tab">Completed</div>
+          <div class="history-tab">Cancelled</div>
+        </div>
+        
+        <div class="toolbar-dark">
+          <div style="position:relative;">
+            <i class="ph ph-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--color-text-muted);"></i>
+            <input type="text" placeholder="Search patient name or ID..." style="padding-left:36px; width:260px;">
+          </div>
+          <div style="position:relative;">
+            <i class="ph ph-calendar-blank" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--color-text-muted);"></i>
+            <select style="padding-left:36px; padding-right:32px; width:160px; appearance:none;">
+              <option>All Dates</option>
+            </select>
+            <i class="ph ph-caret-down" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--color-text-muted); pointer-events:none;"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="appt-cards-row">
+        <!-- Appt 1 -->
+        <div class="dr-appt-card">
+          <div class="appt-top">
+            <div class="initials in-blue">JD</div>
+            <div class="appt-name">
+              <h4 style="display:flex; justify-content:space-between; width:100%;">
+                Johnathan Doe <span class="tag-sm" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:12px;">SCHEDULED</span>
+              </h4>
+              <p><i class="ph-fill ph-identification-card"></i> ID-29481</p>
+            </div>
+          </div>
+          
+          <div class="appt-time">
+            <i class="ph-fill ph-clock" style="color:var(--color-primary);"></i> Today, Oct 12 • 10:30 AM
+          </div>
+          
+          <div class="appt-summary">
+            Routine follow-up for chronic hypertension. Patient reports mild...
+          </div>
+          
+          <button class="btn btn-neon btn-full">
+            <i class="ph-fill ph-check-circle"></i> Mark as Completed
+          </button>
+        </div>
+
+        <!-- Appt 2 -->
+        <div class="dr-appt-card">
+          <div class="appt-top">
+            <div class="initials in-teal">SR</div>
+            <div class="appt-name">
+              <h4 style="display:flex; justify-content:space-between; width:100%;">
+                Sarah Richardson <span class="tag-sm" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:12px;">SCHEDULED</span>
+              </h4>
+              <p><i class="ph-fill ph-identification-card"></i> ID-30112</p>
+            </div>
+          </div>
+          
+          <div class="appt-time">
+            <i class="ph-fill ph-clock" style="color:var(--color-primary);"></i> Today, Oct 12 • 11:45 AM
+          </div>
+          
+          <div class="appt-summary">
+            Initial consultation for persistent back pain. Needs mobility assessment...
+          </div>
+          
+          <button class="btn btn-neon btn-full">
+            <i class="ph-fill ph-check-circle"></i> Mark as Completed
+          </button>
+        </div>
+
+        <!-- Appt 3 -->
+        <div class="dr-appt-card">
+          <div class="appt-top">
+            <div class="initials in-gray">MK</div>
+            <div class="appt-name">
+              <h4 style="display:flex; justify-content:space-between; width:100%;">
+                Marcus Kane <span class="tag-sm" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:12px;">SCHEDULED</span>
+              </h4>
+              <p><i class="ph-fill ph-identification-card"></i> ID-22894</p>
+            </div>
+          </div>
+          
+          <div class="appt-time">
+            <i class="ph-fill ph-clock" style="color:var(--color-primary);"></i> Today, Oct 12 • 02:15 PM
+          </div>
+          
+          <div class="appt-summary">
+            Review lab results for Vitamin D deficiency and prescribe treatment...
+          </div>
+          
+          <button class="btn btn-neon btn-full">
+            <i class="ph-fill ph-check-circle"></i> Mark as Completed
+          </button>
+        </div>
+      </div>
+
+      <div class="weekly-summary">
+        <div class="summary-icon">
+          <i class="ph-fill ph-chart-bar"></i>
+        </div>
+        <h3>Weekly Summary</h3>
+        <p>You have 12 more appointments scheduled for the rest of this week. Your average consultation time is <b>22</b> minutes.</p>
+        
+        <div class="stat-blocks">
+          <div class="stat-block">
+            <h2>84%</h2>
+            <span>COMPLETION RATE</span>
+          </div>
+          <div class="stat-block">
+            <h2 style="color: #111827;">15</h2>
+            <span>TOTAL PATIENTS</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

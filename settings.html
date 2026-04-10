@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital - Settings</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        SmartHospital
+      </div>
+      
+      <div class="nav-menu">
+        <a href="dashboard.html" class="nav-item">
+          <i class="ph ph-squares-four"></i> Dashboard
+        </a>
+        <a href="book-appointment.html" class="nav-item">
+          <i class="ph ph-calendar-plus"></i> Book Appointment
+        </a>
+        <a href="medical-history.html" class="nav-item">
+          <i class="ph ph-files"></i> Medical History
+        </a>
+        <a href="settings.html" class="nav-item active">
+          <i class="ph-fill ph-gear"></i> Settings
+        </a>
+      </div>
+      
+      <div class="sidebar-bottom">
+        <div class="user-profile-sm">
+          <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=0f172a&color=fff" alt="Sarah Jenkins">
+          <div class="info">
+            <span class="name">Sarah Jenkins</span>
+            <span class="role">Patient Account</span>
+          </div>
+        </div>
+        
+        <a href="#" class="bottom-nav-item" onclick="document.getElementById('globalSupportModal').style.display='flex'">
+          <i class="ph ph-headphones"></i> Support
+        </a>
+        <a href="index.html" class="bottom-nav-item" style="color: #dc2626;">
+          <i class="ph ph-sign-out"></i> Sign Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="page-header">
+        <div class="header-title">
+          <h1>Settings</h1>
+          <p>Manage your medical profile and portal preferences.</p>
+        </div>
+      </div>
+
+      <div class="settings-layout">
+        <!-- Left Column -->
+        <div>
+          <!-- Profile Card -->
+          <div class="settings-card">
+            <div class="settings-card-header">
+              <div class="settings-card-title">
+                <h3>Profile Information</h3>
+              </div>
+              <button class="btn btn-primary">Save Changes</button>
+            </div>
+            
+            <div class="profile-section">
+              <div class="profile-photo">
+                <!-- Using a placeholder to represent the avatar from the design -->
+                <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=0f172a&color=fff" alt="Profile avatar">
+                <span>UPDATE PHOTO</span>
+              </div>
+              
+              <div class="profile-form">
+                <div class="settings-form-grid">
+                  <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="input-simple" value="Sarah Jenkins">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="input-simple" value="s.jenkins@example.com">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="tel" class="input-simple" value="+1 (555) 123-4567">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Timezone</label>
+                    <input type="text" class="input-simple" value="Eastern Standard Time">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Card -->
+          <div class="settings-card">
+            <div class="settings-card-header with-icon">
+              <div class="security-icon">
+                <i class="ph-fill ph-check-circle"></i>
+              </div>
+              <div class="settings-card-title">
+                <h3>Security & Access</h3>
+                <p>Ensure your health data remains protected.</p>
+              </div>
+            </div>
+            
+            <div class="settings-form-row">
+              <div class="form-group">
+                <label class="form-label">Current Password</label>
+                <input type="password" class="input-simple" value="password123" style="width: 50%;">
+              </div>
+            </div>
+            
+            <div class="settings-form-grid">
+              <div class="form-group">
+                <label class="form-label">New Password</label>
+                <input type="password" class="input-simple" placeholder="Enter new password">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Confirm Password</label>
+                <input type="password" class="input-simple" placeholder="Verify new password">
+              </div>
+            </div>
+            
+            <div class="settings-footer-row">
+              <div class="status-text">
+                <i class="ph-fill ph-check-circle"></i> Two-factor authentication is active on this account.
+              </div>
+              <button class="btn btn-outline" style="padding: 10px 24px;">Update Security</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div>
+          <!-- Notifications Card -->
+          <div class="settings-card" style="padding: 24px;">
+            <div class="settings-card-title" style="margin-bottom: 24px;">
+              <h3>Notification Settings</h3>
+            </div>
+            
+            <div class="notification-header">
+              <i class="ph-fill ph-calendar-blank"></i> Appointment Alerts
+            </div>
+            <div class="toggle-row">
+              <span class="label">Email Notifications</span>
+              <label class="toggle-switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Support Modal -->
+  <div class="modal-overlay" id="globalSupportModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
+    <div class="modal-container" style="max-width: 400px; text-align: center;">
+      <button class="modal-close" onclick="document.getElementById('globalSupportModal').style.display='none'"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <i class="ph-fill ph-lifebuoy" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 16px; display: inline-block;"></i>
+        <h2>Support Center</h2>
+        <p>We're here to help! Reach out to us 24/7.</p>
+      </div>
+      <div style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6; text-align: left;">
+        <strong>Email:</strong> <a href="mailto:support@smarthospital.com" style="color: var(--color-primary); text-decoration: none;">support@smarthospital.com</a><br>
+        <strong>Phone:</strong> +1 (800) 555-0199<br>
+        <strong>Live Chat:</strong> Currently Offline
+      </div>
+      <div class="modal-actions" style="justify-content: center;">
+        <button class="btn btn-primary" onclick="document.getElementById('globalSupportModal').style.display='none'">Close</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

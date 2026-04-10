@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital - Appointment History</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        SmartHospital
+      </div>
+      
+      <div class="nav-menu">
+        <a href="dashboard.html" class="nav-item">
+          <i class="ph ph-squares-four"></i> Dashboard
+        </a>
+        <a href="book-appointment.html" class="nav-item">
+          <i class="ph ph-calendar-plus"></i> Book Appointment
+        </a>
+        <a href="medical-history.html" class="nav-item active">
+          <i class="ph-fill ph-files"></i> Medical History
+        </a>
+        <a href="settings.html" class="nav-item">
+          <i class="ph ph-gear"></i> Settings
+        </a>
+      </div>
+      
+      <div class="sidebar-bottom">
+        <div class="user-profile-sm">
+          <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=0f172a&color=fff" alt="Sarah Jenkins">
+          <div class="info">
+            <span class="name">Sarah Jenkins</span>
+            <span class="role">Patient Account</span>
+          </div>
+        </div>
+        
+        <a href="#" class="bottom-nav-item" onclick="document.getElementById('globalSupportModal').style.display='flex'">
+          <i class="ph ph-headphones"></i> Support
+        </a>
+        <a href="index.html" class="bottom-nav-item" style="color: #dc2626;">
+          <i class="ph ph-sign-out"></i> Sign Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="page-header" style="align-items: flex-start;">
+        <div class="header-title" style="max-width: 600px;">
+          <h1>Appointment History</h1>
+          <p>Review your clinical interactions, procedures, and provide feedback to help us maintain surgical excellence.</p>
+        </div>
+        <div class="header-actions">
+          <div class="history-tabs">
+            <div class="history-tab active">Scheduled</div>
+            <div class="history-tab">Completed</div>
+            <div class="history-tab">Cancelled</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="history-layout">
+        <div class="history-list" id="historyList">
+          <!-- Dynamic history cards injected here via JS -->
+        </div>
+
+        <div class="history-sidebar">
+          <div class="recent-widget">
+            <h4>Recent Specialists</h4>
+            
+            <div class="recent-doc">
+              <img src="https://ui-avatars.com/api/?name=Eleanor+Vance&background=075242&color=fff" alt="Dr. Eleanor Vance">
+              <div class="recent-doc-info">
+                <h5>Dr. Eleanor Vance</h5>
+                <p>Radiology • 12 Visits</p>
+              </div>
+            </div>
+            
+            <div class="recent-doc">
+              <img src="https://ui-avatars.com/api/?name=Julian+Thorne&background=64748b&color=fff" alt="Dr. Julian Thorne">
+              <div class="recent-doc-info">
+                <h5>Dr. Julian Thorne</h5>
+                <p>Internal Medicine • 4 Visits</p>
+              </div>
+            </div>
+            
+            <div class="recent-doc">
+              <img src="https://ui-avatars.com/api/?name=Marcus+Aurelius&background=0284c7&color=fff" alt="Dr. Marcus Aurelius">
+              <div class="recent-doc-info">
+                <h5>Dr. Marcus Aurelius</h5>
+                <p>Cardiac Surgery • 2 Visits</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="health-tip">
+            <i class="ph-fill ph-lightbulb"></i>
+            <div>
+              <h5>HEALTH TIP</h5>
+              <p>Keep scan results ready for your next follow-up on Jan 12.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rating Modal -->
+  <div class="modal-overlay" id="ratingModal" style="display: none; justify-content: center; align-items: center;">
+    <div class="modal-container">
+      <button class="modal-close" onclick="closeModal('ratingModal')"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <h2>Rate Practitioner</h2>
+        <p>Your feedback improves our clinical standards.</p>
+      </div>
+      <div id="starContainer" style="display:flex; gap:12px; font-size:2rem; color:#e2e8f0; margin-bottom: 24px; cursor:pointer; justify-content:center;">
+        <i class="ph-fill ph-star" data-val="1"></i>
+        <i class="ph-fill ph-star" data-val="2"></i>
+        <i class="ph-fill ph-star" data-val="3"></i>
+        <i class="ph-fill ph-star" data-val="4"></i>
+        <i class="ph-fill ph-star" data-val="5"></i>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeModal('ratingModal')">Cancel</button>
+        <button class="btn btn-primary" id="submitRatingBtn">Submit Feedback</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Modal -->
+  <div class="modal-overlay" id="reportModal" style="display: none; justify-content: center; align-items: center;">
+    <div class="modal-container">
+      <button class="modal-close" onclick="closeModal('reportModal')"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <h2 id="reportTitle">Medical Report</h2>
+        <p id="reportMeta">Loading details...</p>
+      </div>
+      <div style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6;">
+        <strong>Clinical Notes:</strong><br>
+        Patient exhibits standard recovery velocity. Vitals are strictly nominal. Recommended continuation of current therapeutic roadmap with follow-up as scheduled.<br><br>
+        <strong>Prescription:</strong> None indicated.<br>
+        <strong>Next Steps:</strong> Monitor and report any anomalous symptoms.
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closeModal('reportModal')">Close Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel Confirmation Modal -->
+  <div class="modal-overlay" id="cancelModal" style="display: none; justify-content: center; align-items: center;">
+    <div class="modal-container" style="max-width: 400px; text-align: center;">
+      <button class="modal-close" onclick="closeModal('cancelModal')"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <i class="ph-fill ph-warning-circle" style="font-size: 3rem; color: #dc2626; margin-bottom: 16px; display: inline-block;"></i>
+        <h2>Cancel Appointment</h2>
+        <p>Are you sure you want to cancel this scheduled appointment? This action cannot be undone.</p>
+      </div>
+      <div class="modal-actions" style="justify-content: center; border-top: none; padding-top: 8px;">
+        <button class="btn btn-outline" onclick="closeModal('cancelModal')">Nevermind</button>
+        <button class="btn btn-primary" onclick="executeCancellation()" style="background-color: #dc2626; border-color: #dc2626; color: white;">Yes, Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let internalAppointments = [];
+    let currentActiveTab = 'Scheduled';
+
+    const mockPastBookings = [
+      { id: 'APT-112', doctorName: 'Dr. Eleanor Vance', doctorDept: 'Radiology', date: 'Apr 03, 2026', time: '09:30 AM', status: 'Completed', rating: 5, actionDate: 'Apr 05' },
+      { id: 'APT-098', doctorName: 'Dr. Julian Thorne', doctorDept: 'Internal Medicine', date: 'Apr 07, 2026', time: '11:15 AM', status: 'Completed', rating: null },
+      { id: 'APT-070', doctorName: 'Dr. Sarah Chen', doctorDept: 'Ophthalmology', date: 'Apr 05, 2026', time: '', status: 'Cancelled', actionDate: 'Apr 05' }
+    ];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Init missing DB state
+      let upcomingBookings = JSON.parse(localStorage.getItem("upcomingBookings") || "[]");
+      let storedPastBookings = JSON.parse(localStorage.getItem("pastBookings"));
+      
+      // Force update mock data if old 2023 records are detected in cache
+      if (!storedPastBookings || JSON.stringify(storedPastBookings).includes("2023")) {
+        localStorage.setItem("pastBookings", JSON.stringify(mockPastBookings));
+        storedPastBookings = mockPastBookings;
+      }
+      
+      // Migrate explicitly 'Cancelled' upcomingBookings into pastBookings to maintain state safely
+      const validUpcoming = [];
+      upcomingBookings.forEach(apt => {
+        if (apt.status === "Cancelled") {
+          storedPastBookings.push({...apt, actionDate: 'Today'});
+        } else {
+          validUpcoming.push(apt);
+        }
+      });
+      localStorage.setItem("upcomingBookings", JSON.stringify(validUpcoming));
+      localStorage.setItem("pastBookings", JSON.stringify(storedPastBookings));
+      
+      internalAppointments = [...validUpcoming, ...storedPastBookings];
+
+      // Bind Tabs
+      const tabs = document.querySelectorAll(".history-tab");
+      tabs.forEach(tab => {
+        tab.addEventListener("click", () => {
+          tabs.forEach(t => t.classList.remove("active"));
+          tab.classList.add("active");
+          currentActiveTab = tab.textContent;
+          renderList();
+        });
+      });
+
+      renderList();
+      bindRatingModal();
+    });
+
+    function renderList() {
+      const list = document.getElementById("historyList");
+      list.innerHTML = "";
+
+      const filtered = internalAppointments.filter(apt => 
+        apt.status === currentActiveTab || (currentActiveTab === 'Scheduled' && apt.status === 'Confirmed')
+      );
+
+      if (filtered.length === 0) {
+        list.innerHTML = `
+          <div style="padding:40px; text-align:center; color:var(--color-text-muted);">
+            <i class="ph ph-folder-open" style="font-size:3rem; margin-bottom:12px; opacity:0.5;"></i>
+            <p>No ${currentActiveTab.toLowerCase()} appointments found.</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(apt => {
+        const card = document.createElement("div");
+        card.className = "history-card";
+        
+        // Define UI configurations based on status
+        let iconClass = "blue";
+        let iconHtml = '<i class="ph-fill ph-calendar-check"></i>';
+        let badgeHtml = '<div class="status-badge scheduled">SCHEDULED</div>';
+        
+        if(apt.status === 'Completed') {
+          iconClass = "green";
+          iconHtml = '<i class="ph-fill ph-bandaids"></i>';
+          badgeHtml = '<div class="status-badge" style="background-color: var(--color-primary-light); color: white;">COMPLETED</div>';
+        } else if(apt.status === 'Cancelled') {
+          iconClass = "red";
+          iconHtml = '<i class="ph-fill ph-calendar-x"></i>';
+          badgeHtml = '<div class="status-badge" style="background-color: #fee2e2; color: #dc2626;">CANCELLED</div>';
+        }
+
+        // Top Section
+        let topHtml = `
+          <div class="history-card-top" ${apt.status === 'Completed' && !apt.rating ? 'style="margin-bottom:0;"' : ''}>
+            <div class="history-card-left">
+              <div class="history-icon ${iconClass}">
+                ${iconHtml}
+              </div>
+              <div class="history-details">
+                <h4>Consultation</h4>
+                <p>${apt.doctorName} • ${apt.doctorDept}</p>
+                <div class="history-time">
+                  <span><i class="ph ph-calendar-blank"></i> ${apt.date}</span>
+                  ${apt.time ? `<span><i class="ph ph-clock"></i> ${apt.time}</span>` : ''}
+                </div>
+              </div>
+            </div>
+            <div class="history-card-right">
+              ${badgeHtml}
+              ${apt.status === 'Completed' ? `<a href="#" class="link-action" style="margin-top:8px;" onclick="openReport('${apt.doctorName}', '${apt.date}')">View Report <i class="ph ph-arrow-square-out"></i></a>` : ''}
+            </div>
+          </div>
+        `;
+
+        // Bottom Section
+        let bottomHtml = "";
+        if (apt.status === 'Scheduled' || apt.status === 'Confirmed') {
+          bottomHtml = `
+            <div class="history-card-bottom">
+              <div></div>
+              <div class="button-group">
+                <a href="#" style="color: #dc2626; font-size:0.85rem; font-weight:600;" onclick="cancelAppointment('${apt.id}')">Cancel Appointment</a>
+                <button class="btn btn-dark" style="padding: 10px 24px;" onclick="rescheduleAppointment('${apt.doctorName}', '${apt.doctorDept}')">Reschedule</button>
+              </div>
+            </div>
+          `;
+        } else if (apt.status === 'Completed') {
+          if (apt.rating) {
+            let stars = '';
+            for(let i=0; i<5; i++){
+              stars += `<i class="ph-fill ph-star" style="color:${i < apt.rating ? '#fbbf24' : '#e2e8f0'}"></i>`;
+            }
+            bottomHtml = `
+              <div class="history-card-bottom">
+                <div style="font-size:0.75rem; font-weight:700; color:var(--color-text-muted); display:flex; gap:12px; align-items:center;">
+                  FEEDBACK: 
+                  <div class="rating-stars">${stars}</div>
+                </div>
+                <div style="font-size:0.75rem; color:var(--color-text-muted); font-style:italic;">
+                  Submitted ${apt.actionDate || 'recently'}
+                </div>
+              </div>
+            `;
+          } else {
+            bottomHtml = `
+              <div class="history-card-bottom rating-box">
+                <div style="display:flex; gap:16px; align-items:center;">
+                  <i class="ph-fill ph-chat-circle-text" style="color:#fbbf24; font-size:1.5rem;"></i>
+                  <div>
+                    <h5 style="font-size:0.9rem; font-weight:700;">How was your visit?</h5>
+                    <p style="font-size:0.8rem; color:var(--color-text-muted);">Rate your experience</p>
+                  </div>
+                </div>
+                <button class="btn btn-dark" onclick="openRatingModal('${apt.id}')">Rate Appointment</button>
+              </div>
+            `;
+          }
+        } else if (apt.status === 'Cancelled') {
+          bottomHtml = `
+            <div class="history-card-bottom">
+              <div style="font-size:0.75rem; color:var(--color-text-muted); font-style:italic;">
+                Cancelled on ${apt.actionDate || 'Today'}
+              </div>
+              <button class="btn btn-outline" style="padding: 10px 24px;" onclick="rescheduleAppointment('${apt.doctorName}', '${apt.doctorDept}')">Rebook</button>
+            </div>
+          `;
+        }
+
+        card.innerHTML = topHtml + bottomHtml;
+        list.appendChild(card);
+      });
+    }
+
+    let activeCancelId = null;
+
+    function cancelAppointment(id) {
+       activeCancelId = id;
+       document.getElementById('cancelModal').style.display = 'flex';
+    }
+
+    function executeCancellation() {
+      if(!activeCancelId) return;
+
+      // Update global DB in memory
+      let target = internalAppointments.find(a => a.id === activeCancelId);
+      if(target) {
+        target.status = "Cancelled";
+        target.actionDate = "Today";
+      }
+
+      // Sync local storage
+      let upcoming = JSON.parse(localStorage.getItem("upcomingBookings") || "[]");
+      const idx = upcoming.findIndex(u => u.id === activeCancelId);
+      if (idx > -1) {
+        upcoming[idx].status = "Cancelled";
+        localStorage.setItem("upcomingBookings", JSON.stringify(upcoming));
+      }
+
+      closeModal('cancelModal');
+      renderList();
+    }
+
+    function rescheduleAppointment(doctorName, doctorDept) {
+      // Usually passing query params or simple redirect.
+      // But we can store a pending request
+      localStorage.setItem("rescheduleRequest", JSON.stringify({ name: doctorName, dept: doctorDept }));
+      window.location.href = "book-appointment.html";
+    }
+
+    // Modal Operations
+    let activeRatingId = null;
+    let selectedStarVal = 0;
+
+    function openRatingModal(id) {
+      activeRatingId = id;
+      selectedStarVal = 0;
+      updateStarsUI(0);
+      document.getElementById('ratingModal').style.display = 'flex';
+    }
+
+    function openReport(docName, dateVal) {
+      document.getElementById('reportTitle').textContent = docName + " - Assessment";
+      document.getElementById('reportMeta').textContent = "Conducted on " + dateVal;
+      document.getElementById('reportModal').style.display = 'flex';
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+      if(id === 'ratingModal') { activeRatingId = null; }
+    }
+
+    function bindRatingModal() {
+      const stars = document.querySelectorAll("#starContainer .ph-star");
+      stars.forEach(star => {
+        star.addEventListener("click", () => {
+          selectedStarVal = parseInt(star.getAttribute("data-val"));
+          updateStarsUI(selectedStarVal);
+        });
+      });
+
+      document.getElementById("submitRatingBtn").addEventListener("click", () => {
+        if(selectedStarVal === 0) return alert("Please select a star rating first.");
+        
+        let target = internalAppointments.find(a => a.id === activeRatingId);
+        if(target) {
+          target.rating = selectedStarVal;
+          target.actionDate = "Today";
+        }
+
+        // Sync local storage pastBookings
+        let past = JSON.parse(localStorage.getItem("pastBookings") || "[]");
+        const idx = past.findIndex(p => p.id === activeRatingId);
+        if(idx > -1) {
+          past[idx].rating = selectedStarVal;
+          past[idx].actionDate = "Today";
+          localStorage.setItem("pastBookings", JSON.stringify(past));
+        }
+
+        closeModal('ratingModal');
+        renderList();
+      });
+    }
+
+    function updateStarsUI(val) {
+      const stars = document.querySelectorAll("#starContainer .ph-star");
+      stars.forEach(s => {
+        if (parseInt(s.getAttribute("data-val")) <= val) {
+          s.style.color = "#fbbf24";
+        } else {
+          s.style.color = "#e2e8f0";
+        }
+      });
+    }
+
+  </script>
+  <!-- Global Support Modal -->
+  <div class="modal-overlay" id="globalSupportModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
+    <div class="modal-container" style="max-width: 400px; text-align: center;">
+      <button class="modal-close" onclick="document.getElementById('globalSupportModal').style.display='none'"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <i class="ph-fill ph-lifebuoy" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 16px; display: inline-block;"></i>
+        <h2>Support Center</h2>
+        <p>We're here to help! Reach out to us 24/7.</p>
+      </div>
+      <div style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6; text-align: left;">
+        <strong>Email:</strong> <a href="mailto:support@smarthospital.com" style="color: var(--color-primary); text-decoration: none;">support@smarthospital.com</a><br>
+        <strong>Phone:</strong> +1 (800) 555-0199<br>
+        <strong>Live Chat:</strong> Currently Offline
+      </div>
+      <div class="modal-actions" style="justify-content: center;">
+        <button class="btn btn-primary" onclick="document.getElementById('globalSupportModal').style.display='none'">Close</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

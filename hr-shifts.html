@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital - Shift Management</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+  <!-- Create Shift Modal (Hidden initially, using a simple JS toggle to show) -->
+  <div class="modal-overlay" id="shiftModal" style="display: none;">
+    <div class="modal-container">
+      <button class="modal-close" onclick="document.getElementById('shiftModal').style.display='none'"><i class="ph ph-x"></i></button>
+      
+      <div class="modal-header">
+        <h2>Create New Shift</h2>
+        <p>Assign requirements for hospital ward coverage</p>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Ward Selection</label>
+        <div class="input-outline">
+          <select><option>Cardiology</option></select>
+        </div>
+      </div>
+      
+      <div class="form-grid-2">
+        <div class="form-group">
+          <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Date Selection</label>
+          <div class="input-outline">
+            <input type="date" value="2023-11-24" style="color:var(--color-text-dark); background:transparent;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Required Staff Count</label>
+          <div class="input-outline">
+            <input type="number" value="8">
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Shift Type</label>
+        <div class="toggle-group" style="padding:4px;">
+          <div class="toggle-btn active" style="color:var(--color-primary);">Morning</div>
+          <div class="toggle-btn">Afternoon</div>
+          <div class="toggle-btn">Night</div>
+        </div>
+      </div>
+      
+      <div class="ai-insight-box">
+        <div class="ai-insight-text">
+          <i class="ph-fill ph-sparkle"></i>
+          <div>AI Insight: AI recommends <u>8 staff</u> for this shift based on forecasted occupancy.</div>
+        </div>
+        <div>
+          <button class="btn btn-primary" style="padding:6px 16px; font-size:0.75rem; display:inline-flex; align-items:center; gap:8px;">
+            <i class="ph-fill ph-check-circle"></i> Apply Suggestion
+          </button>
+        </div>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="document.getElementById('shiftModal').style.display='none'">Cancel</button>
+        <button class="btn btn-primary">Create Shift</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <span style="display:block;">SmartHospital</span>
+        <span style="font-size: 0.6rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Clinical HR Portal</span>
+      </div>
+      
+      <div class="nav-menu">
+        <a href="hr-dashboard.html" class="nav-item">
+          <i class="ph ph-squares-four"></i> Dashboard
+        </a>
+        <a href="hr-staff.html" class="nav-item">
+          <i class="ph ph-users-three"></i> Staff Management
+        </a>
+        <a href="hr-shifts.html" class="nav-item active">
+          <i class="ph-fill ph-clock-time-three"></i> Shifts
+        </a>
+        <a href="hr-wards.html" class="nav-item">
+          <i class="ph ph-buildings"></i> Wards
+        </a>
+      </div>
+      
+      <div class="sidebar-bottom">
+        <div class="user-profile-sm">
+          <img src="https://ui-avatars.com/api/?name=HR+Manager&background=0f172a&color=fff" alt="HR Manager">
+          <div class="info">
+            <span class="name">HR Manager</span>
+            <span class="role">Admin Access</span>
+          </div>
+        </div>
+        
+        <a href="#" class="bottom-nav-item">
+          <i class="ph ph-headphones"></i> Support
+        </a>
+        <a href="index.html" class="bottom-nav-item">
+          <i class="ph ph-sign-out"></i> Log Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="dr-toolbar" style="align-items:flex-end;">
+        <div>
+          <span class="sub-header-text">Clinical Excellence / Shift Management</span>
+          <h1 style="font-size:2rem; font-weight:700; margin-bottom:8px;">Weekly Schedule</h1>
+          <p style="color:var(--color-text-dark); font-size:1.05rem;">Manage clinical rotations for Oct 23-Oct 29, 2023</p>
+        </div>
+        
+        <div class="dr-actions">
+          <div class="calendar-switch">
+            <div class="cal-tick active">Week</div>
+            <div class="cal-tick" style="color:var(--color-text-muted);">Month</div>
+          </div>
+          <button class="btn btn-primary" onclick="document.getElementById('shiftModal').style.display='flex'">
+            <i class="ph-bold ph-plus"></i> CREATE SHIFT
+          </button>
+        </div>
+      </div>
+      
+      <div class="week-grid">
+        <!-- Monday -->
+        <div>
+          <div class="day-col-header">
+            <div class="day-name">MON</div>
+            <div class="day-number">23</div>
+          </div>
+          
+          <div class="shift-card morning">
+            <span class="tag-sm" style="background:#a7f3d0; color:#064e3b; margin-bottom:12px; display:inline-block;">MORNING</span>
+            <h4>Cardiology Ward</h4>
+            <p>06:00 - 14:00</p>
+            <div class="sc-user">
+              <img src="https://ui-avatars.com/api/?name=Aris+S&background=1e293b&color=fff">
+              <span>Dr. Aris S.</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tuesday -->
+        <div>
+          <div class="day-col-header">
+            <div class="day-name">TUE</div>
+            <div class="day-number">24</div>
+          </div>
+          
+          <div class="shift-card afternoon">
+            <span class="tag-sm" style="background:#fde68a; color:#b45309; margin-bottom:12px; display:inline-block;">AFTERNOON</span>
+            <h4>Emergency Room</h4>
+            <p>14:00 - 22:00</p>
+            <div class="sc-user">
+              <img src="https://ui-avatars.com/api/?name=Dr+Mill&background=334155&color=fff">
+              <span>Dr. Mill...</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Wednesday -->
+        <div>
+          <div class="day-col-header">
+            <div class="day-name">WED</div>
+            <div class="day-number">25</div>
+          </div>
+          
+          <div class="shift-card morning">
+            <span class="tag-sm" style="background:#a7f3d0; color:#064e3b; margin-bottom:12px; display:inline-block;">MORNING</span>
+            <h4>Pediatrics</h4>
+            <p>06:00 - 14:00</p>
+            <div class="sc-user">
+              <img src="https://ui-avatars.com/api/?name=Dr+Sam&background=475569&color=fff">
+              <span>Dr. Sam...</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Thursday -->
+        <div>
+          <div class="day-col-header">
+            <div class="day-name">THU</div>
+            <div class="day-number">26</div>
+          </div>
+          
+          <div class="no-shift">
+            NO SHIFTS
+          </div>
+        </div>
+        
+        <!-- Friday -->
+        <div>
+          <div class="day-col-header">
+            <div class="day-name">FRI</div>
+            <div class="day-number">27</div>
+          </div>
+          
+          <div class="shift-card morning">
+            <span class="tag-sm" style="background:#a7f3d0; color:#064e3b; margin-bottom:12px; display:inline-block;">MORNING</span>
+            <h4>Cardiology Ward</h4>
+            <p>06:00 - 14:00</p>
+            <div class="sc-user">
+              <div class="td-avatar initials" style="background:#f1f5f9; color:#475569;">SC</div>
+              <span>Dr. Coo...</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Saturday -->
+        <div>
+          <div class="day-col-header">
+            <div class="day-name">SAT</div>
+            <div class="day-number">28</div>
+          </div>
+          
+          <div class="shift-card night">
+            <span class="tag-sm" style="background:#e0e7ff; color:#3730a3; margin-bottom:12px; display:inline-block;">NIGHT</span>
+            <h4>On-Call Team</h4>
+            <p>22:00 - 06:00</p>
+            <div class="sc-user">
+              <div class="td-avatar initials" style="background:#f1f5f9; color:#475569;">JM</div>
+              <span>Dr. Mor...</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Sunday -->
+        <div>
+          <div class="day-col-header">
+            <div class="day-name">SUN</div>
+            <div class="day-number">29</div>
+          </div>
+          
+          <div class="no-shift">
+            HOLIDAY
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

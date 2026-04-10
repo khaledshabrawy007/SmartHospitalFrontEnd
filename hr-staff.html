@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital - Staff Management</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="app.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    .approval-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+    
+    .approval-card {
+      background-color: white;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      border-left: 4px solid var(--color-primary);
+    }
+    
+    .ac-top {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .ac-top img {
+      width: 56px; height: 56px; border-radius: 50%;
+    }
+    
+    .ac-info h3 { font-size: 1.125rem; font-weight: 700; }
+    .ac-info p { font-size: 0.85rem; color: var(--color-text-muted); }
+    
+    .ac-status-box {
+      background-color: var(--color-bg-light);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .ac-status-box h4 {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+    }
+    .ac-status-box h4 i { color: var(--color-primary); font-size: 1.1rem; }
+    
+    .ac-status-box p {
+      font-size: 0.85rem; color: var(--color-text-dark); line-height: 1.5;
+    }
+    
+    .ac-actions {
+      display: flex;
+      gap: 16px;
+    }
+    
+    .ac-actions button {
+      flex: 1;
+      padding: 10px 0;
+    }
+    
+    .btn-reject {
+      background-color: white;
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    .btn-reject:hover { background-color: #fee2e2; }
+
+    .role-badge {
+      font-size: 0.65rem; font-weight: 700;
+      padding: 4px 10px; border-radius: 12px;
+    }
+    .role-dr { background-color: #1e293b; color: white; }
+    .role-nurse { background-color: #5eead4; color: #0f766e; }
+
+    .ward-assign {
+      display: flex; align-items: center; gap: 8px; font-weight: 600;
+    }
+    .ward-assign i { font-size: 0.5rem; }
+    .w-green { color: #10b981; }
+    .w-gray { color: #cbd5e1; font-style: italic; font-weight: 400;}
+
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="logo">
+        <span style="display:block;">SmartHospital</span>
+        <span style="font-size: 0.6rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Clinical HR Portal</span>
+      </div>
+      
+      <div class="nav-menu">
+        <a href="hr-dashboard.html" class="nav-item">
+          <i class="ph ph-squares-four"></i> Dashboard
+        </a>
+        <a href="hr-staff.html" class="nav-item active">
+          <i class="ph-fill ph-users-three"></i> Staff Management
+        </a>
+        <a href="hr-shifts.html" class="nav-item">
+          <i class="ph ph-clock-time-three"></i> Shifts
+        </a>
+        <a href="hr-wards.html" class="nav-item">
+          <i class="ph ph-buildings"></i> Wards
+        </a>
+      </div>
+      
+      <div class="sidebar-bottom">
+        <div class="user-profile-sm">
+          <img src="https://ui-avatars.com/api/?name=HR+Manager&background=0f172a&color=fff" alt="HR Manager">
+          <div class="info">
+            <span class="name">HR Manager</span>
+            <span class="role">Admin Access</span>
+          </div>
+        </div>
+        
+        <a href="#" class="bottom-nav-item">
+          <i class="ph ph-headphones"></i> Support
+        </a>
+        <a href="index.html" class="bottom-nav-item">
+          <i class="ph ph-sign-out"></i> Log Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <div class="dr-toolbar">
+        <div class="header-title">
+          <span class="sub-header-text">Organization Workspace</span>
+          <h1>Staff Management</h1>
+        </div>
+        
+        <div class="dr-actions">
+          <div style="position:relative;">
+            <i class="ph ph-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--color-text-muted);"></i>
+            <input type="text" placeholder="Quick search personnel..." style="padding:12px 16px 12px 36px; border:none; border-radius:var(--radius-md); box-shadow:var(--shadow-sm); width:280px; outline:none; font-family:inherit;">
+          </div>
+        </div>
+      </div>
+      
+      <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+        <h2 style="font-size:1.25rem; font-weight:700;">Pending Profile Approvals</h2>
+        <span class="tag-red-pill" style="background:#fee2e2; color:#b91c1c;">2 ACTION REQUIRED</span>
+      </div>
+      
+      <div class="approval-grid">
+        <!-- Card 1 -->
+        <div class="approval-card">
+          <div class="ac-top">
+            <img src="https://ui-avatars.com/api/?name=Aris+Thorne&background=0284c7&color=fff" alt="Dr. Aris Thorne">
+            <div class="ac-info">
+              <h3>Dr. Aris Thorne</h3>
+              <p>Senior Neurosurgeon</p>
+            </div>
+          </div>
+          
+          <div class="ac-status-box">
+            <h4><i class="ph-fill ph-shield-check"></i> Credentials Verification</h4>
+            <p>License: MD-9928-TX. Background check cleared via VeriMed Systems.</p>
+          </div>
+          
+          <div class="ac-actions">
+            <button class="btn btn-primary">APPROVE</button>
+            <button class="btn btn-reject">REJECT</button>
+          </div>
+        </div>
+        
+        <!-- Card 2 -->
+        <div class="approval-card">
+          <div class="ac-top">
+            <img src="https://ui-avatars.com/api/?name=Sarah+Chen&background=ca8a04&color=fff" alt="Dr. Sarah Chen">
+            <div class="ac-info">
+              <h3>Dr. Sarah Chen</h3>
+              <p>Cardiology Fellow</p>
+            </div>
+          </div>
+          
+          <div class="ac-status-box">
+            <h4><i class="ph-fill ph-file-text"></i> Onboarding Progress</h4>
+            <p>Medical Board documentation under final review. Ready for ward sync.</p>
+          </div>
+          
+          <div class="ac-actions">
+            <button class="btn btn-primary">APPROVE</button>
+            <button class="btn btn-reject">REJECT</button>
+          </div>
+        </div>
+      </div>
+      
+      
+      <div class="dt-header" style="padding:0; border:none; margin-bottom:20px; display:flex; align-items:center;">
+        <div style="display:flex; align-items:center; gap:16px;">
+          <h2 style="font-size:1.5rem; font-weight:700;">Medical Staff Directory</h2>
+          <span style="font-size:0.75rem; background:rgba(0,0,0,0.05); padding:4px 12px; border-radius:20px; font-weight:600;">124 Total Staff</span>
+        </div>
+        <button class="btn-filter">
+          <i class="ph ph-faders"></i> Filter By Role
+        </button>
+      </div>
+      
+      <div class="data-table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Staff Member</th>
+              <th>Role</th>
+              <th>Specialization</th>
+              <th>Ward Assignment</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="td-profile">
+                  <div class="td-avatar" style="background:#d1fae5; color:#059669;">JH</div>
+                  <div>
+                    <div class="td-name">James Hiddleston</div>
+                    <div class="td-id">ID: ST-001242</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="role-badge role-dr">DOCTOR</span></td>
+              <td style="color:var(--color-text-dark); font-weight:500;">Emergency Medicine</td>
+              <td><span class="ward-assign"><i class="ph-fill ph-circle w-green"></i> ER South Wing</span></td>
+              <td style="text-align:right;">
+                <button class="btn-filter" style="border:none; background:var(--color-bg-light); color:var(--color-primary); float:right;">
+                  <i class="ph ph-arrows-left-right"></i> ASSIGN TO WARD
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="td-profile">
+                  <div class="td-avatar">MR</div>
+                  <div>
+                    <div class="td-name">Maya Rodriguez</div>
+                    <div class="td-id">ID: ST-001258</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="role-badge role-nurse">NURSE</span></td>
+              <td style="color:var(--color-text-dark); font-weight:500;">Critical Care</td>
+              <td><span class="ward-assign"><i class="ph-fill ph-circle w-green"></i> ICU Block C</span></td>
+              <td style="text-align:right;">
+                <button class="btn-filter" style="border:none; background:var(--color-bg-light); color:var(--color-primary); float:right;">
+                  <i class="ph ph-arrows-left-right"></i> ASSIGN TO WARD
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="td-profile">
+                  <div class="td-avatar" style="background:#fee2e2; color:#b91c1c;">BK</div>
+                  <div>
+                    <div class="td-name">Benjamin Kim</div>
+                    <div class="td-id">ID: ST-001290</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="role-badge role-dr">DOCTOR</span></td>
+              <td style="color:var(--color-text-dark); font-weight:500;">Radiology</td>
+              <td><span class="ward-assign w-gray"><i class="ph-fill ph-circle"></i> Unassigned</span></td>
+              <td style="text-align:right;">
+                <button class="btn-filter" style="border:none; background:var(--color-bg-light); color:var(--color-primary); float:right;">
+                  <i class="ph ph-arrows-left-right"></i> ASSIGN TO WARD
+                </button>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <div class="td-profile">
+                  <div class="td-avatar" style="background:#f3e8ff; color:#7e22ce;">LF</div>
+                  <div>
+                    <div class="td-name">Lucia Ferrari</div>
+                    <div class="td-id">ID: ST-001302</div>
+                  </div>
+                </div>
+              </td>
+              <td><span class="role-badge role-nurse">NURSE</span></td>
+              <td style="color:var(--color-text-dark); font-weight:500;">Neonatal Nursing</td>
+              <td><span class="ward-assign"><i class="ph-fill ph-circle w-green"></i> Maternity Unit</span></td>
+              <td style="text-align:right;">
+                <button class="btn-filter" style="border:none; background:var(--color-bg-light); color:var(--color-primary); float:right;">
+                  <i class="ph ph-arrows-left-right"></i> ASSIGN TO WARD
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        
+        <div class="dt-footer">
+          <span>Showing 4 of 124 records</span>
+          <div class="dt-pagination">
+            <button><i class="ph ph-caret-left"></i></button>
+            <button><i class="ph ph-caret-right"></i></button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</body>
+</html>

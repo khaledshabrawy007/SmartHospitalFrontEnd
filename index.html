@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital - Login</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    .split-layout {
+      display: flex;
+      min-height: 100vh;
+    }
+    
+    .split-left {
+      flex: 0 0 45%;
+      background-color: var(--color-primary);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: white;
+      padding: 40px 60px;
+      overflow: hidden;
+    }
+    
+    .split-left::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at top right, rgba(255,255,255,0.05), transparent 40%);
+      pointer-events: none;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    
+    .logo-icon {
+      background: rgba(255,255,255,0.15);
+      padding: 8px;
+      border-radius: var(--radius-md);
+      display: flex;
+    }
+    
+    .hero-text {
+      margin-top: -60px;
+    }
+    
+    .hero-text h1 {
+      font-size: 3.5rem;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      font-weight: 700;
+    }
+    
+    .text-highlight {
+      color: var(--color-primary-light);
+    }
+    
+    .hero-desc {
+      font-size: 1.125rem;
+      line-height: 1.6;
+      color: rgba(255,255,255,0.85);
+      max-width: 400px;
+    }
+    
+    .trust-badge {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 16px;
+      border-radius: var(--radius-lg);
+      width: max-content;
+      backdrop-filter: blur(10px);
+    }
+    
+    .avatars {
+      display: flex;
+    }
+    
+    .avatars img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid var(--color-primary);
+      margin-left: -12px;
+      object-fit: cover;
+    }
+    
+    .avatars img:first-child {
+      margin-left: 0;
+    }
+    
+    .trust-text h4 {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    
+    .trust-text p {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.6);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .split-right {
+      flex: 1;
+      background-color: var(--color-surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+    
+    .login-container {
+      width: 100%;
+      max-width: 480px;
+      padding: 0 40px;
+    }
+    
+    .login-header {
+      margin-bottom: 40px;
+    }
+    
+    .login-header h2 {
+      font-size: 2rem;
+      font-weight: 600;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+    
+    .login-header p {
+      color: var(--color-text-muted);
+    }
+    
+    .role-tabs {
+      display: flex;
+      background-color: var(--color-input-bg);
+      border-radius: var(--radius-md);
+      padding: 6px;
+      margin-bottom: 32px;
+    }
+    
+    .role-tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      border-radius: var(--radius-md);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    
+    .role-tab i {
+      font-size: 1.25rem;
+    }
+    
+    .role-tab.active {
+      background-color: white;
+      color: var(--color-text-dark);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .form-options {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.875rem;
+      margin: 20px 0 32px 0;
+    }
+    
+    .checkbox-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--color-text-muted);
+      cursor: pointer;
+    }
+    
+    .checkbox-wrap input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--color-primary);
+    }
+    
+    .form-options a {
+      font-weight: 600;
+    }
+    
+    .divider {
+      height: 1px;
+      background-color: var(--color-border);
+      margin: 40px 0;
+    }
+    
+    .register-links {
+      text-align: center;
+      font-size: 0.875rem;
+    }
+    
+    .register-links p {
+      color: var(--color-text-muted);
+      margin-bottom: 16px;
+    }
+    
+    .register-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 24px;
+    }
+    
+    .register-actions a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+    
+    .register-actions span {
+      color: var(--color-border);
+    }
+    
+    .footer-links {
+      position: absolute;
+      bottom: 24px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 0.65rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      letter-spacing: 0.05em;
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .modal.show {
+      display: flex;
+      opacity: 1;
+    }
+    
+    .modal-content {
+      background: white;
+      padding: 32px;
+      border-radius: var(--radius-lg);
+      width: 100%;
+      max-width: 400px;
+      position: relative;
+      transform: translateY(-20px);
+      transition: transform 0.3s;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .modal.show .modal-content {
+      transform: translateY(0);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      cursor: pointer;
+      color: var(--color-text-muted);
+    }
+    
+    .modal-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .modal-desc {
+      color: var(--color-text-muted);
+      margin-bottom: 24px;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="split-layout">
+    <div class="split-left">
+      <div class="logo">
+        <div class="logo-icon">
+          <i class="ph-fill ph-first-aid"></i>
+        </div>
+        SmartHospital
+      </div>
+      
+      <div class="hero-text">
+        <h1>Precision Care,<br/><span class="text-highlight">Powered by<br/>Intelligence.</span></h1>
+        <p class="hero-desc">Access the Clinical Excellence suite. Manage medical records, AI-driven diagnostics, and patient care workflows in one unified environment.</p>
+      </div>
+      
+      <div class="trust-badge">
+        <div class="avatars">
+          <img src="" alt="Avatar 1" id="avatar1">
+          <img src="" alt="Avatar 2" id="avatar2">
+          <img src="" alt="Avatar 3" id="avatar3">
+        </div>
+        <div class="trust-text">
+          <h4>Trusted by 2,400+ Specialists</h4>
+          <p>Top-tier medical security</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="split-right">
+      <div class="login-container">
+        <div class="login-header">
+          <h2>Clinical Login</h2>
+          <p>Enter your credentials to access the secure portal.</p>
+        </div>
+        
+        <form id="loginForm" action="dashboard.html">
+          <div class="role-tabs">
+            <div class="role-tab active">
+              <i class="ph-fill ph-user"></i>
+              PATIENT
+            </div>
+            <div class="role-tab">
+              <i class="ph ph-stethoscope"></i>
+              DOCTOR
+            </div>
+            <div class="role-tab">
+              <i class="ph ph-users"></i>
+              HR MANAGER
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <div class="input-wrapper">
+              <i class="ph ph-at"></i>
+              <input type="email" placeholder="dr.smith@smarthospital.com" required>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div class="input-wrapper">
+              <i class="ph ph-lock-key"></i>
+              <input type="password" id="passwordInput" placeholder="••••••••••••" required pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}" title="Must contain at least one number, one uppercase letter, one lowercase letter, one special character, and at least 8 or more characters">
+              <i class="ph ph-eye-slash" id="togglePassword" style="margin-right: 0; margin-left: 12px; cursor: pointer;"></i>
+            </div>
+          </div>
+          
+          <div class="form-options">
+            <label class="checkbox-wrap">
+              <input type="checkbox"> Remember session
+            </label>
+            <a href="#" id="forgotPasswordLink">Forgot password?</a>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-full">
+            Enter Secure Portal <i class="ph ph-arrow-right"></i>
+          </button>
+        </form>
+        
+        <div class="divider"></div>
+        
+        <div class="register-links">
+          <p>Don't have an account?</p>
+          <div class="register-actions">
+            <a href="register.html"><i class="ph ph-user-plus"></i> Register as Patient</a>
+            <span>|</span>
+            <a href="doctor-register.html"><i class="ph ph-suitcase"></i> Apply as Doctor</a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer-links">
+        <span>SECURITY AUDIT</span>
+        <span>DATA PRIVACY</span>
+        <span>HIPAA COMPLIANCE</span>
+        <span>•</span>
+        <span>&copy; 2026 SMARTHOSPITAL</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="forgotPasswordModal">
+    <div class="modal-content">
+      <button class="modal-close" id="closeModalBtn"><i class="ph ph-x"></i></button>
+      <h3 class="modal-title">Reset Password</h3>
+      <p class="modal-desc">Enter your email address and we'll send you a link to reset your password.</p>
+      <form id="resetPasswordForm">
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <div class="input-wrapper">
+            <i class="ph ph-at"></i>
+            <input type="email" placeholder="dr.smith@smarthospital.com" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top: 16px;">
+          Send Reset Link
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Set placeholder avatars for now
+    document.getElementById('avatar1').src = 'https://ui-avatars.com/api/?name=Dr+S&background=0D8ABC&color=fff';
+    document.getElementById('avatar2').src = 'https://ui-avatars.com/api/?name=Dr+M&background=0a6f56&color=fff';
+    document.getElementById('avatar3').src = 'https://ui-avatars.com/api/?name=Dr+A&background=f09a1a&color=fff';
+
+    const loginForm = document.getElementById('loginForm');
+
+    document.querySelectorAll('.role-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Ensure active tab icon becomes filled, others outline
+        document.querySelectorAll('.role-tab i').forEach(icon => {
+          icon.className = icon.className.replace('ph-fill', 'ph');
+        });
+        const activeIcon = tab.querySelector('i');
+        activeIcon.className = activeIcon.className.replace('ph', 'ph-fill');
+        
+        // Form Routing Logic
+        if (tab.innerText.includes('DOCTOR')) {
+          loginForm.action = 'doctor-patients.html';
+        } else if (tab.innerText.includes('MANAGER')) {
+          loginForm.action = 'hr-dashboard.html';
+        } else {
+          loginForm.action = 'dashboard.html';
+        }
+      });
+    });
+
+    const togglePassword = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('passwordInput');
+
+    togglePassword.addEventListener('click', function () {
+      const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+      passwordInput.setAttribute('type', type);
+      
+      this.classList.toggle('ph-eye');
+      this.classList.toggle('ph-eye-slash');
+    });
+
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+    const closeModalBtn = document.getElementById('closeModalBtn');
+    const resetPasswordForm = document.getElementById('resetPasswordForm');
+
+    forgotPasswordLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      forgotPasswordModal.classList.add('show');
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+      forgotPasswordModal.classList.remove('show');
+    });
+
+    forgotPasswordModal.addEventListener('click', (e) => {
+      if (e.target === forgotPasswordModal) {
+        forgotPasswordModal.classList.remove('show');
+      }
+    });
+
+    resetPasswordForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      alert('Password reset link sent to your email!');
+      forgotPasswordModal.classList.remove('show');
+    });
+  </script>
+</body>
+</html>
