@@ -461,6 +461,31 @@
       });
     });
 
+    loginForm.addEventListener('submit', (e) => {
+      // Let it navigate, just store context beforehand
+      const emailInput = loginForm.querySelector('input[type="email"]');
+      if (emailInput && emailInput.value) {
+        // Simple heuristic to extract a name from email: dr.smith -> Dr Smith
+        let namePrefix = emailInput.value.split('@')[0];
+        namePrefix = namePrefix.replace(/[._]/g, ' ');
+        namePrefix = namePrefix.replace(/\b\w/g, l => l.toUpperCase());
+        
+        let role = 'Patient Account';
+        const activeTab = document.querySelector('.role-tab.active');
+        if (activeTab) {
+          if(activeTab.innerText.includes('DOCTOR')) role = 'Attending Physician';
+          if(activeTab.innerText.includes('MANAGER')) role = 'HR Director';
+        }
+
+        localStorage.setItem('currentUser', JSON.stringify({
+          fullName: namePrefix,
+          firstName: namePrefix.split(' ')[0],
+          email: emailInput.value,
+          role: role
+        }));
+      }
+    });
+
     const togglePassword = document.getElementById('togglePassword');
     const passwordInput = document.getElementById('passwordInput');
 
@@ -498,5 +523,6 @@
       forgotPasswordModal.classList.remove('show');
     });
   </script>
+  <script src="auth-session.js"></script>
 </body>
 </html>

@@ -7,6 +7,26 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    .input-simple {
+      background-color: #f8fafc;
+      border-radius: var(--radius-md, 8px);
+      padding: 14px 16px;
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      color: #0f172a;
+      box-sizing: border-box;
+    }
+    
+    .input-simple:focus {
+      background-color: white;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(10, 111, 86, 0.1);
+      outline: none;
+    }
+  </style>
 </head>
 <body>
 
@@ -60,103 +80,106 @@
       </div>
 
       <div class="settings-layout">
-        <!-- Left Column -->
-        <div>
-          <!-- Profile Card -->
-          <div class="settings-card">
-            <div class="settings-card-header">
-              <div class="settings-card-title">
-                <h3>Profile Information</h3>
-              </div>
-              <button class="btn btn-primary">Save Changes</button>
-            </div>
-            
-            <div class="profile-section">
-              <div class="profile-photo">
-                <!-- Using a placeholder to represent the avatar from the design -->
-                <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=0f172a&color=fff" alt="Profile avatar">
-                <span>UPDATE PHOTO</span>
+        <!-- Top Row -->
+        <div style="display: flex; gap: 24px; margin-bottom: 24px;">
+          <!-- Left: Profile Card -->
+          <div style="flex: 1;">
+            <div class="settings-card">
+              <div class="settings-card-header">
+                <div class="settings-card-title">
+                  <h3>Profile Information</h3>
+                </div>
+                <button class="btn btn-primary" id="saveProfileBtn" disabled>Save Changes</button>
               </div>
               
-              <div class="profile-form">
-                <div class="settings-form-grid">
-                  <div class="form-group">
-                    <label class="form-label">Full Name</label>
-                    <input type="text" class="input-simple" value="Sarah Jenkins">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" class="input-simple" value="s.jenkins@example.com">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Phone Number</label>
-                    <input type="tel" class="input-simple" value="+1 (555) 123-4567">
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Timezone</label>
-                    <input type="text" class="input-simple" value="Eastern Standard Time">
+              <div class="profile-section">
+                <div class="profile-photo">
+                  <!-- Using a placeholder to represent the avatar from the design -->
+                  <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=0f172a&color=fff" alt="Profile avatar" id="profileAvatarImg">
+                  <span>UPDATE PHOTO</span>
+                </div>
+                
+                <div class="profile-form">
+                  <div class="settings-form-grid">
+                    <div class="form-group">
+                      <label class="form-label">Full Name</label>
+                      <input type="text" id="sFullName" class="input-simple" value="Sarah Jenkins">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Email Address</label>
+                      <input type="email" id="sEmail" class="input-simple" value="s.jenkins@example.com">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Phone Number</label>
+                      <input type="tel" id="sPhone" class="input-simple" value="+1 (555) 123-4567">
+                    </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Security Card -->
-          <div class="settings-card">
-            <div class="settings-card-header with-icon">
-              <div class="security-icon">
-                <i class="ph-fill ph-check-circle"></i>
+          <!-- Right: Notifications Card -->
+          <div style="flex: 1;">
+            <div class="settings-card" style="padding: 24px;">
+              <div class="settings-card-title" style="margin-bottom: 24px;">
+                <h3>Notification Settings</h3>
               </div>
-              <div class="settings-card-title">
-                <h3>Security & Access</h3>
-                <p>Ensure your health data remains protected.</p>
+              
+              <div class="notification-header">
+                <i class="ph-fill ph-calendar-blank"></i> Appointment Alerts
               </div>
-            </div>
-            
-            <div class="settings-form-row">
-              <div class="form-group">
-                <label class="form-label">Current Password</label>
-                <input type="password" class="input-simple" value="password123" style="width: 50%;">
+              <div class="toggle-row">
+                <span class="label">Email Notifications</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="emailNotifToggle" checked>
+                  <span class="slider"></span>
+                </label>
               </div>
-            </div>
-            
-            <div class="settings-form-grid">
-              <div class="form-group">
-                <label class="form-label">New Password</label>
-                <input type="password" class="input-simple" placeholder="Enter new password">
-              </div>
-              <div class="form-group">
-                <label class="form-label">Confirm Password</label>
-                <input type="password" class="input-simple" placeholder="Verify new password">
-              </div>
-            </div>
-            
-            <div class="settings-footer-row">
-              <div class="status-text">
-                <i class="ph-fill ph-check-circle"></i> Two-factor authentication is active on this account.
-              </div>
-              <button class="btn btn-outline" style="padding: 10px 24px;">Update Security</button>
             </div>
           </div>
         </div>
 
-        <!-- Right Column -->
-        <div>
-          <!-- Notifications Card -->
-          <div class="settings-card" style="padding: 24px;">
-            <div class="settings-card-title" style="margin-bottom: 24px;">
-              <h3>Notification Settings</h3>
-            </div>
-            
-            <div class="notification-header">
-              <i class="ph-fill ph-calendar-blank"></i> Appointment Alerts
-            </div>
-            <div class="toggle-row">
-              <span class="label">Email Notifications</span>
-              <label class="toggle-switch">
-                <input type="checkbox" checked>
-                <span class="slider"></span>
-              </label>
+        <!-- Bottom Row: Security Card Under Profile -->
+        <div style="display: flex; justify-content: flex-start;">
+          <div style="flex: 0 0 calc(50% - 12px);">
+            <!-- Security Card -->
+            <div class="settings-card">
+              <div class="settings-card-header with-icon">
+                <div class="security-icon">
+                  <i class="ph-fill ph-check-circle"></i>
+                </div>
+                <div class="settings-card-title">
+                  <h3>Security & Access</h3>
+                  <p>Ensure your health data remains protected.</p>
+                </div>
+              </div>
+              
+              <div class="settings-form-row">
+                <div class="form-group">
+                  <label class="form-label">Current Password</label>
+                  <input type="password" id="currentPwd" class="input-simple" value="" style="width: 50%;" placeholder="Enter current password">
+                </div>
+              </div>
+              
+              <div class="settings-form-grid">
+                <div class="form-group">
+                  <label class="form-label">New Password</label>
+                  <input type="password" id="newPwd" class="input-simple" placeholder="Enter new password">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Confirm Password</label>
+                  <input type="password" id="confirmPwd" class="input-simple" placeholder="Verify new password">
+                </div>
+              </div>
+              
+              <div class="settings-footer-row">
+                <div class="status-text">
+                  <i class="ph-fill ph-check-circle"></i> Two-factor authentication is active on this account.
+                </div>
+                <button class="btn btn-outline" id="saveSecurityBtn" style="padding: 10px 24px;">Update Security</button>
+              </div>
             </div>
           </div>
         </div>
@@ -183,5 +206,92 @@
       </div>
     </div>
   </div>
+
+  <script src="auth-session.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const currentUserData = localStorage.getItem("currentUser");
+      let user = {};
+      if (currentUserData) {
+        user = JSON.parse(currentUserData);
+        document.getElementById('sFullName').value = user.fullName || '';
+        document.getElementById('sEmail').value = user.email || '';
+        document.getElementById('sPhone').value = user.phone || '';
+      }
+
+      // Track changes to enable/disable button
+      const saveProfileBtn = document.getElementById('saveProfileBtn');
+      const profileInputs = [
+        document.getElementById('sFullName'),
+        document.getElementById('sEmail'),
+        document.getElementById('sPhone')
+      ];
+
+      function checkProfileChanges() {
+        if (!user) return;
+        const currentName = document.getElementById('sFullName').value;
+        const currentEmail = document.getElementById('sEmail').value;
+        const currentPhone = document.getElementById('sPhone').value;
+        
+        if (currentName !== (user.fullName || '') || 
+            currentEmail !== (user.email || '') || 
+            currentPhone !== (user.phone || '')) {
+          saveProfileBtn.removeAttribute('disabled');
+        } else {
+          saveProfileBtn.setAttribute('disabled', 'true');
+        }
+      }
+
+      profileInputs.forEach(input => {
+        input.addEventListener('input', checkProfileChanges);
+      });
+
+      saveProfileBtn.addEventListener('click', () => {
+        user.fullName = document.getElementById('sFullName').value;
+        user.email = document.getElementById('sEmail').value;
+        user.phone = document.getElementById('sPhone').value;
+        
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        saveProfileBtn.setAttribute('disabled', 'true');
+        alert("Profile successfully updated!");
+        window.location.reload();
+      });
+
+      // Password Logic securely client-side simulated
+      const saveSecurityBtn = document.getElementById('saveSecurityBtn');
+      saveSecurityBtn.addEventListener('click', () => {
+         const newPwd = document.getElementById('newPwd').value;
+         const confPwd = document.getElementById('confirmPwd').value;
+         const currPwd = document.getElementById('currentPwd').value;
+         
+         if (!currPwd) {
+             alert("Current password is required to make security changes.");
+             return;
+         }
+         if (newPwd !== confPwd) {
+            alert("New passwords do not match. Please verify.");
+            return;
+         }
+         if (newPwd.length > 0 && newPwd.length < 8) {
+            alert("Password must be at least 8 characters.");
+            return;
+         }
+         alert("Security settings updated successfully! (Action simulated locally)");
+         document.getElementById('currentPwd').value = '';
+         document.getElementById('newPwd').value = '';
+         document.getElementById('confirmPwd').value = '';
+      });
+
+      // Notification Logic
+      const notifToggle = document.getElementById('emailNotifToggle');
+      const savedNotifPref = localStorage.getItem('emailNotifications');
+      if (savedNotifPref === 'false') {
+         notifToggle.checked = false;
+      }
+      notifToggle.addEventListener('change', (e) => {
+         localStorage.setItem('emailNotifications', e.target.checked);
+      });
+    });
+  </script>
 </body>
 </html>

@@ -287,8 +287,8 @@
             <div class="history-card-bottom">
               <div></div>
               <div class="button-group">
-                <a href="#" style="color: #dc2626; font-size:0.85rem; font-weight:600;" onclick="cancelAppointment('${apt.id}')">Cancel Appointment</a>
-                <button class="btn btn-dark" style="padding: 10px 24px;" onclick="rescheduleAppointment('${apt.doctorName}', '${apt.doctorDept}')">Reschedule</button>
+                <button class="btn btn-outline" style="color: #dc2626; border-color: #fca5a5; padding: 10px 24px;" onclick="cancelAppointment('${apt.id}')">Cancel Appointment</button>
+                <button class="btn btn-outline" style="color: var(--color-primary); border-color: var(--color-primary); padding: 10px 24px;" onclick="rescheduleAppointment('${apt.doctorName}', '${apt.doctorDept}')">Reschedule</button>
               </div>
             </div>
           `;
@@ -460,5 +460,6 @@
       </div>
     </div>
   </div>
+  <script src="auth-session.js"></script>
 </body>
 </html>

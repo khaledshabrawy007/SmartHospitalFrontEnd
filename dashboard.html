@@ -149,7 +149,19 @@
       }
 
       // Past Appointments logic from Medical History cache
-      const pastBookingsJson = localStorage.getItem("pastBookings");
+      let pastBookingsJson = localStorage.getItem("pastBookings");
+      
+      // If there is no local storage, populate with some default mock data
+      if (!pastBookingsJson || JSON.parse(pastBookingsJson).length === 0) {
+         const mockPastBookings = [
+          { id: 'APT-112', doctorName: 'Dr. Eleanor Vance', doctorDept: 'Radiology', date: 'Apr 03, 2026', time: '09:30 AM', status: 'Completed', rating: 5, actionDate: 'Apr 05' },
+          { id: 'APT-098', doctorName: 'Dr. Julian Thorne', doctorDept: 'Internal Medicine', date: 'Apr 07, 2026', time: '11:15 AM', status: 'Completed', rating: null },
+          { id: 'APT-070', doctorName: 'Dr. Sarah Chen', doctorDept: 'Ophthalmology', date: 'Apr 05, 2026', time: '', status: 'Cancelled', actionDate: 'Apr 05' }
+         ];
+         localStorage.setItem("pastBookings", JSON.stringify(mockPastBookings));
+         pastBookingsJson = JSON.stringify(mockPastBookings);
+      }
+
       if (pastBookingsJson) {
          const pastBookings = JSON.parse(pastBookingsJson);
          const pastGrid = document.getElementById("pastAppointmentsGrid");
@@ -200,6 +212,57 @@
             });
          }
       }
+
+      // Dynamic user name mapping
+      const currentUserData = localStorage.getItem("currentUser");
+      let firstName = "Sarah"; // default
+      if (currentUserData) {
+         try {
+           const user = JSON.parse(currentUserData);
+           if (user.fullName) {
+             firstName = user.fullName.split(' ')[0];
+           } else if (user.name) {
+             firstName = user.name.split(' ')[0];
+           } else if (user.firstName) {
+             firstName = user.firstName;
+           }
+           
+           // Also update sidebar name and avatar safely
+           const sidebarName = document.querySelector(".sidebar-bottom .name");
+           if (sidebarName) {
+             const fullName = user.fullName || user.name || (user.firstName + ' ' + (user.lastName || ''));
+             sidebarName.textContent = fullName;
+             const avatarImg = document.querySelector(".sidebar-bottom img");
+             if (avatarImg) {
+               avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0f172a&color=fff`;
+             }
+           }
+         } catch(e) {
+           console.error("Error parsing currentUser", e);
+         }
+      }
+      
+      const welcomeHeader = document.querySelector(".header-title h1");
+      if (welcomeHeader) {
+        welcomeHeader.textContent = `Welcome back, ${firstName}.`;
+      }
+
+      // Update current time on the "Last updated" meta tag
+      function updateTime() {
+        const metaSpan = document.querySelector(".section-header .meta");
+        if (metaSpan) {
+          const now = new Date();
+          let hours = now.getHours();
+          let minutes = now.getMinutes();
+          let ampm = hours >= 12 ? 'PM' : 'AM';
+          hours = hours % 12;
+          hours = hours ? hours : 12;
+          minutes = minutes < 10 ? '0' + minutes : minutes;
+          metaSpan.textContent = `Last updated: Today, ${hours}:${minutes} ${ampm}`;
+        }
+      }
+      updateTime();
+      setInterval(updateTime, 60000);
     });
 
     function openDetailsModal(docName, dateVal, statusVal) {
@@ -237,5 +300,6 @@
       </div>
     </div>
   </div>
+  <script src="auth-session.js"></script>
 </body>
 </html>

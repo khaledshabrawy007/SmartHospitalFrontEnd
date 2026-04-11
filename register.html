@@ -241,11 +241,11 @@
         <p>Join our clinical network for personalized care.</p>
       </div>
       
-      <form action="dashboard.html">
+      <form action="dashboard.html" id="patientRegForm">
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Full Name</label>
-            <input type="text" class="input-simple" required>
+            <input type="text" id="regFullName" class="input-simple" required>
           </div>
           <div class="form-group">
             <label class="form-label">Phone Number</label>
@@ -429,6 +429,24 @@
     regionSelect.addEventListener('change', function() {
       regionDisplay.textContent = this.value;
     });
+
+    const patientRegForm = document.getElementById('patientRegForm');
+    if (patientRegForm) {
+      patientRegForm.addEventListener('submit', function(e) {
+        const fullName = document.getElementById('regFullName').value;
+        const phone = patientRegForm.querySelector('input[type="tel"]').value;
+        const email = patientRegForm.querySelector('input[type="email"]').value;
+        
+        localStorage.setItem('currentUser', JSON.stringify({
+          fullName: fullName,
+          firstName: fullName.split(' ')[0],
+          email: email,
+          phone: phone,
+          role: 'Patient Account'
+        }));
+      });
+    }
   </script>
+  <script src="auth-session.js"></script>
 </body>
 </html>
