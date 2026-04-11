@@ -7,6 +7,399 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    /* Card enhancements */
+    .dr-appt-card {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      box-sizing: border-box;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      animation: cardSlideIn 0.35s ease-out both;
+    }
+
+    .dr-appt-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+
+    @keyframes cardSlideIn {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .dr-appt-card .appt-summary {
+      flex: 1;
+    }
+
+    .dr-appt-card .btn {
+      margin-top: auto;
+    }
+
+    /* Tab count badges */
+    .tab-count {
+      display: inline-block;
+      background: rgba(0,0,0,0.06);
+      padding: 1px 8px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      margin-left: 6px;
+      font-weight: 700;
+    }
+
+    .history-tab.active .tab-count {
+      background: rgba(10,111,86,0.12);
+      color: var(--color-primary);
+    }
+
+    /* Status tag styles */
+    .status-tag {
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .status-scheduled {
+      background: #e0f2fe;
+      color: #0284c7;
+    }
+
+    .status-completed {
+      background: #d1fae5;
+      color: #059669;
+    }
+
+    .status-cancelled {
+      background: #fee2e2;
+      color: #dc2626;
+    }
+
+    /* Completed card overlay */
+    .dr-appt-card.is-completed {
+      opacity: 0.75;
+    }
+
+    .dr-appt-card.is-completed:hover {
+      opacity: 1;
+    }
+
+    .dr-appt-card.is-cancelled {
+      opacity: 0.65;
+    }
+
+    .dr-appt-card.is-cancelled:hover {
+      opacity: 0.85;
+    }
+
+    /* Completed button style */
+    .btn-completed {
+      background-color: #e2e8f0;
+      color: #64748b;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* Cancelled button style */
+    .btn-cancelled {
+      background-color: #fee2e2;
+      color: #dc2626;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    /* Empty state */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 56px 24px;
+    }
+
+    .empty-state-icon {
+      width: 64px;
+      height: 64px;
+      background: #f1f5f9;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      color: #cbd5e1;
+      margin-bottom: 16px;
+    }
+
+    .empty-state h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+
+    .empty-state p {
+      font-size: 0.88rem;
+      color: #94a3b8;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 300px;
+      max-width: 420px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+      border-left: 4px solid #0a6f56;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #0f172a;
+      transform: translateX(120%);
+      opacity: 0;
+      animation: toastIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+
+    .toast.toast-hide {
+      animation: toastOut 0.3s ease-in forwards;
+    }
+
+    .toast-icon {
+      font-size: 1.3rem;
+      color: #0a6f56;
+      flex-shrink: 0;
+    }
+
+    @keyframes toastIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+
+    @keyframes toastOut {
+      from { transform: translateX(0);    opacity: 1; }
+      to   { transform: translateX(120%); opacity: 0; }
+    }
+
+    /* Results count */
+    .results-info {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+
+    /* Card action buttons row */
+    .card-btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    .card-btn-row .btn {
+      flex: 1;
+      margin-top: 0;
+    }
+
+    .btn-report {
+      background-color: #0f172a;
+      color: white;
+    }
+    .btn-report:hover {
+      background-color: #1e293b;
+    }
+
+    .btn-view-report {
+      background-color: white;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+      margin-top: 10px;
+    }
+    .btn-view-report:hover {
+      background-color: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    /* Report Modal Overlay */
+    .report-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      z-index: 90000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      animation: overlayFadeIn 0.25s ease;
+    }
+
+    .report-overlay.is-open {
+      display: flex;
+    }
+
+    @keyframes overlayFadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    /* Report Modal */
+    .report-modal {
+      background: white;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.18);
+      animation: modalSlideUp 0.35s cubic-bezier(0.16,1,0.3,1);
+      overflow: hidden;
+    }
+
+    @keyframes modalSlideUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .report-modal-header {
+      padding: 28px 32px 0 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .report-modal-header h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 4px;
+    }
+
+    .report-modal-header .modal-date {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      font-weight: 500;
+    }
+
+    .report-modal-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 1.4rem;
+      padding: 4px;
+      border-radius: 8px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+    }
+
+    .report-modal-close:hover {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .report-modal-body {
+      padding: 24px 32px;
+    }
+
+    .report-content-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 0;
+    }
+
+    .report-content-box .report-field {
+      margin-bottom: 18px;
+    }
+
+    .report-content-box .report-field:last-child {
+      margin-bottom: 0;
+    }
+
+    .report-content-box label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+
+    .report-content-box textarea,
+    .report-content-box input[type="text"] {
+      width: 100%;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.88rem;
+      color: #0f172a;
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-sizing: border-box;
+    }
+
+    .report-content-box textarea {
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    .report-content-box textarea:focus,
+    .report-content-box input[type="text"]:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(10,111,86,0.08);
+    }
+
+    /* View-only report fields */
+    .report-content-box .view-field {
+      margin-bottom: 14px;
+    }
+
+    .report-content-box .view-field:last-child {
+      margin-bottom: 0;
+    }
+
+    .report-content-box .view-label {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+
+    .report-content-box .view-value {
+      font-size: 0.88rem;
+      color: #475569;
+      line-height: 1.55;
+    }
+
+    .report-modal-footer {
+      padding: 0 32px 28px 32px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .report-modal-footer .btn {
+      padding: 10px 28px;
+      font-size: 0.88rem;
+    }
+  </style>
 </head>
 <body>
 
@@ -54,118 +447,47 @@
       </div>
       
       <div class="dr-toolbar">
-        <div class="history-tabs">
-          <div class="history-tab active">Upcoming</div>
-          <div class="history-tab">Completed</div>
-          <div class="history-tab">Cancelled</div>
+        <div class="history-tabs" id="statusTabs">
+          <div class="history-tab active" data-tab="Upcoming">Upcoming <span class="tab-count" id="countUpcoming">0</span></div>
+          <div class="history-tab" data-tab="Completed">Completed <span class="tab-count" id="countCompleted">0</span></div>
+          <div class="history-tab" data-tab="Cancelled">Cancelled <span class="tab-count" id="countCancelled">0</span></div>
         </div>
         
         <div class="toolbar-dark">
           <div style="position:relative;">
             <i class="ph ph-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--color-text-muted);"></i>
-            <input type="text" placeholder="Search patient name or ID..." style="padding-left:36px; width:260px;">
+            <input type="text" id="searchInput" placeholder="Search patient name or ID..." style="padding-left:36px; width:260px;">
           </div>
           <div style="position:relative;">
             <i class="ph ph-calendar-blank" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--color-text-muted);"></i>
-            <select style="padding-left:36px; padding-right:32px; width:160px; appearance:none;">
-              <option>All Dates</option>
+            <select id="dateFilter" style="padding-left:36px; padding-right:32px; width:180px; appearance:none;">
+              <option value="all">All Dates</option>
             </select>
             <i class="ph ph-caret-down" style="position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--color-text-muted); pointer-events:none;"></i>
           </div>
         </div>
       </div>
 
-      <div class="appt-cards-row">
-        <!-- Appt 1 -->
-        <div class="dr-appt-card">
-          <div class="appt-top">
-            <div class="initials in-blue">JD</div>
-            <div class="appt-name">
-              <h4 style="display:flex; justify-content:space-between; width:100%;">
-                Johnathan Doe <span class="tag-sm" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:12px;">SCHEDULED</span>
-              </h4>
-              <p><i class="ph-fill ph-identification-card"></i> ID-29481</p>
-            </div>
-          </div>
-          
-          <div class="appt-time">
-            <i class="ph-fill ph-clock" style="color:var(--color-primary);"></i> Today, Oct 12 • 10:30 AM
-          </div>
-          
-          <div class="appt-summary">
-            Routine follow-up for chronic hypertension. Patient reports mild...
-          </div>
-          
-          <button class="btn btn-neon btn-full">
-            <i class="ph-fill ph-check-circle"></i> Mark as Completed
-          </button>
-        </div>
+      <div class="results-info" id="resultsInfo"></div>
 
-        <!-- Appt 2 -->
-        <div class="dr-appt-card">
-          <div class="appt-top">
-            <div class="initials in-teal">SR</div>
-            <div class="appt-name">
-              <h4 style="display:flex; justify-content:space-between; width:100%;">
-                Sarah Richardson <span class="tag-sm" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:12px;">SCHEDULED</span>
-              </h4>
-              <p><i class="ph-fill ph-identification-card"></i> ID-30112</p>
-            </div>
-          </div>
-          
-          <div class="appt-time">
-            <i class="ph-fill ph-clock" style="color:var(--color-primary);"></i> Today, Oct 12 • 11:45 AM
-          </div>
-          
-          <div class="appt-summary">
-            Initial consultation for persistent back pain. Needs mobility assessment...
-          </div>
-          
-          <button class="btn btn-neon btn-full">
-            <i class="ph-fill ph-check-circle"></i> Mark as Completed
-          </button>
-        </div>
+      <!-- Appointment Cards Grid (rendered dynamically) -->
+      <div class="appt-cards-row" id="apptGrid"></div>
 
-        <!-- Appt 3 -->
-        <div class="dr-appt-card">
-          <div class="appt-top">
-            <div class="initials in-gray">MK</div>
-            <div class="appt-name">
-              <h4 style="display:flex; justify-content:space-between; width:100%;">
-                Marcus Kane <span class="tag-sm" style="background:#e0f2fe; color:#0284c7; padding:4px 8px; border-radius:12px;">SCHEDULED</span>
-              </h4>
-              <p><i class="ph-fill ph-identification-card"></i> ID-22894</p>
-            </div>
-          </div>
-          
-          <div class="appt-time">
-            <i class="ph-fill ph-clock" style="color:var(--color-primary);"></i> Today, Oct 12 • 02:15 PM
-          </div>
-          
-          <div class="appt-summary">
-            Review lab results for Vitamin D deficiency and prescribe treatment...
-          </div>
-          
-          <button class="btn btn-neon btn-full">
-            <i class="ph-fill ph-check-circle"></i> Mark as Completed
-          </button>
-        </div>
-      </div>
-
-      <div class="weekly-summary">
+      <!-- Weekly Summary -->
+      <div class="weekly-summary" id="weeklySummary">
         <div class="summary-icon">
           <i class="ph-fill ph-chart-bar"></i>
         </div>
         <h3>Weekly Summary</h3>
-        <p>You have 12 more appointments scheduled for the rest of this week. Your average consultation time is <b>22</b> minutes.</p>
+        <p id="summaryText"></p>
         
         <div class="stat-blocks">
           <div class="stat-block">
-            <h2>84%</h2>
+            <h2 id="completionRate">0%</h2>
             <span>COMPLETION RATE</span>
           </div>
           <div class="stat-block">
-            <h2 style="color: #111827;">15</h2>
+            <h2 style="color: #111827;" id="totalPatients">0</h2>
             <span>TOTAL PATIENTS</span>
           </div>
         </div>
@@ -174,6 +496,538 @@
     </div>
   </div>
 
+  <!-- Report Submit Modal -->
+  <div class="report-overlay" id="reportOverlay">
+    <div class="report-modal">
+      <div class="report-modal-header">
+        <div>
+          <h2 id="reportModalTitle">Dr. Alexander West - Assessment</h2>
+          <span class="modal-date" id="reportModalDate"></span>
+        </div>
+        <button class="report-modal-close" onclick="closeReportModal()">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+      <div class="report-modal-body">
+        <div class="report-content-box">
+          <div class="report-field">
+            <label for="reportClinicalNotes">Clinical Notes</label>
+            <textarea id="reportClinicalNotes" placeholder="Document your clinical observations and findings..."></textarea>
+          </div>
+          <div class="report-field">
+            <label for="reportPrescription">Prescription</label>
+            <input type="text" id="reportPrescription" placeholder="e.g. Lisinopril 10mg, None indicated">
+          </div>
+          <div class="report-field">
+            <label for="reportNextSteps">Next Steps</label>
+            <input type="text" id="reportNextSteps" placeholder="e.g. Follow-up in 2 weeks">
+          </div>
+        </div>
+      </div>
+      <div class="report-modal-footer">
+        <button class="btn btn-outline" onclick="closeReportModal()">Cancel</button>
+        <button class="btn btn-primary" id="submitReportBtn" onclick="submitReport()">Submit Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report View Modal -->
+  <div class="report-overlay" id="viewReportOverlay">
+    <div class="report-modal">
+      <div class="report-modal-header">
+        <div>
+          <h2 id="viewReportTitle"></h2>
+          <span class="modal-date" id="viewReportDate"></span>
+        </div>
+        <button class="report-modal-close" onclick="closeViewReport()">
+          <i class="ph ph-x"></i>
+        </button>
+      </div>
+      <div class="report-modal-body">
+        <div class="report-content-box" id="viewReportContent"></div>
+      </div>
+      <div class="report-modal-footer">
+        <button class="btn btn-primary" onclick="closeViewReport()">Close Report</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
   <script src="auth-session.js"></script>
+  <script>
+    // ── Mock Appointment Data ──────────────────────────────────
+    const appointments = [
+      {
+        id: 1,
+        name: "Johnathan Doe",
+        initials: "JD",
+        patientId: "ID-29481",
+        date: "2026-04-14",
+        time: "10:30 AM",
+        notes: "Routine follow-up for chronic hypertension. Patient reports mild dizziness over the past week.",
+        status: "Upcoming",
+        initialsBg: "in-blue"
+      },
+      {
+        id: 2,
+        name: "Sarah Richardson",
+        initials: "SR",
+        patientId: "ID-30112",
+        date: "2026-04-14",
+        time: "11:45 AM",
+        notes: "Initial consultation for persistent back pain. Needs mobility assessment and imaging referral.",
+        status: "Upcoming",
+        initialsBg: "in-teal"
+      },
+      {
+        id: 3,
+        name: "Marcus Kane",
+        initials: "MK",
+        patientId: "ID-22894",
+        date: "2026-04-14",
+        time: "02:15 PM",
+        notes: "Review lab results for Vitamin D deficiency and prescribe treatment plan accordingly.",
+        status: "Upcoming",
+        initialsBg: "in-gray"
+      },
+      {
+        id: 4,
+        name: "Emily Watson",
+        initials: "EW",
+        patientId: "ID-31087",
+        date: "2026-04-15",
+        time: "09:00 AM",
+        notes: "Post-operative wound check following appendectomy. Assess healing and remove stitches if ready.",
+        status: "Upcoming",
+        initialsBg: "in-teal"
+      },
+      {
+        id: 5,
+        name: "David Nguyen",
+        initials: "DN",
+        patientId: "ID-28456",
+        date: "2026-04-15",
+        time: "01:30 PM",
+        notes: "6-month diabetic management review. Evaluate HbA1c levels and adjust medication if needed.",
+        status: "Upcoming",
+        initialsBg: "in-blue"
+      },
+      {
+        id: 6,
+        name: "Olivia Chen",
+        initials: "OC",
+        patientId: "ID-27103",
+        date: "2026-04-11",
+        time: "10:00 AM",
+        notes: "Annual physical examination completed. All vitals within normal range. Flu vaccine administered.",
+        status: "Completed",
+        initialsBg: "in-teal"
+      },
+      {
+        id: 7,
+        name: "Robert Park",
+        initials: "RP",
+        patientId: "ID-25890",
+        date: "2026-04-11",
+        time: "11:30 AM",
+        notes: "Asthma management session. Inhaler technique reviewed and new prescription issued.",
+        status: "Completed",
+        initialsBg: "in-gray"
+      },
+      {
+        id: 8,
+        name: "Lisa Martinez",
+        initials: "LM",
+        patientId: "ID-29034",
+        date: "2026-04-10",
+        time: "03:00 PM",
+        notes: "Dermatology referral consultation for eczema flare-up. Topical steroid prescribed.",
+        status: "Completed",
+        initialsBg: "in-blue"
+      },
+      {
+        id: 9,
+        name: "Ahmad Hassan",
+        initials: "AH",
+        patientId: "ID-26721",
+        date: "2026-04-12",
+        time: "09:30 AM",
+        notes: "Patient requested cancellation due to travel conflict. Rescheduled for next week.",
+        status: "Cancelled",
+        initialsBg: "in-gray"
+      },
+      {
+        id: 10,
+        name: "Karen Thompson",
+        initials: "KT",
+        patientId: "ID-30455",
+        date: "2026-04-13",
+        time: "04:00 PM",
+        notes: "No-show appointment. Third missed visit – follow-up call required.",
+        status: "Cancelled",
+        initialsBg: "in-blue"
+      },
+      {
+        id: 11,
+        name: "James Wright",
+        initials: "JW",
+        patientId: "ID-31200",
+        date: "2026-04-16",
+        time: "10:00 AM",
+        notes: "Cardiology follow-up after stress test results. Evaluate exercise tolerance and medication adherence.",
+        status: "Upcoming",
+        initialsBg: "in-blue"
+      },
+      {
+        id: 12,
+        name: "Fatima Al-Rashid",
+        initials: "FA",
+        patientId: "ID-28999",
+        date: "2026-04-16",
+        time: "02:00 PM",
+        notes: "Prenatal check-up at 28 weeks. Blood glucose screening and fundal height measurement.",
+        status: "Upcoming",
+        initialsBg: "in-teal"
+      }
+    ];
+
+    // ── State ──────────────────────────────────────────────────
+    let activeTab = "Upcoming";
+    let searchQuery = "";
+    let dateFilter = "all";
+
+    // ── DOM References ─────────────────────────────────────────
+    const grid = document.getElementById("apptGrid");
+    const searchInput = document.getElementById("searchInput");
+    const dateSelect = document.getElementById("dateFilter");
+    const tabs = document.querySelectorAll(".history-tab");
+    const resultsInfo = document.getElementById("resultsInfo");
+
+    // ── Helpers ────────────────────────────────────────────────
+    function formatDate(dateStr) {
+      const d = new Date(dateStr + "T00:00:00");
+      const options = { weekday: 'short', month: 'short', day: 'numeric' };
+      return d.toLocaleDateString('en-US', options);
+    }
+
+    function formatDateLabel(dateStr) {
+      const d = new Date(dateStr + "T00:00:00");
+      const options = { month: 'short', day: 'numeric', year: 'numeric' };
+      return d.toLocaleDateString('en-US', options);
+    }
+
+    function getStatusTagHTML(status) {
+      const cls = {
+        Upcoming: "status-scheduled",
+        Completed: "status-completed",
+        Cancelled: "status-cancelled"
+      };
+      const label = {
+        Upcoming: "SCHEDULED",
+        Completed: "COMPLETED",
+        Cancelled: "CANCELLED"
+      };
+      return `<span class="status-tag ${cls[status]}">${label[status]}</span>`;
+    }
+
+    function getButtonHTML(appt) {
+      const viewReportBtn = appt.report
+        ? `<button class="btn btn-view-report btn-full" onclick="viewReport(${appt.id})">
+            <i class="ph ph-file-text"></i> View Report
+          </button>`
+        : '';
+
+      if (appt.status === "Completed") {
+        return `<button class="btn btn-completed btn-full">
+          <i class="ph-fill ph-check-circle"></i> Completed
+        </button>${viewReportBtn}`;
+      }
+      if (appt.status === "Cancelled") {
+        return `<button class="btn btn-cancelled btn-full">
+          <i class="ph-fill ph-x-circle"></i> Cancelled
+        </button>${viewReportBtn}`;
+      }
+      return `<div class="card-btn-row">
+        <button class="btn btn-neon btn-full" onclick="markCompleted(${appt.id})">
+          <i class="ph-fill ph-check-circle"></i> Mark as Completed
+        </button>
+        <button class="btn btn-report btn-full" onclick="openReportModal(${appt.id})">
+          <i class="ph ph-file-text"></i> Submit Report
+        </button>
+      </div>${viewReportBtn}`;
+    }
+
+    function getCardClass(status) {
+      if (status === "Completed") return "dr-appt-card is-completed";
+      if (status === "Cancelled") return "dr-appt-card is-cancelled";
+      return "dr-appt-card";
+    }
+
+    // ── Toast ──────────────────────────────────────────────────
+    function showToast(message) {
+      const container = document.getElementById("toastContainer");
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.innerHTML = `
+        <i class="ph-fill ph-check-circle toast-icon"></i>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add("toast-hide");
+        setTimeout(() => toast.remove(), 350);
+      }, 3000);
+    }
+
+    // ── Populate Date Filter ───────────────────────────────────
+    function populateDateFilter() {
+      const uniqueDates = [...new Set(appointments.map(a => a.date))].sort();
+      dateSelect.innerHTML = '<option value="all">All Dates</option>';
+      uniqueDates.forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d;
+        opt.textContent = formatDateLabel(d);
+        dateSelect.appendChild(opt);
+      });
+    }
+
+    // ── Filter + Render ────────────────────────────────────────
+    function getFiltered() {
+      let result = appointments.filter(a => a.status === activeTab);
+
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        result = result.filter(a =>
+          a.name.toLowerCase().includes(q) ||
+          a.patientId.toLowerCase().includes(q)
+        );
+      }
+
+      if (dateFilter !== "all") {
+        result = result.filter(a => a.date === dateFilter);
+      }
+
+      // Sort by date then time
+      result.sort((a, b) => {
+        if (a.date !== b.date) return a.date.localeCompare(b.date);
+        return a.time.localeCompare(b.time);
+      });
+
+      return result;
+    }
+
+    function updateTabCounts() {
+      document.getElementById("countUpcoming").textContent = appointments.filter(a => a.status === "Upcoming").length;
+      document.getElementById("countCompleted").textContent = appointments.filter(a => a.status === "Completed").length;
+      document.getElementById("countCancelled").textContent = appointments.filter(a => a.status === "Cancelled").length;
+    }
+
+    function updateWeeklySummary() {
+      const total = appointments.length;
+      const completed = appointments.filter(a => a.status === "Completed").length;
+      const uniquePatients = new Set(appointments.map(a => a.name)).size;
+      const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+      const upcoming = appointments.filter(a => a.status === "Upcoming").length;
+
+      document.getElementById("completionRate").textContent = rate + "%";
+      document.getElementById("totalPatients").textContent = uniquePatients;
+      document.getElementById("summaryText").innerHTML = 
+        `You have <b>${upcoming}</b> upcoming appointment${upcoming !== 1 ? 's' : ''} remaining this week. <b>${completed}</b> of <b>${total}</b> appointments completed so far.`;
+    }
+
+    function render() {
+      const filtered = getFiltered();
+      resultsInfo.textContent = `Showing ${filtered.length} ${activeTab.toLowerCase()} appointment${filtered.length !== 1 ? 's' : ''}`;
+
+      if (filtered.length === 0) {
+        const emptyIcons = {
+          Upcoming: "ph-calendar-blank",
+          Completed: "ph-check-circle",
+          Cancelled: "ph-x-circle"
+        };
+        const emptyMsgs = {
+          Upcoming: "No upcoming appointments found.",
+          Completed: "No completed appointments yet.",
+          Cancelled: "No cancelled appointments."
+        };
+        grid.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon"><i class="ph ${emptyIcons[activeTab]}"></i></div>
+            <h3>${emptyMsgs[activeTab]}</h3>
+            <p>Try adjusting your search or date filter.</p>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map((appt, i) => `
+        <div class="${getCardClass(appt.status)}" style="animation-delay: ${i * 0.06}s" id="card-${appt.id}">
+          <div class="appt-top">
+            <div class="initials ${appt.initialsBg}">${appt.initials}</div>
+            <div class="appt-name">
+              <h4 style="display:flex; justify-content:space-between; width:100%;">
+                ${appt.name} ${getStatusTagHTML(appt.status)}
+              </h4>
+              <p><i class="ph-fill ph-identification-card"></i> ${appt.patientId}</p>
+            </div>
+          </div>
+          
+          <div class="appt-time">
+            <i class="ph-fill ph-clock" style="color:var(--color-primary);"></i> ${formatDate(appt.date)} • ${appt.time}
+          </div>
+          
+          <div class="appt-summary">
+            ${appt.notes}
+          </div>
+          
+          ${getButtonHTML(appt)}
+        </div>
+      `).join("");
+    }
+
+    // ── Mark as Completed ──────────────────────────────────────
+    function markCompleted(id) {
+      const appt = appointments.find(a => a.id === id);
+      if (!appt) return;
+
+      // Animate card out
+      const card = document.getElementById(`card-${id}`);
+      if (card) {
+        card.style.transition = "all 0.4s ease";
+        card.style.transform = "scale(0.95)";
+        card.style.opacity = "0";
+      }
+
+      setTimeout(() => {
+        appt.status = "Completed";
+        updateTabCounts();
+        updateWeeklySummary();
+        render();
+        showToast(`${appt.name}'s appointment marked as completed.`);
+      }, 400);
+    }
+
+    // ── Report Modal Logic ─────────────────────────────────────
+    let currentReportApptId = null;
+
+    function openReportModal(id) {
+      const appt = appointments.find(a => a.id === id);
+      if (!appt) return;
+      currentReportApptId = id;
+
+      // Set header
+      document.getElementById('reportModalTitle').textContent = `Dr. Alexander West - Assessment`;
+      const today = new Date();
+      const dateStr = today.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
+      document.getElementById('reportModalDate').textContent = `Conducted on ${dateStr} • Patient: ${appt.name}`;
+
+      // Pre-fill if report already exists
+      if (appt.report) {
+        document.getElementById('reportClinicalNotes').value = appt.report.clinicalNotes;
+        document.getElementById('reportPrescription').value = appt.report.prescription;
+        document.getElementById('reportNextSteps').value = appt.report.nextSteps;
+      } else {
+        document.getElementById('reportClinicalNotes').value = '';
+        document.getElementById('reportPrescription').value = '';
+        document.getElementById('reportNextSteps').value = '';
+      }
+
+      document.getElementById('reportOverlay').classList.add('is-open');
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportOverlay').classList.remove('is-open');
+      currentReportApptId = null;
+    }
+
+    function submitReport() {
+      const clinicalNotes = document.getElementById('reportClinicalNotes').value.trim();
+      const prescription = document.getElementById('reportPrescription').value.trim();
+      const nextSteps = document.getElementById('reportNextSteps').value.trim();
+
+      if (!clinicalNotes) {
+        showToast('Please enter clinical notes before submitting.');
+        return;
+      }
+
+      const appt = appointments.find(a => a.id === currentReportApptId);
+      if (!appt) return;
+
+      appt.report = {
+        clinicalNotes,
+        prescription: prescription || 'None indicated.',
+        nextSteps: nextSteps || 'No further action required.',
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+      };
+
+      closeReportModal();
+      render();
+      showToast(`Report submitted for ${appt.name}.`);
+    }
+
+    function viewReport(id) {
+      const appt = appointments.find(a => a.id === id);
+      if (!appt || !appt.report) return;
+
+      document.getElementById('viewReportTitle').textContent = `Dr. Alexander West - Assessment`;
+      document.getElementById('viewReportDate').textContent = `Conducted on ${appt.report.date} • Patient: ${appt.name}`;
+
+      document.getElementById('viewReportContent').innerHTML = `
+        <div class="view-field">
+          <div class="view-label">Clinical Notes:</div>
+          <div class="view-value">${appt.report.clinicalNotes}</div>
+        </div>
+        <div class="view-field">
+          <div class="view-label">Prescription:</div>
+          <div class="view-value">${appt.report.prescription}</div>
+        </div>
+        <div class="view-field">
+          <div class="view-label">Next Steps:</div>
+          <div class="view-value">${appt.report.nextSteps}</div>
+        </div>
+      `;
+
+      document.getElementById('viewReportOverlay').classList.add('is-open');
+    }
+
+    function closeViewReport() {
+      document.getElementById('viewReportOverlay').classList.remove('is-open');
+    }
+
+    // Close modals on overlay click
+    document.getElementById('reportOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeReportModal();
+    });
+    document.getElementById('viewReportOverlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeViewReport();
+    });
+
+    // ── Event Listeners ────────────────────────────────────────
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        activeTab = tab.dataset.tab;
+        render();
+      });
+    });
+
+    searchInput.addEventListener("input", (e) => {
+      searchQuery = e.target.value.trim();
+      render();
+    });
+
+    dateSelect.addEventListener("change", (e) => {
+      dateFilter = e.target.value;
+      render();
+    });
+
+    // ── Init ───────────────────────────────────────────────────
+    populateDateFilter();
+    updateTabCounts();
+    updateWeeklySummary();
+    render();
+  </script>
 </body>
 </html>

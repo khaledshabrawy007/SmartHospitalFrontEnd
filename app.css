@@ -1156,6 +1156,10 @@ input:checked + .slider:before {
   border-radius: var(--radius-lg);
   padding: 24px;
   box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .pc-top {
@@ -1208,6 +1212,7 @@ input:checked + .slider:before {
   flex-direction: column;
   gap: 16px;
   margin-bottom: 20px;
+  flex: 1;
 }
 
 .info-section {
@@ -1238,6 +1243,7 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin-top: auto;
 }
 
 /* Appointments Page Dr */

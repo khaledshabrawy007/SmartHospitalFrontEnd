@@ -90,16 +90,17 @@
       align-items: center;
       justify-content: center;
       position: relative;
+      overflow-y: auto;
     }
     
     .form-container {
       width: 100%;
       max-width: 480px;
-      padding: 0 40px;
+      padding: 40px 40px;
     }
     
     .form-header {
-      margin-bottom: 40px;
+      margin-bottom: 32px;
     }
     
     .form-header h2 {
@@ -126,11 +127,20 @@
       display: flex;
       align-items: center;
       gap: 12px;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .input-icon-left:focus-within {
+      background-color: white;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(10, 111, 86, 0.1);
     }
     
     .input-icon-left i {
       color: var(--color-text-muted);
       font-size: 1.25rem;
+      flex-shrink: 0;
     }
     
     .input-icon-left input,
@@ -144,10 +154,143 @@
       color: var(--color-text-dark);
     }
 
-    .form-group { margin-bottom: 24px; }
+    /* Phone field styles */
+    .phone-wrapper {
+      display: flex;
+      gap: 8px;
+    }
+
+    .phone-code-box {
+      background-color: #e5e7eb;
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      position: relative;
+      width: 100px;
+      flex-shrink: 0;
+    }
+
+    .phone-code-box:focus-within {
+      background-color: white;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(10, 111, 86, 0.1);
+    }
+
+    .phone-code-display {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      font-size: 0.95rem;
+      color: var(--color-text-dark);
+      z-index: 2;
+    }
+
+    .phone-code-select {
+      width: 100%;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: transparent;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+
+    .phone-code-arrow {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.6rem;
+      color: var(--color-text-muted);
+      pointer-events: none;
+    }
+
+    .phone-input-box {
+      flex: 1;
+      background-color: #e5e7eb;
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--color-text-dark);
+      outline: none;
+    }
+
+    .phone-input-box:focus {
+      background-color: white;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(10, 111, 86, 0.1);
+    }
+
+    /* Password eye wrapper */
+    .pwd-wrapper {
+      background-color: #e5e7eb;
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+
+    .pwd-wrapper:focus-within {
+      background-color: white;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(10, 111, 86, 0.1);
+    }
+
+    .pwd-wrapper i.lock-icon {
+      color: var(--color-text-muted);
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .pwd-wrapper input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: 0.95rem;
+      font-family: inherit;
+      color: var(--color-text-dark);
+    }
+
+    .pwd-toggle {
+      cursor: pointer;
+      font-size: 1.25rem;
+      color: var(--color-text-muted);
+      flex-shrink: 0;
+      transition: color 0.2s;
+    }
+
+    .pwd-toggle:hover {
+      color: var(--color-primary);
+    }
+
+    /* Password strength indicator */
+    .pwd-hint {
+      font-size: 0.72rem;
+      color: var(--color-text-muted);
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+
+    .form-group { margin-bottom: 20px; }
     
     .form-agreement {
-      margin-top: 24px;
+      margin-top: 20px;
       font-size: 0.75rem;
       color: var(--color-text-muted);
       line-height: 1.5;
@@ -230,15 +373,18 @@
           <p>Register your credentials for HR verification. Approval typically takes <span class="highlight-text">24-48 hours.</span></p>
         </div>
         
-        <form action="doctor-patients.html">
+        <form action="doctor-patients.html" id="doctorRegForm">
+
+          <!-- Full Name -->
           <div class="form-group">
             <label class="form-label" style="text-transform:none; letter-spacing:0; color:#374151;">Full Name</label>
             <div class="input-icon-left">
               <i class="ph-fill ph-user"></i>
-              <input type="text" placeholder="Dr. Jane Smith" required>
+              <input type="text" id="drFullName" placeholder="Dr. Jane Smith" required>
             </div>
           </div>
-          
+
+          <!-- Medical Email -->
           <div class="form-group">
             <label class="form-label" style="text-transform:none; letter-spacing:0; color:#374151;">Medical Email</label>
             <div class="input-icon-left">
@@ -246,26 +392,165 @@
               <input type="email" placeholder="j.smith@hospital.org" required>
             </div>
           </div>
-          
+
+          <!-- Phone Number -->
+          <div class="form-group">
+            <label class="form-label" style="text-transform:none; letter-spacing:0; color:#374151;">Phone Number</label>
+            <div class="phone-wrapper">
+              <div class="phone-code-box">
+                <span class="phone-code-display" id="drRegionDisplay">+1</span>
+                <select class="phone-code-select" id="drRegionSelect" required>
+                  <option value="+1" style="color: black;">+1 (United States / Canada)</option>
+                  <option value="+20" style="color: black;">+20 (Egypt)</option>
+                  <option value="+27" style="color: black;">+27 (South Africa)</option>
+                  <option value="+31" style="color: black;">+31 (Netherlands)</option>
+                  <option value="+32" style="color: black;">+32 (Belgium)</option>
+                  <option value="+33" style="color: black;">+33 (France)</option>
+                  <option value="+34" style="color: black;">+34 (Spain)</option>
+                  <option value="+36" style="color: black;">+36 (Hungary)</option>
+                  <option value="+39" style="color: black;">+39 (Italy)</option>
+                  <option value="+41" style="color: black;">+41 (Switzerland)</option>
+                  <option value="+43" style="color: black;">+43 (Austria)</option>
+                  <option value="+44" style="color: black;">+44 (United Kingdom)</option>
+                  <option value="+45" style="color: black;">+45 (Denmark)</option>
+                  <option value="+46" style="color: black;">+46 (Sweden)</option>
+                  <option value="+47" style="color: black;">+47 (Norway)</option>
+                  <option value="+48" style="color: black;">+48 (Poland)</option>
+                  <option value="+49" style="color: black;">+49 (Germany)</option>
+                  <option value="+51" style="color: black;">+51 (Peru)</option>
+                  <option value="+52" style="color: black;">+52 (Mexico)</option>
+                  <option value="+54" style="color: black;">+54 (Argentina)</option>
+                  <option value="+55" style="color: black;">+55 (Brazil)</option>
+                  <option value="+56" style="color: black;">+56 (Chile)</option>
+                  <option value="+57" style="color: black;">+57 (Colombia)</option>
+                  <option value="+58" style="color: black;">+58 (Venezuela)</option>
+                  <option value="+60" style="color: black;">+60 (Malaysia)</option>
+                  <option value="+61" style="color: black;">+61 (Australia)</option>
+                  <option value="+62" style="color: black;">+62 (Indonesia)</option>
+                  <option value="+63" style="color: black;">+63 (Philippines)</option>
+                  <option value="+64" style="color: black;">+64 (New Zealand)</option>
+                  <option value="+65" style="color: black;">+65 (Singapore)</option>
+                  <option value="+66" style="color: black;">+66 (Thailand)</option>
+                  <option value="+81" style="color: black;">+81 (Japan)</option>
+                  <option value="+82" style="color: black;">+82 (South Korea)</option>
+                  <option value="+84" style="color: black;">+84 (Vietnam)</option>
+                  <option value="+86" style="color: black;">+86 (China)</option>
+                  <option value="+90" style="color: black;">+90 (Turkey)</option>
+                  <option value="+91" style="color: black;">+91 (India)</option>
+                  <option value="+92" style="color: black;">+92 (Pakistan)</option>
+                  <option value="+93" style="color: black;">+93 (Afghanistan)</option>
+                  <option value="+94" style="color: black;">+94 (Sri Lanka)</option>
+                  <option value="+98" style="color: black;">+98 (Iran)</option>
+                  <option value="+212" style="color: black;">+212 (Morocco)</option>
+                  <option value="+234" style="color: black;">+234 (Nigeria)</option>
+                  <option value="+254" style="color: black;">+254 (Kenya)</option>
+                  <option value="+351" style="color: black;">+351 (Portugal)</option>
+                  <option value="+353" style="color: black;">+353 (Ireland)</option>
+                  <option value="+358" style="color: black;">+358 (Finland)</option>
+                  <option value="+380" style="color: black;">+380 (Ukraine)</option>
+                  <option value="+420" style="color: black;">+420 (Czech Republic)</option>
+                  <option value="+880" style="color: black;">+880 (Bangladesh)</option>
+                  <option value="+966" style="color: black;">+966 (Saudi Arabia)</option>
+                  <option value="+971" style="color: black;">+971 (United Arab Emirates)</option>
+                </select>
+                <span class="phone-code-arrow">&#9660;</span>
+              </div>
+              <input type="tel" class="phone-input-box" id="drPhone" placeholder="555-000-1234" required>
+            </div>
+          </div>
+
+          <!-- Specialization -->
           <div class="form-group">
             <label class="form-label" style="text-transform:none; letter-spacing:0; color:#374151;">Specialization</label>
             <div class="input-icon-left">
               <i class="ph ph-stethoscope"></i>
-              <select required>
-                <option value="" disabled selected>Select Area</option>
-                <option value="cardio">Cardiology</option>
-                <option value="neuro">Neurology</option>
-                <option value="pediatrics">Pediatrics</option>
+              <select id="drSpecialization" required>
+                <option value="" disabled selected>Select Specialization</option>
+                <!-- Internal Medicine & Primary Care -->
+                <optgroup label="Internal Medicine & Primary Care">
+                  <option value="family-medicine">Family Medicine</option>
+                  <option value="internal-medicine">Internal Medicine</option>
+                  <option value="geriatrics">Geriatrics</option>
+                  <option value="preventive-medicine">Preventive Medicine</option>
+                </optgroup>
+                <!-- Surgical Specialties -->
+                <optgroup label="Surgical Specialties">
+                  <option value="general-surgery">General Surgery</option>
+                  <option value="orthopedics">Orthopedic Surgery</option>
+                  <option value="neurosurgery">Neurosurgery</option>
+                  <option value="cardiothoracic-surgery">Cardiothoracic Surgery</option>
+                  <option value="plastic-surgery">Plastic & Reconstructive Surgery</option>
+                  <option value="vascular-surgery">Vascular Surgery</option>
+                  <option value="colorectal-surgery">Colorectal Surgery</option>
+                </optgroup>
+                <!-- Medical Specialties -->
+                <optgroup label="Medical Specialties">
+                  <option value="cardiology">Cardiology</option>
+                  <option value="neurology">Neurology</option>
+                  <option value="gastroenterology">Gastroenterology</option>
+                  <option value="pulmonology">Pulmonology</option>
+                  <option value="nephrology">Nephrology</option>
+                  <option value="rheumatology">Rheumatology</option>
+                  <option value="endocrinology">Endocrinology & Diabetes</option>
+                  <option value="hematology">Hematology</option>
+                  <option value="oncology">Oncology</option>
+                  <option value="infectious-disease">Infectious Disease</option>
+                  <option value="allergy-immunology">Allergy & Immunology</option>
+                </optgroup>
+                <!-- Women's & Children's Health -->
+                <optgroup label="Women's & Children's Health">
+                  <option value="pediatrics">Pediatrics</option>
+                  <option value="neonatology">Neonatology</option>
+                  <option value="obstetrics">Obstetrics & Gynecology</option>
+                  <option value="fertility">Reproductive Medicine & Fertility</option>
+                  <option value="pediatric-surgery">Pediatric Surgery</option>
+                </optgroup>
+                <!-- Mental Health -->
+                <optgroup label="Mental Health">
+                  <option value="psychiatry">Psychiatry</option>
+                  <option value="child-psychiatry">Child & Adolescent Psychiatry</option>
+                  <option value="addiction-medicine">Addiction Medicine</option>
+                </optgroup>
+                <!-- Diagnostics & Imaging -->
+                <optgroup label="Diagnostics & Imaging">
+                  <option value="radiology">Radiology</option>
+                  <option value="nuclear-medicine">Nuclear Medicine</option>
+                  <option value="pathology">Pathology</option>
+                  <option value="clinical-lab">Clinical Laboratory Medicine</option>
+                </optgroup>
+                <!-- Other Specialties -->
+                <optgroup label="Other Specialties">
+                  <option value="dermatology">Dermatology</option>
+                  <option value="ophthalmology">Ophthalmology</option>
+                  <option value="ent">Otolaryngology (ENT)</option>
+                  <option value="urology">Urology</option>
+                  <option value="anesthesiology">Anesthesiology</option>
+                  <option value="emergency-medicine">Emergency Medicine</option>
+                  <option value="critical-care">Critical Care Medicine</option>
+                  <option value="sports-medicine">Sports Medicine</option>
+                  <option value="pain-management">Pain Management</option>
+                  <option value="palliative-care">Palliative Care</option>
+                </optgroup>
               </select>
             </div>
           </div>
           
+          <!-- Password -->
           <div class="form-group">
             <label class="form-label" style="text-transform:none; letter-spacing:0; color:#374151;">Password</label>
-            <div class="input-icon-left">
-              <i class="ph-fill ph-lock-key"></i>
-              <input type="password" placeholder="••••••••••••" required>
+            <div class="pwd-wrapper">
+              <i class="ph-fill ph-lock-key lock-icon"></i>
+              <input
+                type="password"
+                id="drPassword"
+                placeholder="••••••••••••"
+                required
+                pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[\W_]).{8,}"
+                title="Must contain at least 8 characters, one uppercase, one lowercase, one number, and one special character."
+              >
+              <i class="ph ph-eye-slash pwd-toggle" id="toggleDrPwd"></i>
             </div>
+            <p class="pwd-hint">Min. 8 characters · uppercase · lowercase · number · special character</p>
           </div>
           
           <button type="submit" class="btn btn-primary btn-full">
@@ -290,6 +575,45 @@
       </div>
     </div>
   </div>
+
+  <script>
+    // Phone country code display
+    const drRegionSelect = document.getElementById('drRegionSelect');
+    const drRegionDisplay = document.getElementById('drRegionDisplay');
+    drRegionSelect.addEventListener('change', function() {
+      drRegionDisplay.textContent = this.value;
+    });
+
+    // Password toggle (eye icon)
+    const drPassword = document.getElementById('drPassword');
+    const toggleDrPwd = document.getElementById('toggleDrPwd');
+
+    toggleDrPwd.addEventListener('click', function() {
+      const isPassword = drPassword.getAttribute('type') === 'password';
+      drPassword.setAttribute('type', isPassword ? 'text' : 'password');
+      this.className = `ph ${isPassword ? 'ph-eye' : 'ph-eye-slash'} pwd-toggle`;
+    });
+
+    // Save session on submit
+    const doctorRegForm = document.getElementById('doctorRegForm');
+    if (doctorRegForm) {
+      doctorRegForm.addEventListener('submit', function(e) {
+        const fullName = document.getElementById('drFullName').value;
+        const phone = document.getElementById('drPhone').value;
+        const email = doctorRegForm.querySelector('input[type="email"]').value;
+        const specialization = document.getElementById('drSpecialization').value;
+
+        localStorage.setItem('currentUser', JSON.stringify({
+          fullName: fullName,
+          firstName: fullName.replace(/^Dr\.?\s*/i, '').split(' ')[0],
+          email: email,
+          phone: phone,
+          specialization: specialization,
+          role: 'Doctor'
+        }));
+      });
+    }
+  </script>
 
   <script src="auth-session.js"></script>
 </body>

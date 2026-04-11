@@ -7,6 +7,177 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    /* Search & Toolbar Enhancements */
+    .patients-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .patients-toolbar-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .patients-search {
+      position: relative;
+      width: 340px;
+    }
+
+    .patients-search i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-size: 1.1rem;
+    }
+
+    .patients-search input {
+      width: 100%;
+      padding: 11px 16px 11px 42px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      background: white;
+      color: #0f172a;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: all 0.2s;
+      box-sizing: border-box;
+    }
+
+    .patients-search input:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(10, 111, 86, 0.08);
+    }
+
+    .patients-toolbar-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .filter-pills {
+      display: flex;
+      gap: 8px;
+    }
+
+    .filter-pill {
+      padding: 7px 18px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      background-color: white;
+      color: #64748b;
+      cursor: pointer;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s;
+      user-select: none;
+    }
+
+    .filter-pill:hover {
+      background-color: #f8fafc;
+      color: #334155;
+      border-color: #cbd5e1;
+    }
+
+    .filter-pill.active {
+      background-color: var(--color-primary);
+      color: white;
+      border-color: var(--color-primary);
+    }
+
+    .filter-pill .count {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      margin-left: 6px;
+    }
+
+    .filter-pill.active .count {
+      background: rgba(255,255,255,0.25);
+    }
+
+    .filter-pill:not(.active) .count {
+      background: #f1f5f9;
+      color: #94a3b8;
+    }
+
+    .sort-select {
+      padding: 9px 34px 9px 14px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+      background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%2364748b' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+      cursor: pointer;
+      appearance: none;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      transition: all 0.2s;
+    }
+
+    .sort-select:focus {
+      outline: none;
+      border-color: var(--color-primary);
+    }
+
+    /* Results counter */
+    .results-count {
+      font-size: 0.82rem;
+      color: #94a3b8;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    /* Patient card entrance animation */
+    .patient-card {
+      animation: cardFadeIn 0.35s ease-out both;
+    }
+
+    @keyframes cardFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Empty state */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 64px 24px;
+      color: #94a3b8;
+    }
+
+    .empty-state i {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      display: block;
+      color: #cbd5e1;
+    }
+
+    .empty-state h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    .empty-state p {
+      font-size: 0.88rem;
+    }
+  </style>
 </head>
 <body>
 
@@ -51,165 +222,306 @@
           <h1>Patients History</h1>
           <p>Review and manage active patient files across departments.</p>
         </div>
-        
-        <div class="dr-actions">
-          <button class="btn-filter">
-            <i class="ph ph-faders"></i> Filter
-          </button>
-          <button class="btn-filter">
-            <i class="ph ph-sort-ascending"></i> Sort by Risk
-          </button>
+      </div>
+
+      <!-- Dynamic Toolbar -->
+      <div class="patients-toolbar">
+        <div class="patients-toolbar-top">
+          <div class="patients-search">
+            <i class="ph ph-magnifying-glass"></i>
+            <input type="text" id="patientSearch" placeholder="Search patients by name…">
+          </div>
+          <select class="sort-select" id="sortSelect">
+            <option value="name-asc">Sort: Name A–Z</option>
+            <option value="name-desc">Sort: Name Z–A</option>
+            <option value="age-asc">Sort: Age (Youngest)</option>
+            <option value="age-desc">Sort: Age (Oldest)</option>
+            <option value="risk">Sort: Risk Level</option>
+          </select>
+        </div>
+        <div class="patients-toolbar-bottom">
+          <div class="filter-pills" id="filterPills">
+            <button class="filter-pill active" data-filter="all">All <span class="count" id="countAll">0</span></button>
+            <button class="filter-pill" data-filter="Critical">Critical <span class="count" id="countCritical">0</span></button>
+            <button class="filter-pill" data-filter="Stable">Stable <span class="count" id="countStable">0</span></button>
+            <button class="filter-pill" data-filter="Chronic">Chronic <span class="count" id="countChronic">0</span></button>
+          </div>
+          <span class="results-count" id="resultsCount"></span>
         </div>
       </div>
 
-      <div class="patient-grid">
-        <!-- Patient 1 -->
-        <div class="patient-card">
-          <div class="pc-top">
-            <div class="pc-profile">
-              <img src="https://ui-avatars.com/api/?name=Sarah+Jenkins&background=2dd4bf&color=fff" alt="Sarah Jenkins">
-              <div class="pc-name">
-                <h3>Sarah Jenkins</h3>
-                <div class="pc-tags">
-                  <span class="tag-sm tag-gray">54Y</span>
-                  <span class="tag-sm tag-gray">Female</span>
-                </div>
-              </div>
-            </div>
-            <div style="display:flex; gap:8px;">
-              <span class="tag-sm tag-orange" style="align-self: center;">CHRONIC</span>
-              <span class="tag-green-pill">STABLE</span>
-            </div>
-          </div>
-          
-          <div class="patient-info-box">
-            <div class="info-section">
-              <span class="label">Diagnosis</span>
-              <span class="value">Hypertension, Type 2 Diabetes</span>
-            </div>
-            <div class="info-section">
-              <span class="label">Treatment</span>
-              <span class="value">Lisinopril 10mg, Metformin 500mg</span>
-            </div>
-            <div class="info-section">
-              <span class="label">Symptoms</span>
-              <span class="value">Mild dizziness, occasional fatigue</span>
-            </div>
-            <div class="info-section italic">
-              <span class="label">Notes</span>
-              <span class="value">Monitoring blood pressure stability during morning hours.</span>
-            </div>
-          </div>
-          
-          <div class="dr-card-actions">
-            <button class="btn btn-primary btn-full" onclick="window.location.href='doctor-risk-assessment.html'">
-              Readmission Risk Score <i class="ph ph-trend-up"></i>
-            </button>
-            <button class="btn btn-outline btn-full" onclick="window.location.href='doctor-treatment-rec.html'">
-              Chronic Treatment Recommendation
-            </button>
-          </div>
-        </div>
-
-        <!-- Patient 2 -->
-        <div class="patient-card">
-          <div class="pc-top">
-            <div class="pc-profile">
-              <img src="https://ui-avatars.com/api/?name=Arthur+Miller&background=1e293b&color=fff" alt="Arthur Miller">
-              <div class="pc-name">
-                <h3>Arthur Miller</h3>
-                <div class="pc-tags">
-                  <span class="tag-sm tag-gray">72Y</span>
-                  <span class="tag-sm tag-gray">Male</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <span class="tag-red-pill">CRITICAL</span>
-            </div>
-          </div>
-          
-          <div class="patient-info-box">
-            <div class="info-section">
-              <span class="label">Diagnosis</span>
-              <span class="value">Acute Myocardial Infarction</span>
-            </div>
-            <div class="info-section">
-              <span class="label">Treatment</span>
-              <span class="value">PCI, Antiplatelet Therapy</span>
-            </div>
-            <div class="info-section">
-              <span class="label">Symptoms</span>
-              <span class="value">Chest pain, shortness of breath</span>
-            </div>
-            <div class="info-section italic">
-              <span class="label">Notes</span>
-              <span class="value">Immediate post-op observation. Stable but high risk.</span>
-            </div>
-          </div>
-          
-          <div class="dr-card-actions">
-            <button class="btn btn-primary btn-full" onclick="window.location.href='doctor-risk-assessment.html'">
-              Readmission Risk Score <i class="ph ph-trend-up"></i>
-            </button>
-            <button class="btn btn-outline btn-full" onclick="window.location.href='doctor-treatment-rec.html'">
-              Chronic Treatment Recommendation
-            </button>
-          </div>
-        </div>
-
-        <!-- Patient 3 -->
-        <div class="patient-card">
-          <div class="pc-top">
-            <div class="pc-profile">
-              <img src="https://ui-avatars.com/api/?name=Robert+Chen&background=991b1b&color=fff" alt="Robert Chen">
-              <div class="pc-name">
-                <h3>Robert Chen</h3>
-                <div class="pc-tags">
-                  <span class="tag-sm tag-gray">41Y</span>
-                  <span class="tag-sm tag-gray">Male</span>
-                </div>
-              </div>
-            </div>
-            <div style="display:flex; gap:8px;">
-              <span class="tag-sm tag-orange" style="align-self: center;">CHRONIC</span>
-              <span class="tag-green-pill">STABLE</span>
-            </div>
-          </div>
-          
-          <div class="patient-info-box">
-            <div class="info-section">
-              <span class="label">Diagnosis</span>
-              <span class="value">Asthma (Moderate Persistent)</span>
-            </div>
-            <div class="info-section">
-              <span class="label">Treatment</span>
-              <span class="value">Advair Inhaler, Salbutamol PRN</span>
-            </div>
-            <div class="info-section">
-              <span class="label">Symptoms</span>
-              <span class="value">Wheezing upon exertion</span>
-            </div>
-            <div class="info-section italic">
-              <span class="label">Notes</span>
-              <span class="value">Patient education on peak flow monitoring completed.</span>
-            </div>
-          </div>
-          
-          <div class="dr-card-actions">
-            <button class="btn btn-primary btn-full" onclick="window.location.href='doctor-risk-assessment.html'">
-              Readmission Risk Score <i class="ph ph-trend-up"></i>
-            </button>
-            <button class="btn btn-outline btn-full" onclick="window.location.href='doctor-treatment-rec.html'">
-              Chronic Treatment Recommendation
-            </button>
-          </div>
-        </div>
-
-      </div>
+      <!-- Patient Grid (rendered dynamically) -->
+      <div class="patient-grid" id="patientGrid"></div>
     </div>
   </div>
 
   <script src="auth-session.js"></script>
+  <script>
+    // ── Mock Patient Data ──────────────────────────────────────
+    const patients = [
+      {
+        name: "Sarah Jenkins",
+        age: 54,
+        gender: "Female",
+        diagnosis: "Hypertension, Type 2 Diabetes",
+        treatment: "Lisinopril 10mg, Metformin 500mg",
+        symptoms: "Mild dizziness, occasional fatigue",
+        notes: "Monitoring blood pressure stability during morning hours.",
+        status: "Chronic",
+        avatarBg: "2dd4bf"
+      },
+      {
+        name: "Arthur Miller",
+        age: 72,
+        gender: "Male",
+        diagnosis: "Acute Myocardial Infarction",
+        treatment: "PCI, Antiplatelet Therapy",
+        symptoms: "Chest pain, shortness of breath",
+        notes: "Immediate post-op observation. Stable but high risk.",
+        status: "Critical",
+        avatarBg: "1e293b"
+      },
+      {
+        name: "Robert Chen",
+        age: 41,
+        gender: "Male",
+        diagnosis: "Asthma (Moderate Persistent)",
+        treatment: "Advair Inhaler, Salbutamol PRN",
+        symptoms: "Wheezing upon exertion",
+        notes: "Patient education on peak flow monitoring completed.",
+        status: "Stable",
+        avatarBg: "991b1b"
+      },
+      {
+        name: "Emily Rodriguez",
+        age: 35,
+        gender: "Female",
+        diagnosis: "Generalized Anxiety Disorder",
+        treatment: "Sertraline 50mg, CBT Sessions",
+        symptoms: "Restlessness, sleep disturbance",
+        notes: "Scheduled for follow-up in 2 weeks. Good progress noted.",
+        status: "Stable",
+        avatarBg: "7c3aed"
+      },
+      {
+        name: "James Okafor",
+        age: 68,
+        gender: "Male",
+        diagnosis: "Congestive Heart Failure (Stage III)",
+        treatment: "Furosemide 40mg, Carvedilol 12.5mg",
+        symptoms: "Peripheral edema, dyspnea on exertion",
+        notes: "Weight monitoring daily. Fluid restriction advised.",
+        status: "Critical",
+        avatarBg: "dc2626"
+      },
+      {
+        name: "Maria Gonzalez",
+        age: 47,
+        gender: "Female",
+        diagnosis: "Rheumatoid Arthritis",
+        treatment: "Methotrexate 15mg weekly, Folic Acid",
+        symptoms: "Joint stiffness, bilateral hand swelling",
+        notes: "Labs pending for liver function monitoring.",
+        status: "Chronic",
+        avatarBg: "0891b2"
+      },
+      {
+        name: "David Park",
+        age: 29,
+        gender: "Male",
+        diagnosis: "Post-Surgical Recovery (ACL Repair)",
+        treatment: "Physical Therapy 3x/week, Ibuprofen PRN",
+        symptoms: "Mild knee swelling, limited ROM",
+        notes: "Recovery on track. Cleared for light activity next week.",
+        status: "Stable",
+        avatarBg: "059669"
+      },
+      {
+        name: "Fatima Al-Hassan",
+        age: 61,
+        gender: "Female",
+        diagnosis: "Chronic Kidney Disease (Stage IV)",
+        treatment: "Erythropoietin, Low-Protein Diet",
+        symptoms: "Fatigue, decreased urine output",
+        notes: "Dialysis evaluation scheduled. Nephrology consult ordered.",
+        status: "Critical",
+        avatarBg: "b91c1c"
+      },
+      {
+        name: "Thomas Wright",
+        age: 55,
+        gender: "Male",
+        diagnosis: "Type 1 Diabetes, Peripheral Neuropathy",
+        treatment: "Insulin Pump, Gabapentin 300mg",
+        symptoms: "Numbness in extremities, glucose fluctuations",
+        notes: "Adjusting basal insulin rate. Podiatry referral placed.",
+        status: "Chronic",
+        avatarBg: "ca8a04"
+      }
+    ];
+
+    // ── State ──────────────────────────────────────────────────
+    let activeFilter = "all";
+    let searchQuery = "";
+    let sortMode = "name-asc";
+
+    // ── DOM References ─────────────────────────────────────────
+    const grid = document.getElementById("patientGrid");
+    const searchInput = document.getElementById("patientSearch");
+    const sortSelect = document.getElementById("sortSelect");
+    const filterPills = document.querySelectorAll(".filter-pill");
+    const resultsCount = document.getElementById("resultsCount");
+
+    // ── Helpers ────────────────────────────────────────────────
+    function getStatusTag(status) {
+      switch (status) {
+        case "Critical":
+          return `<span class="tag-red-pill">CRITICAL</span>`;
+        case "Stable":
+          return `<span class="tag-green-pill">STABLE</span>`;
+        case "Chronic":
+          return `<div style="display:flex; gap:8px;">
+            <span class="tag-sm tag-orange" style="align-self:center;">CHRONIC</span>
+            <span class="tag-green-pill">STABLE</span>
+          </div>`;
+        default:
+          return "";
+      }
+    }
+
+    function riskOrder(status) {
+      const order = { Critical: 0, Chronic: 1, Stable: 2 };
+      return order[status] ?? 3;
+    }
+
+    // ── Filter + Sort + Render ─────────────────────────────────
+    function getFilteredPatients() {
+      let result = [...patients];
+
+      // Search filter
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        result = result.filter(p => p.name.toLowerCase().includes(q));
+      }
+
+      // Status filter
+      if (activeFilter !== "all") {
+        result = result.filter(p => p.status === activeFilter);
+      }
+
+      // Sort
+      switch (sortMode) {
+        case "name-asc":
+          result.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        case "name-desc":
+          result.sort((a, b) => b.name.localeCompare(a.name));
+          break;
+        case "age-asc":
+          result.sort((a, b) => a.age - b.age);
+          break;
+        case "age-desc":
+          result.sort((a, b) => b.age - a.age);
+          break;
+        case "risk":
+          result.sort((a, b) => riskOrder(a.status) - riskOrder(b.status));
+          break;
+      }
+
+      return result;
+    }
+
+    function updateCounts() {
+      document.getElementById("countAll").textContent = patients.length;
+      document.getElementById("countCritical").textContent = patients.filter(p => p.status === "Critical").length;
+      document.getElementById("countStable").textContent = patients.filter(p => p.status === "Stable").length;
+      document.getElementById("countChronic").textContent = patients.filter(p => p.status === "Chronic").length;
+    }
+
+    function renderPatients() {
+      const filtered = getFilteredPatients();
+      resultsCount.textContent = `Showing ${filtered.length} of ${patients.length} patients`;
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div class="empty-state">
+            <i class="ph ph-user-circle-minus"></i>
+            <h3>No patients found</h3>
+            <p>Try adjusting your search or filter criteria.</p>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map((p, i) => `
+        <div class="patient-card" style="animation-delay: ${i * 0.06}s">
+          <div class="pc-top">
+            <div class="pc-profile">
+              <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(p.name)}&background=${p.avatarBg}&color=fff" alt="${p.name}">
+              <div class="pc-name">
+                <h3>${p.name}</h3>
+                <div class="pc-tags">
+                  <span class="tag-sm tag-gray">${p.age}Y</span>
+                  <span class="tag-sm tag-gray">${p.gender}</span>
+                </div>
+              </div>
+            </div>
+            ${getStatusTag(p.status)}
+          </div>
+          
+          <div class="patient-info-box">
+            <div class="info-section">
+              <span class="label">Diagnosis</span>
+              <span class="value">${p.diagnosis}</span>
+            </div>
+            <div class="info-section">
+              <span class="label">Treatment</span>
+              <span class="value">${p.treatment}</span>
+            </div>
+            <div class="info-section">
+              <span class="label">Symptoms</span>
+              <span class="value">${p.symptoms}</span>
+            </div>
+            <div class="info-section italic">
+              <span class="label">Notes</span>
+              <span class="value">${p.notes}</span>
+            </div>
+          </div>
+          
+          <div class="dr-card-actions">
+            <button class="btn btn-primary btn-full" onclick="window.location.href='doctor-risk-assessment.html'">
+              Readmission Risk Score <i class="ph ph-trend-up"></i>
+            </button>
+            <button class="btn btn-outline btn-full" onclick="window.location.href='doctor-treatment-rec.html'">
+              Chronic Treatment Recommendation
+            </button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    // ── Event Listeners ────────────────────────────────────────
+    searchInput.addEventListener("input", (e) => {
+      searchQuery = e.target.value.trim();
+      renderPatients();
+    });
+
+    sortSelect.addEventListener("change", (e) => {
+      sortMode = e.target.value;
+      renderPatients();
+    });
+
+    filterPills.forEach(pill => {
+      pill.addEventListener("click", () => {
+        filterPills.forEach(p => p.classList.remove("active"));
+        pill.classList.add("active");
+        activeFilter = pill.dataset.filter;
+        renderPatients();
+      });
+    });
+
+    // ── Init ───────────────────────────────────────────────────
+    updateCounts();
+    renderPatients();
+  </script>
 </body>
 </html>

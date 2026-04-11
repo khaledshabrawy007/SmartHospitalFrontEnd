@@ -7,6 +7,190 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    /* Focus and Hover states for inputs */
+    .input-outline {
+      transition: border-color 0.2s, box-shadow 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .input-outline:hover {
+      border-color: #cbd5e1;
+    }
+
+    .input-outline:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(10,111,86,0.08);
+      background-color: white;
+    }
+
+    .input-outline select,
+    .input-outline input {
+      cursor: text;
+      transition: color 0.2s;
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+    }
+    
+    .input-outline select {
+      cursor: pointer;
+    }
+
+    /* Validation error styles */
+    .input-outline.has-error {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.08) !important;
+    }
+
+    .field-error {
+      font-size: 0.72rem;
+      color: #ef4444;
+      font-weight: 600;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .field-error.show {
+      display: block;
+    }
+
+    /* Buttons */
+    .btn {
+      transition: all 0.2s;
+    }
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .btn-outline:hover:not(:disabled) {
+      background-color: #f8fafc;
+    }
+    .btn-primary:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+    
+    /* Outdated Data Warning Box */
+    .outdated-warning {
+      display: none;
+      background-color: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      border-radius: 4px;
+      color: #92400e;
+      font-size: 0.85rem;
+      font-weight: 500;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .outdated-warning.show {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Output Panels */
+    .output-panel {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+    .output-panel.show {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Loading Spinner */
+    .ai-loading {
+      text-align: center;
+      padding: 60px 24px;
+    }
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(10, 111, 86, 0.1);
+      border-top-color: var(--color-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px auto;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .awaiting-panel {
+      border: 1px dashed #cbd5e1;
+      border-radius: var(--radius-lg);
+      padding: 60px 24px;
+      text-align: center;
+      background: white;
+    }
+    .awaiting-panel i {
+      font-size: 2.5rem;
+      color: #94a3b8;
+      margin-bottom: 16px;
+    }
+    .awaiting-panel h4 {
+      font-size: 1.125rem;
+      color: var(--color-text-dark);
+      margin-bottom: 8px;
+    }
+    .awaiting-panel p {
+      color: var(--color-text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 300px;
+      max-width: 420px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+      border-left: 4px solid #0a6f56;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #0f172a;
+      transform: translateX(120%);
+      opacity: 0;
+      animation: toastIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+
+    .toast.toast-hide {
+      animation: toastOut 0.3s ease-in forwards;
+    }
+    .toast-icon { font-size: 1.3rem; color: #0a6f56; flex-shrink: 0; }
+
+    @keyframes toastIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+    @keyframes toastOut {
+      from { transform: translateX(0);    opacity: 1; }
+      to   { transform: translateX(120%); opacity: 0; }
+    }
+  </style>
 </head>
 <body>
 
@@ -65,165 +249,191 @@
               </div>
             </div>
             
-            <div class="form-grid-2" style="margin-bottom: 20px;">
-              <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label">Age</label>
-                <div class="input-outline">
-                  <input type="text" value="58">
+            <form id="vitalsForm">
+              <div class="form-grid-2" style="margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Age</label>
+                  <div class="input-outline">
+                    <input type="number" id="fAge" value="58" min="0" max="120" required>
+                  </div>
+                  <div class="field-error" id="errAge">Requires a valid age (0-120)</div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Gender</label>
+                  <div class="input-outline">
+                    <select id="fGender" required>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                    </select>
+                  </div>
+                  <div class="field-error" id="errGender">Required</div>
                 </div>
               </div>
-              <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label">Gender</label>
-                <div class="input-outline">
-                  <select><option>Male</option></select>
-                </div>
-              </div>
-            </div>
 
-            <div class="form-grid-2" style="margin-bottom: 20px;">
-              <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label">Blood Pressure</label>
-                <div class="input-outline">
-                  <input type="text" value="145/92">
+              <div class="form-grid-2" style="margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Blood Pressure (e.g. 120/80)</label>
+                  <div class="input-outline">
+                    <input type="text" id="fBp" value="145/92" required>
+                  </div>
+                  <div class="field-error" id="errBp">Format like 120/80</div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Sugar Level (mg/dL)</label>
+                  <div class="input-outline">
+                    <input type="number" id="fSugar" value="115" min="20" max="600" required>
+                  </div>
+                  <div class="field-error" id="errSugar">Valid range 20-600</div>
                 </div>
               </div>
-              <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label">Sugar Level</label>
-                <div class="input-outline">
-                  <input type="text" value="115">
-                </div>
-              </div>
-            </div>
 
-            <div class="form-grid-2" style="margin-bottom: 20px;">
-              <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label">Cholesterol</label>
-                <div class="input-outline">
-                  <input type="text" value="210">
+              <div class="form-grid-2" style="margin-bottom: 20px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Cholesterol (mg/dL)</label>
+                  <div class="input-outline">
+                    <input type="number" id="fCholesterol" value="210" min="50" max="500" required>
+                  </div>
+                  <div class="field-error" id="errCholesterol">Valid range 50-500</div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">BMI</label>
+                  <div class="input-outline">
+                    <input type="number" id="fBmi" value="28.4" step="0.1" min="10" max="80" required>
+                  </div>
+                  <div class="field-error" id="errBmi">Valid range 10-80</div>
                 </div>
               </div>
-              <div class="form-group" style="margin-bottom: 0;">
-                <label class="form-label">BMI</label>
+              
+              <div class="form-group" style="margin-bottom: 32px;">
+                <label class="form-label">Physical Activity Level</label>
                 <div class="input-outline">
-                  <input type="text" value="28.4">
+                  <select id="fActivity" required>
+                    <option value="Sedentary">Sedentary (Little to no exercise)</option>
+                    <option value="Lightly Active">Lightly Active</option>
+                    <option value="Moderately Active">Moderately Active</option>
+                    <option value="Very Active">Very Active</option>
+                  </select>
                 </div>
               </div>
-            </div>
-            
-            <div class="form-group" style="margin-bottom: 32px;">
-              <label class="form-label">Physical Activity Level</label>
-              <div class="input-outline">
-                <select><option>Sedentary (Little to no exercise)</option></select>
+              
+              <div class="switch-bg-row">
+                <div class="s-label">
+                  <i class="ph-fill ph-cigarette-slash" style="color:var(--color-text-muted); font-size:1.25rem;"></i> Smoking Status
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="fSmoking">
+                  <span class="slider"></span>
+                </label>
               </div>
-            </div>
-            
-            <div class="switch-bg-row">
-              <div class="s-label">
-                <i class="ph-fill ph-cigarette-slash" style="color:var(--color-text-muted); font-size:1.25rem;"></i> Smoking Status
+              
+              <div class="switch-bg-row" style="margin-bottom: 32px;">
+                <div class="s-label">
+                  <i class="ph-fill ph-git-branch" style="color:var(--color-text-dark); font-size:1.25rem;"></i> Family History (Chronic)
+                </div>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="fFamily" checked>
+                  <span class="slider"></span>
+                </label>
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox">
-                <span class="slider"></span>
-              </label>
-            </div>
-            
-            <div class="switch-bg-row" style="margin-bottom: 32px;">
-              <div class="s-label">
-                <i class="ph-fill ph-git-branch" style="color:var(--color-text-dark); font-size:1.25rem;"></i> Family History
+              
+              <div style="display:flex; gap: 16px;">
+                <button type="button" class="btn btn-outline" id="btnReset" style="width: 30%;">
+                  Reset Form
+                </button>
+                <button type="button" class="btn btn-primary" id="btnGenerate" style="flex: 1;">
+                  <i class="ph-fill ph-brain"></i> Generate Recommendation
+                </button>
               </div>
-              <label class="toggle-switch">
-                <input type="checkbox" checked>
-                <span class="slider"></span>
-              </label>
-            </div>
-            
-            <button class="btn btn-primary btn-full">
-              <i class="ph-fill ph-brain"></i> Generate Recommendation
-            </button>
+            </form>
           </div>
         </div>
 
         <!-- Right Column: Outputs -->
         <div>
-          <div class="treatment-grid-wrapper" style="margin-bottom:24px;">
-            <div class="treat-card tc-center">
-              <div class="tc-icon-lg">
-                <i class="ph-fill ph-first-aid-kit"></i>
-              </div>
-              <div class="tc-subtitle">PREDICTED DISEASE</div>
-              <h3 style="font-size:1.25rem; font-weight:700;">Hypertension<br>Type II</h3>
-              <div class="confidence-text">94% CONFIDENCE</div>
+          <!-- Outdated Data Warning -->
+          <div class="outdated-warning" id="outdatedWarning">
+            <i class="ph-fill ph-warning-circle" style="font-size: 1.25rem;"></i>
+            Data changed. Regenerate recommendation for updated results.
+          </div>
+
+          <!-- Awaiting State -->
+          <div id="panelAwaiting" class="output-panel show awaiting-panel">
+            <i class="ph-fill ph-flask"></i>
+            <h4>Ready to Analyze</h4>
+            <p>Fill the patient form and generate a neural-network powered protocol.</p>
+          </div>
+
+          <!-- Loading State -->
+          <div id="panelLoading" class="output-panel">
+            <div class="group-box ai-loading" style="background: white;">
+              <div class="loading-spinner"></div>
+              <h4 style="color: var(--color-primary); margin-bottom: 8px;">Processing Vitals...</h4>
+              <p style="color: var(--color-text-muted); font-size: 0.9rem;">Evaluating parameters against global medical databanks</p>
             </div>
-            
-            <div class="treat-card" style="display:flex; flex-direction:column; justify-content:center;">
-              <div class="tc-header-split">
-                <h3>Recommended<br>Medication</h3>
-                <span class="first-line-pill">First-line<br>Defense</span>
+          </div>
+
+          <!-- Result State -->
+          <div id="panelResult" class="output-panel">
+            <div class="treatment-grid-wrapper" style="margin-bottom:24px;">
+              <div class="treat-card tc-center">
+                <div class="tc-icon-lg">
+                  <i class="ph-fill ph-first-aid-kit"></i>
+                </div>
+                <div class="tc-subtitle">PREDICTED DISEASE</div>
+                <h3 id="resDiseaseTitle" style="font-size:1.25rem; font-weight:700;">Hypertension<br>Type II</h3>
+                <div class="confidence-text" id="resConfidence">94% CONFIDENCE</div>
               </div>
               
-              <div class="med-card">
-                <div class="med-icon">
-                  <i class="ph-fill ph-pill"></i>
+              <div class="treat-card" style="display:flex; flex-direction:column; justify-content:center;">
+                <div class="tc-header-split">
+                  <h3>Recommended<br>Medication</h3>
+                  <span class="first-line-pill">First-line<br>Defense</span>
                 </div>
-                <div>
-                  <h4>Lisinopril 10mg</h4>
-                  <p>Take once daily in the morning with food. Monitor BP bi-weekly for initial 14-day titration period.</p>
+                
+                <div class="med-card">
+                  <div class="med-icon">
+                    <i class="ph-fill ph-pill"></i>
+                  </div>
+                  <div>
+                    <h4 id="resMedName">Lisinopril 10mg</h4>
+                    <p id="resMedDesc">Take once daily in the morning with food. Monitor BP bi-weekly for initial 14-day titration period.</p>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          
-          <div class="treatment-grid-wrapper" style="margin-bottom:24px;">
-            <div class="treat-card">
-              <h4 style="font-size:1.05rem; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-                <i class="ph-fill ph-arrows-left-right" style="color:var(--color-text-muted);"></i> Alternative Medication
-              </h4>
-              <div class="alt-row">
-                <div class="alt-info">
-                  <h5>Amlodipine Besylate</h5>
-                  <p>Calcium Channel Blocker</p>
+            
+            <div class="treatment-grid-wrapper" style="margin-bottom:24px;">
+              <div class="treat-card">
+                <h4 style="font-size:1.05rem; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                  <i class="ph-fill ph-arrows-left-right" style="color:var(--color-text-muted);"></i> Alternative Medication
+                </h4>
+                <div id="resAltMeds">
+                  <!-- dynamically populated -->
                 </div>
-                <i class="ph ph-caret-right" style="color:var(--color-text-muted);"></i>
               </div>
-              <div class="alt-row">
-                <div class="alt-info">
-                  <h5>Hydrochlorothiazide</h5>
-                  <p>Diuretic / Water Pill</p>
+              
+              <div class="treat-card">
+                <h4 style="font-size:1.05rem; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:16px;">
+                  <i class="ph-fill ph-person-simple-walk" style="color:var(--color-text-muted);"></i> Lifestyle Advice
+                </h4>
+                <div id="resLifestyle">
+                  <!-- dynamically populated -->
                 </div>
-                <i class="ph ph-caret-right" style="color:var(--color-text-muted);"></i>
               </div>
             </div>
             
             <div class="treat-card">
-              <h4 style="font-size:1.05rem; font-weight:700; display:flex; align-items:center; gap:8px; margin-bottom:16px;">
-                <i class="ph-fill ph-person-simple-walk" style="color:var(--color-text-muted);"></i> Lifestyle Advice
+              <h4 style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-primary); font-weight:700; margin-bottom:16px;">
+                Clinician Narrative
               </h4>
-              <div class="life-item">
-                <i class="ph-fill ph-check-circle"></i>
-                <p>Reduce sodium intake to < 2,300 mg per day.</p>
+              <div class="narrative-block" id="resNarrative">
+                "The patient presents with compounding risk factors."
               </div>
-              <div class="life-item">
-                <i class="ph-fill ph-check-circle"></i>
-                <p>Engage in 150 min of moderate aerobic activity weekly.</p>
-              </div>
-              <div class="life-item">
-                <i class="ph-fill ph-check-circle"></i>
-                <p>DASH diet (Dietary Approaches to Stop Hypertension).</p>
-              </div>
+              
+              <button class="btn btn-primary" id="btnFinalize" style="padding:12px 24px;">
+                <i class="ph-fill ph-clipboard-text"></i> Finalize Protocol
+              </button>
             </div>
-          </div>
-          
-          <div class="treat-card">
-            <h4 style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-primary); font-weight:700; margin-bottom:16px;">
-              Clinician Narrative
-            </h4>
-            <div class="narrative-block">
-              "The patient presents with compounding risk factors (BMI 28.4 and sedentary habits). Given the BP of 145/92, Lisinopril is the optimal starting point. If BP doesn't stabilize in 3 weeks, consider combining with a low-dose diuretic."
-            </div>
-            
-            <button class="btn btn-primary" style="padding:12px 24px;">
-              <i class="ph-fill ph-clipboard-text"></i> Finalize Protocol
-            </button>
           </div>
         </div>
       </div>
@@ -231,6 +441,245 @@
     </div>
   </div>
 
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
   <script src="auth-session.js"></script>
+  <script>
+    // Elements
+    const form = document.getElementById('vitalsForm');
+    const inputs = form.querySelectorAll('input, select');
+    const btnGenerate = document.getElementById('btnGenerate');
+    const btnReset = document.getElementById('btnReset');
+    const btnFinalize = document.getElementById('btnFinalize');
+    
+    // Panels
+    const outdatedWarning = document.getElementById('outdatedWarning');
+    const panelAwaiting = document.getElementById('panelAwaiting');
+    const panelLoading = document.getElementById('panelLoading');
+    const panelResult = document.getElementById('panelResult');
+    
+    // Result fields
+    const resDiseaseTitle = document.getElementById('resDiseaseTitle');
+    const resConfidence = document.getElementById('resConfidence');
+    const resMedName = document.getElementById('resMedName');
+    const resMedDesc = document.getElementById('resMedDesc');
+    const resAltMeds = document.getElementById('resAltMeds');
+    const resLifestyle = document.getElementById('resLifestyle');
+    const resNarrative = document.getElementById('resNarrative');
+
+    let state = {
+      isGenerated: false,
+      inputsChangedAfterGen: false
+    };
+
+    // Show Toast
+    function showToast(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<i class="ph-fill ph-check-circle toast-icon"></i> <span>${message}</span>`;
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.classList.add('toast-hide');
+        setTimeout(() => toast.remove(), 350);
+      }, 3000);
+    }
+
+    // Input Validation
+    function clearErrors() {
+      inputs.forEach(input => {
+        const wrap = input.closest('.input-outline');
+        if(wrap) wrap.classList.remove('has-error');
+      });
+      document.querySelectorAll('.field-error').forEach(e => e.classList.remove('show'));
+    }
+
+    function checkFormValidity() {
+      clearErrors();
+      let isValid = true;
+      
+      const vAge = document.getElementById('fAge').value;
+      if (!vAge || vAge < 0 || vAge > 120) {
+        document.getElementById('fAge').closest('.input-outline').classList.add('has-error');
+        document.getElementById('errAge').classList.add('show');
+        isValid = false;
+      }
+      
+      const vBp = document.getElementById('fBp').value;
+      if (!/^\d{2,3}\/\d{2,3}$/.test(vBp)) {
+        document.getElementById('fBp').closest('.input-outline').classList.add('has-error');
+        document.getElementById('errBp').classList.add('show');
+        isValid = false;
+      }
+      
+      const vSugar = document.getElementById('fSugar').value;
+      if (!vSugar || vSugar < 20 || vSugar > 600) {
+        document.getElementById('fSugar').closest('.input-outline').classList.add('has-error');
+        document.getElementById('errSugar').classList.add('show');
+        isValid = false;
+      }
+      
+      const vChol = document.getElementById('fCholesterol').value;
+      if (!vChol || vChol < 50 || vChol > 500) {
+        document.getElementById('fCholesterol').closest('.input-outline').classList.add('has-error');
+        document.getElementById('errCholesterol').classList.add('show');
+        isValid = false;
+      }
+
+      const vBmi = document.getElementById('fBmi').value;
+      if (!vBmi || vBmi < 10 || vBmi > 80) {
+        document.getElementById('fBmi').closest('.input-outline').classList.add('has-error');
+        document.getElementById('errBmi').classList.add('show');
+        isValid = false;
+      }
+      
+      btnGenerate.disabled = !isValid;
+      return isValid;
+    }
+
+    // Track input changes
+    inputs.forEach(input => {
+      input.addEventListener('input', () => {
+        checkFormValidity();
+        
+        if (state.isGenerated) {
+          state.inputsChangedAfterGen = true;
+          outdatedWarning.classList.add('show');
+        }
+      });
+    });
+
+    // Mock AI generator logic
+    function getMockRecommendation() {
+      const isHighSugar = document.getElementById('fSugar').value > 125;
+      const bpParts = document.getElementById('fBp').value.split('/');
+      const isHighBp = parseInt(bpParts[0]) > 130 || parseInt(bpParts[1]) > 80;
+      
+      let diseaseHtml = `Hypertension<br>Type II`;
+      let confidence = `94% CONFIDENCE`;
+      let medName = `Lisinopril 10mg`;
+      let medDesc = `Take once daily in the morning with food. Monitor BP bi-weekly for initial 14-day titration period.`;
+      
+      let alts = [
+        { name: "Amlodipine Besylate", desc: "Calcium Channel Blocker" },
+        { name: "Hydrochlorothiazide", desc: "Diuretic / Water Pill" }
+      ];
+      
+      let lstyles = [
+        "Reduce sodium intake to < 2,300 mg per day.",
+        "Engage in 150 min of moderate aerobic activity weekly.",
+        "DASH diet (Dietary Approaches to Stop Hypertension)."
+      ];
+
+      let narrative = `"The patient presents with compounding risk factors. Given the BP readings, Lisinopril is the optimal starting point. If BP doesn't stabilize in 3 weeks, consider combining with a low-dose diuretic."`;
+
+      // Variation based on input values!
+      if (isHighSugar && !isHighBp) {
+        diseaseHtml = `Type 2<br>Diabetes`;
+        confidence = `91% CONFIDENCE`;
+        medName = `Metformin 500mg`;
+        medDesc = `Take twice daily with meals. Monitor HbA1c closely over next 3 months.`;
+        alts = [ { name: "Glipizide", desc: "Sulfonylurea" }, { name: "Sitagliptin", desc: "DPP-4 Inhibitor" } ];
+        lstyles = [
+          "Maintain carbohydrate-consistent diet regimen.",
+          "Check blood glucose levels fasting and 2 hours post-meal.",
+          "Daily aerobic exercise for 30 minutes."
+        ];
+        narrative = `"Due to elevated blood glucose indicating uncontrolled diabetes, Metformin is recommended as the first-line medication alongside strict lifestyle interventions."`;
+      } else if (isHighSugar && isHighBp) {
+        diseaseHtml = `Metabolic<br>Syndrome`;
+        confidence = `88% CONFIDENCE`;
+        medName = `Metformin & Lisinopril`;
+        medDesc = `Begin dual-therapy. Metformin 500mg BID and Lisinopril 10mg QD.`;
+        narrative = `"Patient exhibits elevated BP and blood glucose simultaneously. Early intervention on both fronts is required to mitigate cardiovascular risk."`;
+      }
+
+      return { diseaseHtml, confidence, medName, medDesc, alts, lstyles, narrative };
+    }
+
+    // Generate Button
+    btnGenerate.addEventListener('click', () => {
+      if (!checkFormValidity()) return;
+      
+      outdatedWarning.classList.remove('show');
+      panelAwaiting.classList.remove('show');
+      panelResult.classList.remove('show');
+      panelLoading.classList.add('show');
+      
+      btnGenerate.disabled = true;
+
+      // Simulate API Response delay
+      setTimeout(() => {
+        const data = getMockRecommendation();
+        
+        resDiseaseTitle.innerHTML = data.diseaseHtml;
+        resConfidence.textContent = data.confidence;
+        resMedName.textContent = data.medName;
+        resMedDesc.textContent = data.medDesc;
+        
+        resAltMeds.innerHTML = data.alts.map(a => `
+          <div class="alt-row">
+            <div class="alt-info">
+              <h5>${a.name}</h5>
+              <p>${a.desc}</p>
+            </div>
+            <i class="ph ph-caret-right" style="color:var(--color-text-muted);"></i>
+          </div>
+        `).join('');
+        
+        resLifestyle.innerHTML = data.lstyles.map(l => `
+          <div class="life-item">
+            <i class="ph-fill ph-check-circle"></i>
+            <p>${l}</p>
+          </div>
+        `).join('');
+
+        resNarrative.textContent = data.narrative;
+        
+        panelLoading.classList.remove('show');
+        panelResult.classList.add('show');
+        
+        state.isGenerated = true;
+        state.inputsChangedAfterGen = false;
+        btnGenerate.disabled = false;
+        
+      }, 1500);
+    });
+
+    // Reset Form
+    btnReset.addEventListener('click', () => {
+      form.reset();
+      clearErrors();
+      outdatedWarning.classList.remove('show');
+      panelResult.classList.remove('show');
+      panelLoading.classList.remove('show');
+      panelAwaiting.classList.add('show');
+      state.isGenerated = false;
+      state.inputsChangedAfterGen = false;
+      checkFormValidity();
+    });
+
+    // Finalize Protocol
+    btnFinalize.addEventListener('click', () => {
+      // Mock Saving to LocalStorage
+      const protocol = {
+        patientId: 'mock-pt-001',
+        date: new Date().toISOString(),
+        disease: document.getElementById('resDiseaseTitle').innerText.replace('\n', ' '),
+        primaryMed: document.getElementById('resMedName').textContent
+      };
+      
+      let saved = JSON.parse(localStorage.getItem('smartHospital_Protocols') || '[]');
+      saved.push(protocol);
+      localStorage.setItem('smartHospital_Protocols', JSON.stringify(saved));
+      
+      showToast('Treatment Protocol Finalized & Saved');
+    });
+
+    // Initial check
+    checkFormValidity();
+  </script>
 </body>
 </html>

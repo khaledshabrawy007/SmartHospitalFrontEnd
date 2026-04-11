@@ -26,6 +26,130 @@
       box-shadow: 0 0 0 3px rgba(10, 111, 86, 0.1);
       outline: none;
     }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 320px;
+      max-width: 440px;
+      padding: 16px 20px;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+      border-left: 4px solid #0a6f56;
+      color: #0f172a;
+      font-size: 0.93rem;
+      font-weight: 500;
+      transform: translateX(120%);
+      opacity: 0;
+      animation: toastSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .toast.toast-hide {
+      animation: toastSlideOut 0.35s cubic-bezier(0.55, 0, 1, 0.45) forwards;
+    }
+
+    .toast.toast-success { border-left-color: #0a6f56; }
+    .toast.toast-error   { border-left-color: #dc2626; }
+    .toast.toast-warning { border-left-color: #f59e0b; }
+
+    .toast-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+    }
+
+    .toast-success .toast-icon { background: rgba(10,111,86,0.1); color: #0a6f56; }
+    .toast-error   .toast-icon { background: rgba(220,38,38,0.1); color: #dc2626; }
+    .toast-warning .toast-icon { background: rgba(245,158,11,0.1); color: #f59e0b; }
+
+    .toast-body {
+      flex: 1;
+    }
+
+    .toast-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 2px;
+    }
+
+    .toast-msg {
+      font-weight: 400;
+      color: #64748b;
+      font-size: 0.88rem;
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 1.2rem;
+      padding: 4px;
+      border-radius: 6px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+    }
+
+    .toast-close:hover {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .toast-progress {
+      position: absolute;
+      bottom: 0;
+      left: 4px;
+      right: 0;
+      height: 3px;
+      border-radius: 0 0 12px 0;
+      overflow: hidden;
+    }
+
+    .toast-progress-bar {
+      height: 100%;
+      border-radius: 3px;
+      animation: toastProgress 4s linear forwards;
+    }
+
+    .toast-success .toast-progress-bar { background: #0a6f56; }
+    .toast-error   .toast-progress-bar { background: #dc2626; }
+    .toast-warning .toast-progress-bar { background: #f59e0b; }
+
+    @keyframes toastSlideIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+
+    @keyframes toastSlideOut {
+      from { transform: translateX(0);    opacity: 1; }
+      to   { transform: translateX(120%); opacity: 0; }
+    }
+
+    @keyframes toastProgress {
+      from { width: 100%; }
+      to   { width: 0%; }
+    }
   </style>
 </head>
 <body>
@@ -187,6 +311,9 @@
     </div>
   </div>
 
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
   <!-- Global Support Modal -->
   <div class="modal-overlay" id="globalSupportModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
     <div class="modal-container" style="max-width: 400px; text-align: center;">
@@ -209,6 +336,50 @@
 
   <script src="auth-session.js"></script>
   <script>
+    // --- Toast notification system ---
+    function showToast(message, type = 'success', title) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+
+      const icons = {
+        success: 'ph-fill ph-check-circle',
+        error:   'ph-fill ph-x-circle',
+        warning: 'ph-fill ph-warning'
+      };
+      const titles = {
+        success: title || 'Success',
+        error:   title || 'Error',
+        warning: title || 'Warning'
+      };
+
+      toast.innerHTML = `
+        <div class="toast-icon"><i class="${icons[type]}"></i></div>
+        <div class="toast-body">
+          <div class="toast-title">${titles[type]}</div>
+          <div class="toast-msg">${message}</div>
+        </div>
+        <button class="toast-close" onclick="dismissToast(this)"><i class="ph ph-x"></i></button>
+        <div class="toast-progress"><div class="toast-progress-bar"></div></div>
+      `;
+
+      container.appendChild(toast);
+
+      // Auto-dismiss after 4s
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.classList.add('toast-hide');
+          setTimeout(() => toast.remove(), 400);
+        }
+      }, 4000);
+    }
+
+    function dismissToast(btn) {
+      const toast = btn.closest('.toast');
+      toast.classList.add('toast-hide');
+      setTimeout(() => toast.remove(), 400);
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       const currentUserData = localStorage.getItem("currentUser");
       let user = {};
@@ -253,8 +424,15 @@
         
         localStorage.setItem("currentUser", JSON.stringify(user));
         saveProfileBtn.setAttribute('disabled', 'true');
-        alert("Profile successfully updated!");
-        window.location.reload();
+        showToast('Your profile information has been saved.', 'success', 'Profile Updated');
+
+        // Update sidebar and avatar to reflect new name
+        const nameEls = document.querySelectorAll('.user-profile-sm .name');
+        nameEls.forEach(el => el.textContent = user.fullName);
+        const avatarImgs = document.querySelectorAll('.user-profile-sm img, #profileAvatarImg');
+        avatarImgs.forEach(img => {
+          img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=0f172a&color=fff`;
+        });
       });
 
       // Password Logic securely client-side simulated
@@ -265,18 +443,18 @@
          const currPwd = document.getElementById('currentPwd').value;
          
          if (!currPwd) {
-             alert("Current password is required to make security changes.");
+             showToast('Current password is required to make security changes.', 'warning', 'Missing Field');
              return;
          }
          if (newPwd !== confPwd) {
-            alert("New passwords do not match. Please verify.");
+            showToast('New passwords do not match. Please verify.', 'error', 'Mismatch');
             return;
          }
          if (newPwd.length > 0 && newPwd.length < 8) {
-            alert("Password must be at least 8 characters.");
+            showToast('Password must be at least 8 characters.', 'error', 'Too Short');
             return;
          }
-         alert("Security settings updated successfully! (Action simulated locally)");
+         showToast('Security settings updated successfully!', 'success', 'Security Updated');
          document.getElementById('currentPwd').value = '';
          document.getElementById('newPwd').value = '';
          document.getElementById('confirmPwd').value = '';

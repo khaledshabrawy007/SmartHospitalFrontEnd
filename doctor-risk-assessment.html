@@ -7,6 +7,278 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    /* Enhanced input focus/hover states */
+    .input-outline {
+      transition: border-color 0.2s, box-shadow 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .input-outline:hover {
+      border-color: #cbd5e1;
+    }
+
+    .input-outline:focus-within {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(10,111,86,0.08);
+      background-color: white;
+    }
+
+    .input-outline select,
+    .input-outline input {
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .input-outline select:focus,
+    .input-outline input:focus {
+      outline: none;
+    }
+
+    .toggle-btn {
+      transition: all 0.2s;
+    }
+
+    .toggle-btn:hover:not(.active) {
+      color: var(--color-text-dark);
+      background-color: rgba(0,0,0,0.02);
+    }
+
+    /* Validation error styles */
+    .input-outline.has-error {
+      border-color: #ef4444 !important;
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.08) !important;
+    }
+
+    .field-error {
+      font-size: 0.72rem;
+      color: #ef4444;
+      font-weight: 600;
+      margin-top: 4px;
+      display: none;
+    }
+
+    .field-error.show {
+      display: block;
+    }
+
+    /* Total diagnoses counter */
+    .diag-counter {
+      background: white;
+      padding: 4px 16px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      min-width: 24px;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    /* AI Output panel states */
+    .ai-result {
+      display: none;
+    }
+
+    .ai-result.show {
+      display: block;
+      animation: resultFadeIn 0.5s ease;
+    }
+
+    @keyframes resultFadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .ai-risk-score {
+      text-align: center;
+      padding: 32px 24px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+    }
+
+    .risk-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 12px;
+    }
+
+    .risk-percentage {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .risk-percentage.low { color: #34d399; }
+    .risk-percentage.moderate { color: #fbbf24; }
+    .risk-percentage.high { color: #f87171; }
+
+    .risk-level-badge {
+      display: inline-block;
+      padding: 6px 20px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .risk-level-badge.low {
+      background: rgba(52,211,153,0.15);
+      color: #34d399;
+    }
+    .risk-level-badge.moderate {
+      background: rgba(251,191,36,0.15);
+      color: #fbbf24;
+    }
+    .risk-level-badge.high {
+      background: rgba(248,113,113,0.15);
+      color: #f87171;
+    }
+
+    .ai-factors {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .ai-factor-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.04);
+      border-radius: var(--radius-md);
+      font-size: 0.85rem;
+    }
+
+    .ai-factor-row .factor-name {
+      color: rgba(255,255,255,0.7);
+      font-weight: 500;
+    }
+
+    .ai-factor-row .factor-value {
+      font-weight: 700;
+    }
+
+    .ai-factor-row .factor-value.increase { color: #f87171; }
+    .ai-factor-row .factor-value.decrease { color: #34d399; }
+    .ai-factor-row .factor-value.neutral  { color: #94a3b8; }
+
+    .ai-confidence {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.4);
+      font-weight: 600;
+    }
+
+    .ai-confidence span {
+      color: var(--color-primary-light);
+      font-weight: 700;
+    }
+
+    /* Loading animation */
+    .ai-loading {
+      display: none;
+      text-align: center;
+      padding: 60px 24px;
+    }
+
+    .ai-loading.show {
+      display: block;
+    }
+
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(255,255,255,0.1);
+      border-top-color: var(--color-primary-light);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 20px auto;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .ai-loading h4 {
+      color: var(--color-primary-light);
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .ai-loading p {
+      color: rgba(255,255,255,0.5);
+      font-size: 0.82rem;
+    }
+
+    /* Button enhancements */
+    .btn-outline:hover {
+      background-color: #f8fafc;
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    /* Toast */
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 300px;
+      max-width: 420px;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+      border-left: 4px solid #0a6f56;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #0f172a;
+      transform: translateX(120%);
+      opacity: 0;
+      animation: toastIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+
+    .toast.error-toast { border-left-color: #ef4444; }
+
+    .toast.toast-hide {
+      animation: toastOut 0.3s ease-in forwards;
+    }
+
+    .toast-icon { font-size: 1.3rem; color: #0a6f56; flex-shrink: 0; }
+    .error-toast .toast-icon { color: #ef4444; }
+
+    @keyframes toastIn {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+
+    @keyframes toastOut {
+      from { transform: translateX(0);    opacity: 1; }
+      to   { transform: translateX(120%); opacity: 0; }
+    }
+  </style>
 </head>
 <body>
 
@@ -65,21 +337,30 @@
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label">Race</label>
                 <div class="input-outline">
-                  <select><option>Caucasian</option></select>
+                  <select id="fRace">
+                    <option value="">Select...</option>
+                    <option value="Caucasian">Caucasian</option>
+                    <option value="AfricanAmerican">African American</option>
+                    <option value="Asian">Asian</option>
+                    <option value="Hispanic">Hispanic</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
+                <div class="field-error" id="errRace">Required</div>
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label">Gender</label>
-                <div class="toggle-group">
-                  <div class="toggle-btn active">Male</div>
-                  <div class="toggle-btn">Female</div>
+                <div class="toggle-group" id="genderToggle">
+                  <div class="toggle-btn active" data-value="Male">Male</div>
+                  <div class="toggle-btn" data-value="Female">Female</div>
                 </div>
               </div>
               <div class="form-group" style="margin-bottom:0;">
-                <label class="form-label">Age Bracket</label>
-                <div class="input-outline">
-                  <select><option>[0-10)</option></select>
+                <label class="form-label">Age</label>
+                <div class="input-outline" id="wrapAge">
+                  <input type="number" id="fAge" placeholder="e.g. 65" min="0" max="120">
                 </div>
+                <div class="field-error" id="errAge">Enter a valid age (0-120)</div>
               </div>
             </div>
           </div>
@@ -93,26 +374,52 @@
               <div class="form-group">
                 <label class="form-label">Admission Type</label>
                 <div class="input-outline">
-                  <select><option>Emergency</option></select>
+                  <select id="fAdmType">
+                    <option value="">Select...</option>
+                    <option value="Emergency">Emergency</option>
+                    <option value="Urgent">Urgent</option>
+                    <option value="Elective">Elective</option>
+                    <option value="Newborn">Newborn</option>
+                    <option value="Trauma">Trauma Center</option>
+                  </select>
                 </div>
+                <div class="field-error" id="errAdmType">Required</div>
               </div>
               <div class="form-group">
                 <label class="form-label">Discharge Disposition</label>
                 <div class="input-outline">
-                  <select><option>Discharged to home</option></select>
+                  <select id="fDischarge">
+                    <option value="">Select...</option>
+                    <option value="Home">Discharged to home</option>
+                    <option value="SNF">Short-term hospital → SNF</option>
+                    <option value="Rehab">Transferred to rehab</option>
+                    <option value="HomeHealth">Home with health service</option>
+                    <option value="AMA">Left against medical advice</option>
+                    <option value="Other">Other / Expired</option>
+                  </select>
                 </div>
+                <div class="field-error" id="errDischarge">Required</div>
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label">Admission Source</label>
                 <div class="input-outline">
-                  <select><option>Emergency Room</option></select>
+                  <select id="fAdmSource">
+                    <option value="">Select...</option>
+                    <option value="ER">Emergency Room</option>
+                    <option value="Referral">Physician Referral</option>
+                    <option value="Transfer">Transfer from another facility</option>
+                    <option value="Clinic">Clinic Referral</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
+                <div class="field-error" id="errAdmSource">Required</div>
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label">Time in Hospital (Days)</label>
-                <div class="input-outline">
-                  <input type="text" placeholder="e.g. 5">
+                <div class="input-outline" id="wrapHospDays">
+                  <input type="number" id="fHospDays" placeholder="e.g. 5" min="1" max="30">
                 </div>
+                <div class="field-error" id="errHospDays">Enter a valid number (1-30)</div>
               </div>
             </div>
           </div>
@@ -126,15 +433,15 @@
               
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <span class="text-sm"># Lab Procedures</span>
-                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="text" value="0" class="input-num"></div>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fLabs" value="0" min="0" max="99" class="input-num"></div>
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <span class="text-sm"># Procedures</span>
-                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="text" value="0" class="input-num"></div>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fProcs" value="0" min="0" max="99" class="input-num"></div>
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span class="text-sm"># Medications</span>
-                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="text" value="0" class="input-num"></div>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fMeds" value="0" min="0" max="99" class="input-num"></div>
               </div>
             </div>
 
@@ -146,15 +453,15 @@
               
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <span class="text-sm"># Outpatient</span>
-                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="text" value="0" class="input-num"></div>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fOutpatient" value="0" min="0" max="99" class="input-num"></div>
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <span class="text-sm"># Emergency</span>
-                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="text" value="0" class="input-num"></div>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fEmergency" value="0" min="0" max="99" class="input-num"></div>
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span class="text-sm"># Inpatient</span>
-                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="text" value="0" class="input-num"></div>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fInpatient" value="0" min="0" max="99" class="input-num"></div>
               </div>
             </div>
           </div>
@@ -167,20 +474,43 @@
             
             <div class="input-outline" style="align-items:center; justify-content:space-between; margin-bottom:20px; font-weight:600; font-size:0.85rem;">
               <span>Total Number of Diagnoses</span>
-              <div style="background:white; padding:4px 16px; border-radius:4px;">1</div>
+              <div style="width:60px;"><input type="number" id="fDiagCount" value="1" min="0" max="20" class="input-num" style="text-align:center; font-weight:700;"></div>
             </div>
             
             <div class="form-grid-2">
               <div class="form-group">
                 <label class="form-label">Primary Group</label>
                 <div class="input-outline">
-                  <select><option>Circulatory</option></select>
+                  <select id="fDiag1">
+                    <option value="">Select...</option>
+                    <option value="Circulatory">Circulatory</option>
+                    <option value="Respiratory">Respiratory</option>
+                    <option value="Digestive">Digestive</option>
+                    <option value="Diabetes">Diabetes</option>
+                    <option value="Injury">Injury / Poisoning</option>
+                    <option value="Musculoskeletal">Musculoskeletal</option>
+                    <option value="Genitourinary">Genitourinary</option>
+                    <option value="Neoplasms">Neoplasms</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
+                <div class="field-error" id="errDiag1">Required</div>
               </div>
               <div class="form-group">
                 <label class="form-label">Secondary Group</label>
                 <div class="input-outline">
-                  <select><option>None</option></select>
+                  <select id="fDiag2">
+                    <option value="">None</option>
+                    <option value="Circulatory">Circulatory</option>
+                    <option value="Respiratory">Respiratory</option>
+                    <option value="Digestive">Digestive</option>
+                    <option value="Diabetes">Diabetes</option>
+                    <option value="Injury">Injury / Poisoning</option>
+                    <option value="Musculoskeletal">Musculoskeletal</option>
+                    <option value="Genitourinary">Genitourinary</option>
+                    <option value="Neoplasms">Neoplasms</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -188,14 +518,25 @@
             <div class="form-group" style="margin-bottom:0;">
               <label class="form-label">Tertiary Group</label>
               <div class="input-outline">
-                <select><option>None</option></select>
+                <select id="fDiag3">
+                  <option value="">None</option>
+                  <option value="Circulatory">Circulatory</option>
+                  <option value="Respiratory">Respiratory</option>
+                  <option value="Digestive">Digestive</option>
+                  <option value="Diabetes">Diabetes</option>
+                  <option value="Injury">Injury / Poisoning</option>
+                  <option value="Musculoskeletal">Musculoskeletal</option>
+                  <option value="Genitourinary">Genitourinary</option>
+                  <option value="Neoplasms">Neoplasms</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
             </div>
           </div>
           
           <div style="display:flex; justify-content:center; gap:24px; margin-top:40px; margin-bottom:40px;">
-            <button class="btn btn-outline" style="width:200px;">Reset Form</button>
-            <button class="btn btn-primary" style="width:200px;">
+            <button class="btn btn-outline" style="width:200px;" id="resetBtn">Reset Form</button>
+            <button class="btn btn-primary" style="width:200px;" id="runBtn">
               <i class="ph-fill ph-lightning"></i> Run AI Prediction
             </button>
           </div>
@@ -209,15 +550,34 @@
               <i class="ph-fill ph-sparkle"></i> AI Diagnostic Output
             </div>
             
-            <div class="dashed-awaiting">
-              <i class="ph-fill ph-chart-bar"></i>
-              <h4>Awaiting Data Entry</h4>
-              <p>Submit the clinical assessment form to generate a 30-day readmission risk score.</p>
+            <!-- Awaiting state -->
+            <div id="aiAwaiting">
+              <div class="dashed-awaiting">
+                <i class="ph-fill ph-chart-bar"></i>
+                <h4>Awaiting Data Entry</h4>
+                <p>Submit the clinical assessment form to generate a 30-day readmission risk score.</p>
+              </div>
+              
+              <div style="display:flex; justify-content:space-between; margin-top:24px; padding:0 12px;">
+                <div style="height:40px; width:45%; background:rgba(255,255,255,0.05); border-radius:var(--radius-md);"></div>
+                <div style="height:40px; width:45%; background:rgba(255,255,255,0.05); border-radius:var(--radius-md);"></div>
+              </div>
             </div>
-            
-            <div style="display:flex; justify-content:space-between; margin-top:24px; padding:0 12px;">
-              <div style="height:40px; width:45%; background:rgba(255,255,255,0.05); border-radius:var(--radius-md);"></div>
-              <div style="height:40px; width:45%; background:rgba(255,255,255,0.05); border-radius:var(--radius-md);"></div>
+
+            <!-- Loading state -->
+            <div class="ai-loading" id="aiLoading">
+              <div class="loading-spinner"></div>
+              <h4>Analyzing Clinical Data</h4>
+              <p>Running model inference across 47 parameters...</p>
+            </div>
+
+            <!-- Result state -->
+            <div class="ai-result" id="aiResult">
+              <div class="ai-risk-score">
+                <div class="risk-label">30-Day Readmission Risk</div>
+                <div class="risk-percentage" id="riskPct">—</div>
+                <div><span class="risk-level-badge" id="riskBadge">—</span></div>
+              </div>
             </div>
           </div>
         </div>
@@ -226,6 +586,270 @@
     </div>
   </div>
 
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
   <script src="auth-session.js"></script>
+  <script>
+    // ── DOM Refs ────────────────────────────────────────────────
+    const runBtn = document.getElementById('runBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const diagCountEl = document.getElementById('fDiagCount');
+
+    // Form fields
+    const fields = {
+      race:       document.getElementById('fRace'),
+      age:        document.getElementById('fAge'),
+      diagCount:  document.getElementById('fDiagCount'),
+      admType:    document.getElementById('fAdmType'),
+      discharge:  document.getElementById('fDischarge'),
+      admSource:  document.getElementById('fAdmSource'),
+      hospDays:   document.getElementById('fHospDays'),
+      labs:       document.getElementById('fLabs'),
+      procs:      document.getElementById('fProcs'),
+      meds:       document.getElementById('fMeds'),
+      outpatient: document.getElementById('fOutpatient'),
+      emergency:  document.getElementById('fEmergency'),
+      inpatient:  document.getElementById('fInpatient'),
+      diag1:      document.getElementById('fDiag1'),
+      diag2:      document.getElementById('fDiag2'),
+      diag3:      document.getElementById('fDiag3')
+    };
+
+    let gender = 'Male';
+
+    // ── Gender Toggle ──────────────────────────────────────────
+    const genderBtns = document.querySelectorAll('#genderToggle .toggle-btn');
+    genderBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        genderBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        gender = btn.dataset.value;
+      });
+    });
+
+    // ── Numeric enforcement for diagnosis count ────────────────
+    fields.diagCount.addEventListener('input', () => {
+      fields.diagCount.value = fields.diagCount.value.replace(/[^0-9]/g, '');
+    });
+
+    // ── Numeric Validation on Input ────────────────────────────
+    const numericFields = [fields.age, fields.hospDays, fields.labs, fields.procs, fields.meds, fields.outpatient, fields.emergency, fields.inpatient];
+    numericFields.forEach(f => {
+      f.addEventListener('input', () => {
+        f.value = f.value.replace(/[^0-9]/g, '');
+      });
+    });
+
+    // ── Toast ──────────────────────────────────────────────────
+    function showToast(message, isError = false) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = isError ? 'toast error-toast' : 'toast';
+      const iconCls = isError ? 'ph-fill ph-warning-circle' : 'ph-fill ph-check-circle';
+      toast.innerHTML = `
+        <i class="${iconCls} toast-icon"></i>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add('toast-hide');
+        setTimeout(() => toast.remove(), 350);
+      }, 3500);
+    }
+
+    // ── Validation ─────────────────────────────────────────────
+    function clearErrors() {
+      document.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
+      document.querySelectorAll('.field-error').forEach(el => el.classList.remove('show'));
+    }
+
+    function validate() {
+      clearErrors();
+      let valid = true;
+
+      const required = [
+        { field: fields.race, err: 'errRace' },
+        { field: fields.admType, err: 'errAdmType' },
+        { field: fields.discharge, err: 'errDischarge' },
+        { field: fields.admSource, err: 'errAdmSource' },
+        { field: fields.diag1, err: 'errDiag1' }
+      ];
+
+      required.forEach(({ field, err }) => {
+        if (!field.value) {
+          field.closest('.input-outline').classList.add('has-error');
+          document.getElementById(err).classList.add('show');
+          valid = false;
+        }
+      });
+
+      // Age
+      const ageVal = parseInt(fields.age.value);
+      if (!fields.age.value || isNaN(ageVal) || ageVal < 0 || ageVal > 120) {
+        document.getElementById('wrapAge').classList.add('has-error');
+        document.getElementById('errAge').classList.add('show');
+        valid = false;
+      }
+
+      // Hospital days
+      const days = parseInt(fields.hospDays.value);
+      if (!fields.hospDays.value || isNaN(days) || days < 1 || days > 30) {
+        document.getElementById('wrapHospDays').classList.add('has-error');
+        document.getElementById('errHospDays').classList.add('show');
+        valid = false;
+      }
+
+      if (!valid) {
+        showToast('Please fill in all required fields.', true);
+      }
+
+      return valid;
+    }
+
+    // ── Mock AI Prediction ─────────────────────────────────────
+    function calculateMockRisk() {
+      let score = 15; // base
+
+      // Age factor
+      const age = parseInt(fields.age.value) || 0;
+      if (age >= 70) score += 18;
+      else if (age >= 60) score += 12;
+      else if (age >= 50) score += 7;
+      else if (age >= 40) score += 3;
+
+      // Admission type
+      if (fields.admType.value === 'Emergency') score += 12;
+      else if (fields.admType.value === 'Urgent') score += 8;
+      else if (fields.admType.value === 'Trauma') score += 15;
+
+      // Discharge disposition
+      if (fields.discharge.value === 'AMA') score += 18;
+      else if (fields.discharge.value === 'SNF') score += 10;
+      else if (fields.discharge.value === 'HomeHealth') score += 6;
+      else if (fields.discharge.value === 'Home') score -= 3;
+
+      // Hospital days
+      const days = parseInt(fields.hospDays.value) || 0;
+      if (days >= 10) score += 14;
+      else if (days >= 7) score += 9;
+      else if (days >= 4) score += 4;
+
+      // Medical activity
+      const meds = parseInt(fields.meds.value) || 0;
+      const labs = parseInt(fields.labs.value) || 0;
+      const procs = parseInt(fields.procs.value) || 0;
+      if (meds >= 10) score += 10;
+      else if (meds >= 5) score += 5;
+      if (labs >= 5) score += 4;
+      if (procs >= 3) score += 5;
+
+      // Visit history
+      const emergency = parseInt(fields.emergency.value) || 0;
+      const inpatient = parseInt(fields.inpatient.value) || 0;
+      if (emergency >= 3) score += 10;
+      else if (emergency >= 1) score += 5;
+      if (inpatient >= 3) score += 12;
+      else if (inpatient >= 1) score += 6;
+
+      // Diagnosis complexity
+      const diagCount = parseInt(fields.diagCount.value) || 0;
+      if (diagCount >= 5) score += 12;
+      else if (diagCount >= 3) score += 8;
+      else if (diagCount >= 2) score += 4;
+      
+      // Specific high-risk diagnoses
+      const allDiags = [fields.diag1.value, fields.diag2.value, fields.diag3.value];
+      if (allDiags.includes('Circulatory')) score += 5;
+      if (allDiags.includes('Diabetes')) score += 6;
+      if (allDiags.includes('Respiratory')) score += 4;
+
+      // Clamp and add small randomness
+      const noise = (Math.random() * 6) - 3;
+      score = Math.max(5, Math.min(95, Math.round(score + noise)));
+
+      return score;
+    }
+
+    function getRiskLevel(score) {
+      if (score >= 50) return { level: 'High', cls: 'high' };
+      return { level: 'Low', cls: 'low' };
+    }
+
+    function displayResult(score) {
+      const risk = getRiskLevel(score);
+
+      document.getElementById('riskPct').textContent = score + '%';
+      document.getElementById('riskPct').className = `risk-percentage ${risk.cls}`;
+      document.getElementById('riskBadge').textContent = `${risk.level} Risk`;
+      document.getElementById('riskBadge').className = `risk-level-badge ${risk.cls}`;
+
+      // Swap panels
+      document.getElementById('aiAwaiting').style.display = 'none';
+      document.getElementById('aiLoading').classList.remove('show');
+      document.getElementById('aiResult').classList.add('show');
+    }
+
+    // ── Run Prediction ─────────────────────────────────────────
+    runBtn.addEventListener('click', () => {
+      if (!validate()) return;
+
+      // Show loading
+      document.getElementById('aiAwaiting').style.display = 'none';
+      document.getElementById('aiResult').classList.remove('show');
+      document.getElementById('aiLoading').classList.add('show');
+
+      // Simulate AI processing delay
+      setTimeout(() => {
+        const score = calculateMockRisk();
+        displayResult(score);
+        const risk = getRiskLevel(score);
+        showToast(`Prediction complete — ${risk.level} Risk (${score}%)`);
+      }, 1800);
+    });
+
+    // ── Reset Form ─────────────────────────────────────────────
+    resetBtn.addEventListener('click', () => {
+      // Reset dropdowns
+      fields.race.value = '';
+      fields.age.value = '';
+      fields.diagCount.value = '1';
+      fields.admType.value = '';
+      fields.discharge.value = '';
+      fields.admSource.value = '';
+      fields.diag1.value = '';
+      fields.diag2.value = '';
+      fields.diag3.value = '';
+
+      // Reset numeric inputs
+      fields.hospDays.value = '';
+      fields.labs.value = '0';
+      fields.procs.value = '0';
+      fields.meds.value = '0';
+      fields.outpatient.value = '0';
+      fields.emergency.value = '0';
+      fields.inpatient.value = '0';
+
+      // Reset gender
+      genderBtns.forEach(b => b.classList.remove('active'));
+      genderBtns[0].classList.add('active');
+      gender = 'Male';
+
+      // Reset diagnosis count
+      // diagCount already reset above
+
+      // Clear validation errors
+      clearErrors();
+
+      // Reset AI output
+      document.getElementById('aiAwaiting').style.display = 'block';
+      document.getElementById('aiLoading').classList.remove('show');
+      document.getElementById('aiResult').classList.remove('show');
+
+      showToast('Form reset successfully.');
+    });
+
+    // ── Init ───────────────────────────────────────────────────
+  </script>
 </body>
 </html>
