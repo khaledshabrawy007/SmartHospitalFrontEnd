@@ -296,6 +296,12 @@
         <a href="doctor-appointments.html" class="nav-item">
           <i class="ph ph-calendar-blank"></i> Appointments
         </a>
+        <a href="doctor-risk-assessment.html" class="nav-item active">
+          <i class="ph-fill ph-chart-line-up"></i> Risk Assessment
+        </a>
+        <a href="doctor-treatment-rec.html" class="nav-item">
+          <i class="ph ph-brain"></i> Treatment Rec.
+        </a>
       </div>
       
       <div class="sidebar-bottom">
@@ -307,10 +313,10 @@
           </div>
         </div>
         
-        <a href="#" class="bottom-nav-item">
+        <a href="#" class="bottom-nav-item" onclick="document.getElementById('globalSupportModal').style.display='flex'">
           <i class="ph ph-headphones"></i> Support
         </a>
-        <a href="index.html" class="bottom-nav-item">
+        <a href="index.html" class="bottom-nav-item" style="color: #dc2626;">
           <i class="ph ph-sign-out"></i> Log Out
         </a>
       </div>
@@ -534,6 +540,33 @@
             </div>
           </div>
           
+          <!-- Patient Assignment -->
+          <div class="group-box" style="margin-top: 8px;">
+            <div class="group-header">
+              <i class="ph-fill ph-user-circle-plus"></i> Assign Result to Patient
+            </div>
+            <div class="form-grid-2" style="align-items:flex-end; gap:12px;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Patient ID</label>
+                <div class="input-outline" id="wrapPatientId">
+                  <input type="text" id="fPatientId" placeholder="e.g. PT-0012">
+                </div>
+                <div class="field-error" id="errPatientId">Enter a valid Patient ID</div>
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label">Patient Name <span style="font-weight:400; color:var(--color-text-muted);">(optional)</span></label>
+                <div class="input-outline">
+                  <input type="text" id="fPatientName" placeholder="e.g. Sarah Jenkins">
+                </div>
+              </div>
+            </div>
+            <div id="patientContextBanner" style="display:none; margin-top:12px; padding:10px 14px; background:rgba(10,111,86,0.07); border-radius:8px; font-size:0.83rem; color:var(--color-primary); font-weight:600; align-items:center; gap:8px;">
+              <i class="ph-fill ph-link-simple"></i>
+              <span id="patientContextText"></span>
+              <a href="doctor-patients.html" style="margin-left:auto; font-size:0.78rem; color:var(--color-primary); text-decoration:underline;">← Back to Patients</a>
+            </div>
+          </div>
+
           <div style="display:flex; justify-content:center; gap:24px; margin-top:40px; margin-bottom:40px;">
             <button class="btn btn-outline" style="width:200px;" id="resetBtn">Reset Form</button>
             <button class="btn btn-primary" style="width:200px;" id="runBtn">
@@ -578,6 +611,11 @@
                 <div class="risk-percentage" id="riskPct">—</div>
                 <div><span class="risk-level-badge" id="riskBadge">—</span></div>
               </div>
+              <div style="padding: 0 4px;">
+                <button class="btn btn-primary" id="btnSaveRisk" style="width:100%; padding:12px 24px; margin-top:8px;">
+                  <i class="ph-fill ph-floppy-disk"></i> Save Result to Patient
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -589,7 +627,28 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- Global Support Modal -->
+  <div class="modal-overlay" id="globalSupportModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
+    <div class="modal-container" style="max-width: 400px; text-align: center;">
+      <button class="modal-close" onclick="document.getElementById('globalSupportModal').style.display='none'"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <i class="ph-fill ph-lifebuoy" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 16px; display: inline-block;"></i>
+        <h2>Support Center</h2>
+        <p>We're here to help! Reach out to us 24/7.</p>
+      </div>
+      <div style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6; text-align: left;">
+        <strong>Email:</strong> <a href="mailto:support@smarthospital.com" style="color: var(--color-primary); text-decoration: none;">support@smarthospital.com</a><br>
+        <strong>Phone:</strong> +1 (800) 555-0199<br>
+        <strong>Live Chat:</strong> Currently Offline
+      </div>
+      <div class="modal-actions" style="justify-content: center;">
+        <button class="btn btn-primary" onclick="document.getElementById('globalSupportModal').style.display='none'">Close</button>
+      </div>
+    </div>
+  </div>
   <script src="auth-session.js"></script>
+</body>
+</html>
   <script>
     // ── DOM Refs ────────────────────────────────────────────────
     const runBtn = document.getElementById('runBtn');
@@ -847,6 +906,53 @@
       document.getElementById('aiResult').classList.remove('show');
 
       showToast('Form reset successfully.');
+    });
+
+    // ── URL Param Pre-fill ──────────────────────────────────────
+    (function prefillFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const pid = params.get('patientId');
+      const pname = params.get('patientName');
+      if (pid) {
+        document.getElementById('fPatientId').value = pid;
+        const banner = document.getElementById('patientContextBanner');
+        banner.style.display = 'flex';
+        const nameStr = pname ? ` — ${pname}` : '';
+        document.getElementById('patientContextText').textContent =
+          `Auto-linked to patient: ${pid}${nameStr}`;
+        if (pname) document.getElementById('fPatientName').value = pname;
+      }
+    })();
+
+    // ── Save Risk Result to Patient ────────────────────────────
+    document.getElementById('btnSaveRisk').addEventListener('click', () => {
+      const patientId = document.getElementById('fPatientId').value.trim();
+      if (!patientId) {
+        document.getElementById('wrapPatientId').classList.add('has-error');
+        document.getElementById('errPatientId').classList.add('show');
+        showToast('Please enter a Patient ID to save the result.', true);
+        return;
+      }
+      document.getElementById('wrapPatientId').classList.remove('has-error');
+      document.getElementById('errPatientId').classList.remove('show');
+
+      const score = document.getElementById('riskPct').textContent;
+      const level = document.getElementById('riskBadge').textContent;
+      const record = {
+        type: 'riskAssessment',
+        patientId,
+        patientName: document.getElementById('fPatientName').value.trim() || 'Unknown',
+        riskScore: score,
+        riskLevel: level,
+        date: new Date().toISOString()
+      };
+
+      const key = 'smartHospital_PatientRecords';
+      const saved = JSON.parse(localStorage.getItem(key) || '[]');
+      saved.push(record);
+      localStorage.setItem(key, JSON.stringify(saved));
+
+      showToast(`Risk result saved to patient ${patientId}`);
     });
 
     // ── Init ───────────────────────────────────────────────────

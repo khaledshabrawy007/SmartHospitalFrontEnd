@@ -10,8 +10,8 @@
 </head>
 <body>
 
-  <!-- New Patient Admission Modal (Using visible toggle for demonstration) -->
-  <div class="modal-overlay" id="admissionModal">
+  <!-- New Patient Admission Modal -->
+  <div class="modal-overlay" id="admissionModal" style="display:none;">
     <div class="modal-container">
       <button class="modal-close" onclick="document.getElementById('admissionModal').style.display='none'"><i class="ph ph-x"></i></button>
       
@@ -55,7 +55,7 @@
     </div>
   </div>
 
-  <div class="app-container" style="filter: blur(2px);">
+  <div class="app-container">
     <!-- Sidebar -->
     <div class="sidebar">
       <div class="logo">
@@ -71,7 +71,7 @@
           <i class="ph ph-users-three"></i> Staff Management
         </a>
         <a href="hr-shifts.html" class="nav-item">
-          <i class="ph ph-clock-time-three"></i> Shifts
+          <i class="ph ph-clock"></i> Shifts
         </a>
         <a href="hr-wards.html" class="nav-item active">
           <i class="ph-fill ph-buildings"></i> Wards
@@ -87,10 +87,10 @@
           </div>
         </div>
         
-        <a href="#" class="bottom-nav-item">
+        <a href="#" class="bottom-nav-item" onclick="document.getElementById('globalSupportModal').style.display='flex'">
           <i class="ph ph-headphones"></i> Support
         </a>
-        <a href="index.html" class="bottom-nav-item">
+        <a href="index.html" class="bottom-nav-item" style="color: #dc2626;">
           <i class="ph ph-sign-out"></i> Log Out
         </a>
       </div>
@@ -177,6 +177,25 @@
         });
     }
   </script>
+  <!-- Global Support Modal -->
+  <div class="modal-overlay" id="globalSupportModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
+    <div class="modal-container" style="max-width: 400px; text-align: center;">
+      <button class="modal-close" onclick="document.getElementById('globalSupportModal').style.display='none'"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <i class="ph-fill ph-lifebuoy" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 16px; display: inline-block;"></i>
+        <h2>Support Center</h2>
+        <p>We're here to help! Reach out to us 24/7.</p>
+      </div>
+      <div style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6; text-align: left;">
+        <strong>Email:</strong> <a href="mailto:support@smarthospital.com" style="color: var(--color-primary); text-decoration: none;">support@smarthospital.com</a><br>
+        <strong>Phone:</strong> +1 (800) 555-0199<br>
+        <strong>Live Chat:</strong> Currently Offline
+      </div>
+      <div class="modal-actions" style="justify-content: center;">
+        <button class="btn btn-primary" onclick="document.getElementById('globalSupportModal').style.display='none'">Close</button>
+      </div>
+    </div>
+  </div>
   <script src="auth-session.js"></script>
 </body>
 </html>

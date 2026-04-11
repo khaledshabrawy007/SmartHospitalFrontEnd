@@ -7,171 +7,174 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
+    /* ── Metric Cards ────────────────────────────── */
     .metric-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 24px;
       margin-bottom: 24px;
     }
-    
     .metric-card {
-      background-color: white;
+      background: white;
       border-radius: var(--radius-lg);
       padding: 24px;
       box-shadow: var(--shadow-sm);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: default;
     }
-    
-    .mc-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 20px;
+    .metric-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.09);
     }
-    
-    .mc-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-    }
-    
-    .mc-tag {
-      font-size: 0.65rem;
-      font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 12px;
-    }
-    
-    .mc-label {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      font-weight: 700;
-      color: var(--color-text-muted);
-      letter-spacing: 0.05em;
-      margin-bottom: 4px;
-    }
-    
-    .mc-value {
-      font-size: 2.25rem;
-      font-weight: 700;
-    }
+    .mc-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+    .mc-icon { width: 48px; height: 48px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+    .mc-tag { font-size: 0.65rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; }
+    .mc-label { font-size: 0.65rem; text-transform: uppercase; font-weight: 700; color: var(--color-text-muted); letter-spacing: 0.05em; margin-bottom: 4px; }
+    .mc-value { font-size: 2.25rem; font-weight: 700; }
     .mc-value span { font-size: 1rem; color: var(--color-text-muted); font-weight: 600; }
-    
-    .graph-layout {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 24px;
-      margin-bottom: 32px;
-    }
-    
-    .chart-card {
-      background-color: white;
-      border-radius: var(--radius-lg);
-      padding: 24px;
-      box-shadow: var(--shadow-sm);
-    }
-    
-    .chart-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-    
-    .chart-title {
-      font-size: 1rem;
+
+    /* ── Graph Layout ────────────────────────────── */
+    .graph-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px; }
+    .chart-card { background: white; border-radius: var(--radius-lg); padding: 24px; box-shadow: var(--shadow-sm); }
+    .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+    .chart-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+    /* Chart toggle buttons */
+    .chart-toggles { display: flex; gap: 6px; }
+    .chart-toggle-btn {
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.72rem;
       font-weight: 700;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      border: 1.5px solid #e2e8f0;
+      background: white;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
     }
-    
-    .chart-mockup {
-      width: 100%;
-      height: 200px;
-      position: relative;
-    }
-    
-    /* Creating a pure CSS wavy line using borders to fake a chart */
-    .css-chart-line {
-      position: absolute;
-      bottom: 20px;
-      left: 0;
-      width: 100%;
-      height: 100px;
-      border-bottom: 3px solid var(--color-primary);
-      border-radius: 50% 50% 0 0 / 100px 100px 0 0;
-      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-    }
-    
-    .chart-axes {
-      position: absolute;
-      bottom: -10px; left: 0; right: 0;
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.65rem;
-      font-weight: 600;
-      color: var(--color-text-muted);
-    }
-    
+    .chart-toggle-btn .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .chart-toggle-btn.active-predicted { border-color: var(--color-primary); color: var(--color-primary); background: rgba(10,111,86,0.06); }
+    .chart-toggle-btn.active-actual { border-color: #94a3b8; color: #334155; background: #f8fafc; }
+    .chart-toggle-btn:not(.active-predicted):not(.active-actual):hover { border-color: #94a3b8; color: #334155; }
+
+    /* ── Staff Needs ─────────────────────────────── */
     .needs-item {
-      background-color: var(--color-bg-light);
+      background: var(--color-bg-light);
       border-radius: var(--radius-md);
       padding: 16px;
       margin-bottom: 12px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      position: relative;
+      z-index: 1;
     }
-    
-    .needs-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
-    
+    .needs-item:last-child { margin-bottom: 0; }
+    .needs-item:hover { background: #e2e8f0; transform: translateX(3px); z-index: 20; }
+    .needs-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
     .needs-top h4 { font-size: 0.9rem; font-weight: 700; }
-    .needs-tag { font-size: 0.65rem; font-weight: 700; color: var(--color-primary); }
     .needs-desc { font-size: 0.8rem; color: var(--color-text-muted); line-height: 1.4; }
-    
-    .alert-container {
-      background-color: var(--color-bg-light);
-      border-radius: var(--radius-lg);
-      padding: 32px;
+    .needs-badge {
+      font-size: 0.65rem; font-weight: 700; padding: 3px 10px; border-radius: 12px;
     }
-    
-    .alert-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
+    .badge-urgent { background: #fee2e2; color: #b91c1c; }
+    .badge-stable { background: #d1fae5; color: #065f46; }
+    .badge-info   { background: #dbeafe; color: #1d4ed8; }
+
+    /* Staff tooltip */
+    .staff-tooltip {
+      display: none;
+      position: absolute;
+      right: 0;
+      bottom: calc(100% + 8px);
+      background: #1e293b;
+      color: white;
+      border-radius: 10px;
+      padding: 14px 16px;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      width: 240px;
+      z-index: 500;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+      animation: tipFade 0.15s ease;
     }
-    
-    .alert-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+    .staff-tooltip::before {
+      content: '';
+      position: absolute;
+      bottom: -6px;
+      right: 18px;
+      width: 12px;
+      height: 6px;
+      background: #1e293b;
+      clip-path: polygon(50% 100%, 0 0, 100% 0);
     }
-    
+    @keyframes tipFade { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+    .needs-item:hover .staff-tooltip { display: block; }
+
+    /* ── Alerts Section ──────────────────────────── */
+    .alert-container { background: var(--color-bg-light); border-radius: var(--radius-lg); padding: 32px; }
+    .alert-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .alert-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .alert-card {
-      background-color: white;
+      background: white;
       border-radius: var(--radius-md);
-      padding: 20px;
+      padding: 18px 20px;
       display: flex;
-      gap: 16px;
-      border: 1px solid rgba(239, 68, 68, 0.2);
+      gap: 14px;
+      border-left: 4px solid transparent;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+      transition: box-shadow 0.2s, transform 0.2s;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
     }
-    
-    .alert-icon {
-      width: 40px; height: 40px;
-      border-radius: 50%;
-      background-color: #fee2e2;
-      color: #ef4444;
+    .alert-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: translateY(-2px); }
+    .alert-card.severity-critical { border-left-color: #ef4444; }
+    .alert-card.severity-info     { border-left-color: #10b981; }
+    .alert-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; flex-shrink: 0; }
+    .alert-icon.critical { background: #fee2e2; color: #ef4444; }
+    .alert-icon.info     { background: #a7f3d0; color: #059669; }
+    .alert-body { flex: 1; }
+    .alert-title { font-weight: 700; font-size: 0.92rem; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .alert-time { font-size: 0.6rem; font-weight: 600; color: var(--color-text-muted); background: var(--color-bg-light); padding: 2px 7px; border-radius: 4px; }
+    .alert-desc { font-size: 0.82rem; color: var(--color-text-dark); line-height: 1.5; }
+    .alert-expand { font-size: 0.75rem; color: var(--color-primary); font-weight: 700; margin-top: 8px; display: none; }
+    .alert-card.expanded .alert-expand { display: block; }
+    .alert-dismiss {
+      position: absolute; top: 10px; right: 10px;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #f1f5f9; border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.25rem;
-      flex-shrink: 0;
+      font-size: 0.7rem; color: #94a3b8;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .alert-card:hover .alert-dismiss { opacity: 1; }
+    .alert-card.dismissing {
+      animation: dismissCard 0.35s ease forwards;
+    }
+    @keyframes dismissCard {
+      to { opacity: 0; transform: translateX(40px) scale(0.95); max-height: 0; padding: 0; margin: 0; }
+    }
+    /* No alerts empty state */
+    .alerts-empty {
+      display: none;
+      text-align: center;
+      padding: 32px;
+      color: #94a3b8;
+      font-size: 0.9rem;
+    }
+
+    /* ── Dynamic Date button ─────────────────────── */
+    .date-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px;
+      background: var(--color-bg-light);
+      border: none; border-radius: 10px;
+      font-size: 0.85rem; font-weight: 700;
+      color: var(--color-text-dark);
+      cursor: default;
     }
   </style>
 </head>
@@ -193,7 +196,7 @@
           <i class="ph ph-users-three"></i> Staff Management
         </a>
         <a href="hr-shifts.html" class="nav-item">
-          <i class="ph ph-clock-time-three"></i> Shifts
+          <i class="ph ph-clock"></i> Shifts
         </a>
         <a href="hr-wards.html" class="nav-item">
           <i class="ph ph-buildings"></i> Wards
@@ -209,10 +212,10 @@
           </div>
         </div>
         
-        <a href="#" class="bottom-nav-item">
+        <a href="#" class="bottom-nav-item" onclick="document.getElementById('globalSupportModal').style.display='flex'">
           <i class="ph ph-headphones"></i> Support
         </a>
-        <a href="index.html" class="bottom-nav-item">
+        <a href="index.html" class="bottom-nav-item" style="color: #dc2626;">
           <i class="ph ph-sign-out"></i> Log Out
         </a>
       </div>
@@ -225,124 +228,426 @@
           <h1>Clinical Overview</h1>
           <p>Performance metrics and AI operational forecasting</p>
         </div>
-        
         <div class="dr-actions">
-          <button class="btn-filter" style="background:var(--color-bg-light); border:none;">
-            <i class="ph-fill ph-calendar-blank"></i> Today: Oct 24
-          </button>
+          <div class="date-btn">
+            <i class="ph-fill ph-calendar-blank" style="color:var(--color-primary);"></i>
+            <span id="todayLabel">Today</span>
+          </div>
         </div>
       </div>
       
-      <span class="sub-header-text" style="color:#111827; margin-bottom:16px;">
+      <span class="sub-header-text" style="color:#111827; margin-bottom:16px; display:block;">
         <i class="ph-fill ph-chart-line-up" style="color:var(--color-primary); margin-right:4px;"></i> Doctor Performance Metrics
       </span>
       
-      <div class="metric-row">
-        <div class="metric-card">
-          <div class="mc-top">
-            <div class="mc-icon" style="background:#5eead4; color:#0f766e;"><i class="ph-fill ph-stopwatch"></i></div>
-            <div class="mc-tag" style="background:#5eead4; color:#0f766e;">-1.2m vs avg</div>
-          </div>
-          <div class="mc-label">Avg. Consultation Time</div>
-          <div class="mc-value">14.5<span>min</span></div>
-        </div>
-        
-        <div class="metric-card">
-          <div class="mc-top">
-            <div class="mc-icon" style="background:#1e293b; color:white;"><i class="ph-fill ph-smiley"></i></div>
-            <div class="mc-tag" style="background:#5eead4; color:#0f766e;">+4%</div>
-          </div>
-          <div class="mc-label">Patient Satisfaction</div>
-          <div class="mc-value">4.8<span>/5</span></div>
-        </div>
-        
-        <div class="metric-card">
-          <div class="mc-top">
-            <div class="mc-icon" style="background:var(--color-bg-light); color:#111827;"><i class="ph ph-check-square-offset"></i></div>
-            <div class="mc-tag" style="background:var(--color-bg-light); color:var(--color-text-muted);">Optimal</div>
-          </div>
-          <div class="mc-label">Appt. Completion Rate</div>
-          <div class="mc-value">96.2<span>%</span></div>
-        </div>
-      </div>
+      <!-- Metric Cards (powered by mock JSON) -->
+      <div class="metric-row" id="metricsRow"></div>
       
+      <!-- Chart + Staff Needs -->
       <div class="graph-layout">
+        <!-- Chart.js Card -->
         <div class="chart-card">
           <div class="chart-header">
-            <div class="chart-title"><i class="ph-fill ph-sparkle" style="color:var(--color-primary);"></i> AI Bed Occupancy Forecast (7-Day)</div>
-            <div style="display:flex; gap:16px; font-size:0.75rem; font-weight:600; color:var(--color-text-muted);">
-              <span><i class="ph-fill ph-circle" style="color:var(--color-primary);"></i> Predicted</span>
-              <span><i class="ph-fill ph-circle" style="color:#cbd5e1;"></i> Actual</span>
+            <div class="chart-title">
+              <i class="ph-fill ph-sparkle" style="color:var(--color-primary);"></i>
+              AI Bed Occupancy Forecast (7-Day)
+            </div>
+            <div class="chart-toggles">
+              <button class="chart-toggle-btn active-predicted" id="btnPredicted" onclick="toggleSeries('predicted')">
+                <span class="dot" style="background:var(--color-primary);"></span> Predicted
+              </button>
+              <button class="chart-toggle-btn active-actual" id="btnActual" onclick="toggleSeries('actual')">
+                <span class="dot" style="background:#94a3b8;"></span> Actual
+              </button>
             </div>
           </div>
-          <div class="chart-mockup">
-            <!-- Simulated sine wave line representing forecast -->
-            <svg viewBox="0 0 500 150" width="100%" height="150" preserveAspectRatio="none">
-              <path d="M0,120 C100,100 150,50 200,90 C250,130 300,10 350,140 C400,20 450,10 500,70" fill="none" stroke="#0a6f56" stroke-width="3" />
-            </svg>
-            <div class="chart-axes">
-              <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
-            </div>
+          <div style="position:relative; height:220px;">
+            <canvas id="occupancyChart"></canvas>
           </div>
         </div>
         
+        <!-- Staff Needs Panel -->
         <div class="chart-card">
-          <div class="chart-title" style="margin-bottom:24px;"><i class="ph-fill ph-users" style="color:var(--color-primary);"></i> Staff Needs Prediction</div>
-          
-          <div class="needs-item">
-            <div class="needs-top">
-              <h4>Emergency Dept.</h4>
-              <span class="needs-tag">+3 Nurses</span>
-            </div>
-            <div class="needs-desc">Projected surge in admissions starting 20:00 tonight.</div>
+          <div class="chart-title" style="margin-bottom:20px;">
+            <i class="ph-fill ph-users" style="color:var(--color-primary);"></i> Staff Needs Prediction
           </div>
-          <div class="needs-item">
-            <div class="needs-top">
-              <h4>General Surgery</h4>
-              <span class="needs-tag" style="color:var(--color-text-dark);">Stable</span>
-            </div>
-            <div class="needs-desc">Sufficient staffing levels forecasted for the next 48h.</div>
-          </div>
-          <div class="needs-item">
-            <div class="needs-top">
-              <h4>Pediatrics</h4>
-              <span class="needs-tag">+1 Specialist</span>
-            </div>
-            <div class="needs-desc">Recommended addition for morning clinic rotation.</div>
-          </div>
+          <div id="staffNeedsPanel"></div>
         </div>
       </div>
       
+      <!-- Operational Alerts -->
       <div class="alert-container">
         <div class="alert-header">
           <h3 style="font-size:1.125rem; font-weight:700; display:flex; align-items:center; gap:8px;">
             <i class="ph-fill ph-bell-ringing" style="color:#ef4444;"></i> Operational Alerts
           </h3>
-          <span class="tag-red-pill">3 CRITICAL</span>
+          <span id="alertBadge" class="tag-red-pill"></span>
         </div>
-        
-        <div class="alert-grid">
-          <div class="alert-card">
-            <div class="alert-icon"><i class="ph-fill ph-warning"></i></div>
-            <div>
-              <h4 style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">ICU at Capacity <span style="font-size:0.6rem; font-weight:600; color:var(--color-text-muted); background:var(--color-bg-light); padding:2px 6px; border-radius:4px; margin-left:6px;">2m ago</span></h4>
-              <p style="font-size:0.85rem; color:var(--color-text-dark); line-height:1.4;">98% occupancy. Redirect non-critical admissions immediately.</p>
-            </div>
-          </div>
-          
-          <div class="alert-card" style="border-color: rgba(52, 211, 153, 0.4);">
-            <div class="alert-icon" style="background:#a7f3d0; color:#059669;"><i class="ph-fill ph-user-minus"></i></div>
-            <div>
-              <h4 style="font-weight:700; font-size:0.95rem; margin-bottom:4px;">Staffing Shortage <span style="font-size:0.6rem; font-weight:600; color:var(--color-text-muted); background:var(--color-bg-light); padding:2px 6px; border-radius:4px; margin-left:6px;">15m ago</span></h4>
-              <p style="font-size:0.85rem; color:var(--color-text-dark); line-height:1.4;">Ward B-4 needs 2 RNs for night shift. Redeploy staff.</p>
-            </div>
-          </div>
+        <div class="alert-grid" id="alertGrid"></div>
+        <div class="alerts-empty" id="alertsEmpty">
+          <i class="ph-fill ph-check-circle" style="font-size:2rem; color:#10b981; display:block; margin-bottom:8px;"></i>
+          All clear — no active alerts.
         </div>
       </div>
+    </div>
+  </div>
 
+  <!-- Staff Detail Modal -->
+  <div class="modal-overlay" id="staffModal" style="display:none; justify-content:center; align-items:center; z-index:9999;">
+    <div class="modal-container" style="max-width:420px;">
+      <button class="modal-close" onclick="document.getElementById('staffModal').style.display='none'"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <h2 id="staffModalTitle">Staff Detail</h2>
+        <p id="staffModalSub"></p>
+      </div>
+      <div style="background:var(--color-bg-light); padding:20px; border-radius:10px; font-size:0.9rem; line-height:1.7; color:var(--color-text-dark);">
+        <span id="staffModalBody"></span>
+      </div>
+      <div class="modal-actions" style="justify-content:flex-end; margin-top:20px;">
+        <button class="btn btn-primary" onclick="document.getElementById('staffModal').style.display='none'">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Global Support Modal -->
+  <div class="modal-overlay" id="globalSupportModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
+    <div class="modal-container" style="max-width: 400px; text-align: center;">
+      <button class="modal-close" onclick="document.getElementById('globalSupportModal').style.display='none'"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <i class="ph-fill ph-lifebuoy" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 16px; display: inline-block;"></i>
+        <h2>Support Center</h2>
+        <p>We're here to help! Reach out to us 24/7.</p>
+      </div>
+      <div style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6; text-align: left;">
+        <strong>Email:</strong> <a href="mailto:support@smarthospital.com" style="color: var(--color-primary); text-decoration: none;">support@smarthospital.com</a><br>
+        <strong>Phone:</strong> +1 (800) 555-0199<br>
+        <strong>Live Chat:</strong> Currently Offline
+      </div>
+      <div class="modal-actions" style="justify-content: center;">
+        <button class="btn btn-primary" onclick="document.getElementById('globalSupportModal').style.display='none'">Close</button>
+      </div>
     </div>
   </div>
 
   <script src="auth-session.js"></script>
+  <script>
+    // ═══════════════════════════════════════════════════
+    // MOCK DATA (single source of truth)
+    // ═══════════════════════════════════════════════════
+    const mockData = {
+      metrics: [
+        {
+          icon: 'ph-fill ph-timer',
+          iconBg: '#5eead4', iconColor: '#0f766e',
+          tag: '-1.2m vs avg', tagBg: '#5eead4', tagColor: '#0f766e',
+          label: 'Avg. Consultation Time',
+          value: '14.5', unit: 'min'
+        },
+        {
+          icon: 'ph-fill ph-smiley',
+          iconBg: '#1e293b', iconColor: 'white',
+          tag: '+4% vs last month', tagBg: '#5eead4', tagColor: '#0f766e',
+          label: 'Patient Satisfaction',
+          value: '4.8', unit: '/5'
+        },
+        {
+          icon: 'ph ph-check-square-offset',
+          iconBg: '#f1f5f9', iconColor: '#111827',
+          tag: 'Optimal', tagBg: '#f1f5f9', tagColor: '#64748b',
+          label: 'Appt. Completion Rate',
+          value: '96.2', unit: '%'
+        }
+      ],
+
+      occupancy: {
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        predicted: [72, 78, 82, 88, 91, 76, 69],
+        actual:    [70, 75, 80, 85, 89, 74, null]  // null = future (no actual yet)
+      },
+
+      staffNeeds: [
+        {
+          dept: 'Emergency Dept.',
+          badge: '+3 Nurses',
+          badgeType: 'urgent',
+          desc: 'Projected surge in admissions starting 20:00 tonight.',
+          detail: 'AI model predicts a 34% rise in ER intake between 20:00–02:00 based on historical Friday patterns and current weather data. Recommend pre-authorizing 3 float nurses from Ward B-2.',
+          action: 'Redeploy from Float Pool'
+        },
+        {
+          dept: 'General Surgery',
+          badge: 'Stable',
+          badgeType: 'stable',
+          desc: 'Sufficient staffing levels forecasted for the next 48h.',
+          detail: 'Current staffing ratio: 1 RN per 3.2 patients. Target ratio met. No intervention needed until Thursday morning roster review.',
+          action: null
+        },
+        {
+          dept: 'Pediatrics',
+          badge: '+1 Specialist',
+          badgeType: 'info',
+          desc: 'Recommended addition for morning clinic rotation.',
+          detail: 'Pediatrics morning clinic has 17 scheduled appointments, 4 flagged as high-complexity. Adding one pediatric specialist for the 08:00–12:00 slot is advised.',
+          action: 'Request Specialist Consult'
+        }
+      ],
+
+      alerts: [
+        {
+          id: 'a1',
+          severity: 'critical',
+          icon: 'ph-fill ph-warning',
+          title: 'ICU at Capacity',
+          time: '2m ago',
+          desc: '98% occupancy. Redirect non-critical admissions immediately.',
+          detail: 'ICU Block A has 48/49 beds occupied. 1 discharge expected by 14:00. Recommend activating overflow protocol with Ward C-1 step-down unit.'
+        },
+        {
+          id: 'a2',
+          severity: 'critical',
+          icon: 'ph-fill ph-user-minus',
+          title: 'Staffing Shortage',
+          time: '15m ago',
+          desc: 'Ward B-4 needs 2 RNs for night shift. Redeploy staff.',
+          detail: 'Two scheduled night-shift RNs called out sick. Shift starts at 22:00. Float pool has 1 available — 1 position still unfilled. Manager approval needed.'
+        },
+        {
+          id: 'a3',
+          severity: 'info',
+          icon: 'ph-fill ph-first-aid-kit',
+          title: 'Supply Restock Complete',
+          time: '1h ago',
+          desc: 'ICU and OR medical supplies restocked per weekly schedule.',
+          detail: 'All critical supplies confirmed received and logged. Next scheduled restock: Friday 07:00. No action required.'
+        },
+        {
+          id: 'a4',
+          severity: 'info',
+          icon: 'ph-fill ph-calendar-check',
+          title: 'Shift Roster Approved',
+          time: '3h ago',
+          desc: 'This week\'s roster for all 4 wards has been approved by Clinical Lead.',
+          detail: 'Roster confirmed for Oct 23–29. 98.7% shift coverage achieved. One Saturday night slot pending voluntary overtime response.'
+        }
+      ]
+    };
+
+    // ═══════════════════════════════════════════════════
+    // DYNAMIC DATE
+    // ═══════════════════════════════════════════════════
+    function setDynamicDate() {
+      const now = new Date();
+      const opts = { weekday: 'short', month: 'short', day: 'numeric' };
+      document.getElementById('todayLabel').textContent =
+        'Today: ' + now.toLocaleDateString('en-US', opts);
+    }
+    setDynamicDate();
+
+    // ═══════════════════════════════════════════════════
+    // RENDER METRIC CARDS
+    // ═══════════════════════════════════════════════════
+    function renderMetrics() {
+      const row = document.getElementById('metricsRow');
+      row.innerHTML = mockData.metrics.map(m => `
+        <div class="metric-card">
+          <div class="mc-top">
+            <div class="mc-icon" style="background:${m.iconBg}; color:${m.iconColor};">
+              <i class="${m.icon}"></i>
+            </div>
+            <div class="mc-tag" style="background:${m.tagBg}; color:${m.tagColor};">${m.tag}</div>
+          </div>
+          <div class="mc-label">${m.label}</div>
+          <div class="mc-value">${m.value}<span>${m.unit}</span></div>
+        </div>
+      `).join('');
+    }
+    renderMetrics();
+
+    // ═══════════════════════════════════════════════════
+    // CHART.JS – Bed Occupancy Forecast
+    // ═══════════════════════════════════════════════════
+    const ctx = document.getElementById('occupancyChart').getContext('2d');
+    const d = mockData.occupancy;
+
+    const chartColors = {
+      predicted: { line: '#0a6f56', fill: 'rgba(10,111,86,0.10)' },
+      actual:    { line: '#94a3b8', fill: 'rgba(148,163,184,0.10)' }
+    };
+
+    const occupancyChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: d.labels,
+        datasets: [
+          {
+            label: 'Predicted',
+            data: d.predicted,
+            borderColor: chartColors.predicted.line,
+            backgroundColor: chartColors.predicted.fill,
+            borderWidth: 2.5,
+            pointBackgroundColor: chartColors.predicted.line,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.4,
+            fill: true
+          },
+          {
+            label: 'Actual',
+            data: d.actual,
+            borderColor: chartColors.actual.line,
+            backgroundColor: chartColors.actual.fill,
+            borderWidth: 2.5,
+            pointBackgroundColor: chartColors.actual.line,
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.4,
+            fill: true,
+            spanGaps: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 900, easing: 'easeOutQuart' },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            titleColor: '#f8fafc',
+            bodyColor: '#cbd5e1',
+            padding: 12,
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? ctx.parsed.y + '%' : 'N/A'}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { size:11, weight:'600' }, color:'#94a3b8' }
+          },
+          y: {
+            min: 50, max: 100,
+            grid: { color: '#f1f5f9' },
+            ticks: {
+              font: { size:11 }, color:'#94a3b8',
+              callback: v => v + '%'
+            }
+          }
+        }
+      }
+    });
+
+    // Toggle predicted / actual datasets
+    let seriesVisible = { predicted: true, actual: true };
+    function toggleSeries(series) {
+      const idx = series === 'predicted' ? 0 : 1;
+      seriesVisible[series] = !seriesVisible[series];
+      occupancyChart.data.datasets[idx].hidden = !seriesVisible[series];
+      occupancyChart.update();
+
+      const btn = document.getElementById(series === 'predicted' ? 'btnPredicted' : 'btnActual');
+      const activeClass = series === 'predicted' ? 'active-predicted' : 'active-actual';
+      btn.classList.toggle(activeClass, seriesVisible[series]);
+    }
+
+    // ═══════════════════════════════════════════════════
+    // STAFF NEEDS PANEL
+    // ═══════════════════════════════════════════════════
+    function renderStaffNeeds() {
+      const panel = document.getElementById('staffNeedsPanel');
+      panel.innerHTML = mockData.staffNeeds.map((s, i) => `
+        <div class="needs-item" onclick="openStaffModal(${i})">
+          <div class="needs-top">
+            <h4>${s.dept}</h4>
+            <span class="needs-badge badge-${s.badgeType}">${s.badge}</span>
+          </div>
+          <div class="needs-desc">${s.desc}</div>
+          <div class="staff-tooltip">
+            <strong>${s.dept}</strong><br>${s.detail}
+            ${s.action ? `<br><span style="color:#5eead4; font-weight:700; margin-top:6px; display:block;">→ ${s.action}</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+    renderStaffNeeds();
+
+    function openStaffModal(idx) {
+      const s = mockData.staffNeeds[idx];
+      document.getElementById('staffModalTitle').textContent = s.dept;
+      document.getElementById('staffModalSub').textContent = s.badge + ' · AI Staffing Prediction';
+      document.getElementById('staffModalBody').innerHTML =
+        s.detail +
+        (s.action ? `<br><br><strong style="color:var(--color-primary);">Recommended Action:</strong> ${s.action}` : '');
+      document.getElementById('staffModal').style.display = 'flex';
+    }
+
+    // ═══════════════════════════════════════════════════
+    // ALERTS
+    // ═══════════════════════════════════════════════════
+    let activeAlerts = [...mockData.alerts];
+
+    function renderAlerts() {
+      const grid = document.getElementById('alertGrid');
+      const empty = document.getElementById('alertsEmpty');
+      const badge = document.getElementById('alertBadge');
+
+      const criticalCount = activeAlerts.filter(a => a.severity === 'critical').length;
+      badge.textContent = criticalCount > 0
+        ? `${criticalCount} CRITICAL`
+        : `${activeAlerts.length} ACTIVE`;
+      badge.className = criticalCount > 0 ? 'tag-red-pill' : 'tag-green-pill';
+
+      if (activeAlerts.length === 0) {
+        grid.innerHTML = '';
+        grid.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+
+      grid.style.display = 'grid';
+      empty.style.display = 'none';
+
+      grid.innerHTML = activeAlerts.map(a => `
+        <div class="alert-card severity-${a.severity}" id="alert-${a.id}" onclick="toggleAlertDetail('${a.id}')">
+          <div class="alert-icon ${a.severity}">
+            <i class="${a.icon}"></i>
+          </div>
+          <div class="alert-body">
+            <div class="alert-title">
+              ${a.title}
+              <span class="alert-time">${a.time}</span>
+            </div>
+            <div class="alert-desc">${a.desc}</div>
+            <div class="alert-expand" id="expand-${a.id}">
+              <i class="ph ph-caret-down"></i> ${a.detail}
+            </div>
+          </div>
+          <button class="alert-dismiss" onclick="dismissAlert(event,'${a.id}')" title="Dismiss">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+      `).join('');
+    }
+    renderAlerts();
+
+    function toggleAlertDetail(id) {
+      const card = document.getElementById('alert-' + id);
+      const expand = document.getElementById('expand-' + id);
+      card.classList.toggle('expanded');
+    }
+
+    function dismissAlert(event, id) {
+      event.stopPropagation();
+      const card = document.getElementById('alert-' + id);
+      card.classList.add('dismissing');
+      setTimeout(() => {
+        activeAlerts = activeAlerts.filter(a => a.id !== id);
+        renderAlerts();
+      }, 350);
+    }
+  </script>
 </body>
 </html>

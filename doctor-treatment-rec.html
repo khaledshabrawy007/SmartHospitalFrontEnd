@@ -99,6 +99,54 @@
     .output-panel.show {
       display: block;
     }
+
+    /* Narrative Textarea */
+    .narrative-textarea {
+      width: 100%;
+      min-height: 110px;
+      padding: 14px 16px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 10px;
+      font-size: 0.92rem;
+      font-family: inherit;
+      color: var(--color-text-dark);
+      background: #f8fafc;
+      resize: vertical;
+      transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+      line-height: 1.6;
+      box-sizing: border-box;
+      margin-bottom: 20px;
+      display: block;
+    }
+    .narrative-textarea:focus {
+      outline: none;
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px rgba(10,111,86,0.08);
+      background: white;
+    }
+    .narrative-label-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .narrative-label-row span {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+    .narrative-label-row .edit-badge {
+      font-size: 0.7rem;
+      background: rgba(10,111,86,0.1);
+      color: var(--color-primary);
+      border-radius: 20px;
+      padding: 2px 8px;
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+    }
     
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(10px); }
@@ -208,6 +256,12 @@
         <a href="doctor-appointments.html" class="nav-item">
           <i class="ph ph-calendar-blank"></i> Appointments
         </a>
+        <a href="doctor-risk-assessment.html" class="nav-item">
+          <i class="ph ph-chart-line-up"></i> Risk Assessment
+        </a>
+        <a href="doctor-treatment-rec.html" class="nav-item active">
+          <i class="ph-fill ph-brain"></i> Treatment Rec.
+        </a>
       </div>
       
       <div class="sidebar-bottom">
@@ -219,10 +273,10 @@
           </div>
         </div>
         
-        <a href="#" class="bottom-nav-item">
+        <a href="#" class="bottom-nav-item" onclick="document.getElementById('globalSupportModal').style.display='flex'">
           <i class="ph ph-headphones"></i> Support
         </a>
-        <a href="index.html" class="bottom-nav-item">
+        <a href="index.html" class="bottom-nav-item" style="color: #dc2626;">
           <i class="ph ph-sign-out"></i> Log Out
         </a>
       </div>
@@ -254,7 +308,7 @@
                 <div class="form-group" style="margin-bottom: 0;">
                   <label class="form-label">Age</label>
                   <div class="input-outline">
-                    <input type="number" id="fAge" value="58" min="0" max="120" required>
+                    <input type="number" id="fAge" min="0" max="120" required placeholder="e.g. 45">
                   </div>
                   <div class="field-error" id="errAge">Requires a valid age (0-120)</div>
                 </div>
@@ -274,14 +328,14 @@
                 <div class="form-group" style="margin-bottom: 0;">
                   <label class="form-label">Blood Pressure (e.g. 120/80)</label>
                   <div class="input-outline">
-                    <input type="text" id="fBp" value="145/92" required>
+                    <input type="text" id="fBp" required placeholder="e.g. 120/80">
                   </div>
                   <div class="field-error" id="errBp">Format like 120/80</div>
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                   <label class="form-label">Sugar Level (mg/dL)</label>
                   <div class="input-outline">
-                    <input type="number" id="fSugar" value="115" min="20" max="600" required>
+                    <input type="number" id="fSugar" min="20" max="600" required placeholder="e.g. 95">
                   </div>
                   <div class="field-error" id="errSugar">Valid range 20-600</div>
                 </div>
@@ -291,14 +345,14 @@
                 <div class="form-group" style="margin-bottom: 0;">
                   <label class="form-label">Cholesterol (mg/dL)</label>
                   <div class="input-outline">
-                    <input type="number" id="fCholesterol" value="210" min="50" max="500" required>
+                    <input type="number" id="fCholesterol" min="50" max="500" required placeholder="e.g. 180">
                   </div>
                   <div class="field-error" id="errCholesterol">Valid range 50-500</div>
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
                   <label class="form-label">BMI</label>
                   <div class="input-outline">
-                    <input type="number" id="fBmi" value="28.4" step="0.1" min="10" max="80" required>
+                    <input type="number" id="fBmi" step="0.1" min="10" max="80" required placeholder="e.g. 24.5">
                   </div>
                   <div class="field-error" id="errBmi">Valid range 10-80</div>
                 </div>
@@ -331,11 +385,38 @@
                   <i class="ph-fill ph-git-branch" style="color:var(--color-text-dark); font-size:1.25rem;"></i> Family History (Chronic)
                 </div>
                 <label class="toggle-switch">
-                  <input type="checkbox" id="fFamily" checked>
+                  <input type="checkbox" id="fFamily">
                   <span class="slider"></span>
                 </label>
               </div>
               
+              <!-- Patient Assignment Section -->
+              <div style="margin: 0 0 24px 0; padding: 18px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                <div style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-primary); font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:7px;">
+                  <i class="ph-fill ph-user-circle-plus"></i> Assign to Patient
+                </div>
+                <div class="form-grid-2" style="gap:12px; margin-bottom:0;">
+                  <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">Patient ID</label>
+                    <div class="input-outline" id="wrapPatientId">
+                      <input type="text" id="fPatientId" placeholder="e.g. PT-0012">
+                    </div>
+                    <div class="field-error" id="errPatientId">Enter a valid Patient ID</div>
+                  </div>
+                  <div class="form-group" style="margin-bottom:0;">
+                    <label class="form-label">Patient Name <span style="font-weight:400; color:var(--color-text-muted);">(optional)</span></label>
+                    <div class="input-outline">
+                      <input type="text" id="fPatientName" placeholder="e.g. Sarah Jenkins">
+                    </div>
+                  </div>
+                </div>
+                <div id="patientContextBanner" style="display:none; margin-top:12px; padding:10px 14px; background:rgba(10,111,86,0.07); border-radius:8px; font-size:0.83rem; color:var(--color-primary); font-weight:600; align-items:center; gap:8px;">
+                  <i class="ph-fill ph-link-simple"></i>
+                  <span id="patientContextText"></span>
+                  <a href="doctor-patients.html" style="margin-left:auto; font-size:0.78rem; color:var(--color-primary); text-decoration:underline;">← Back to Patients</a>
+                </div>
+              </div>
+
               <div style="display:flex; gap: 16px;">
                 <button type="button" class="btn btn-outline" id="btnReset" style="width: 30%;">
                   Reset Form
@@ -423,12 +504,17 @@
             </div>
             
             <div class="treat-card">
-              <h4 style="font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--color-primary); font-weight:700; margin-bottom:16px;">
-                Clinician Narrative
-              </h4>
-              <div class="narrative-block" id="resNarrative">
-                "The patient presents with compounding risk factors."
+              <div class="narrative-label-row">
+                <i class="ph-fill ph-note-pencil" style="color:var(--color-primary); font-size:1rem;"></i>
+                <span>Clinician Narrative</span>
+                <span class="edit-badge">Editable</span>
               </div>
+              <textarea
+                class="narrative-textarea"
+                id="resNarrative"
+                placeholder="AI-generated narrative will appear here. You may edit before finalizing."
+                rows="5"
+              ></textarea>
               
               <button class="btn btn-primary" id="btnFinalize" style="padding:12px 24px;">
                 <i class="ph-fill ph-clipboard-text"></i> Finalize Protocol
@@ -443,6 +529,26 @@
 
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Global Support Modal -->
+  <div class="modal-overlay" id="globalSupportModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
+    <div class="modal-container" style="max-width: 400px; text-align: center;">
+      <button class="modal-close" onclick="document.getElementById('globalSupportModal').style.display='none'"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <i class="ph-fill ph-lifebuoy" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 16px; display: inline-block;"></i>
+        <h2>Support Center</h2>
+        <p>We're here to help! Reach out to us 24/7.</p>
+      </div>
+      <div style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6; text-align: left;">
+        <strong>Email:</strong> <a href="mailto:support@smarthospital.com" style="color: var(--color-primary); text-decoration: none;">support@smarthospital.com</a><br>
+        <strong>Phone:</strong> +1 (800) 555-0199<br>
+        <strong>Live Chat:</strong> Currently Offline
+      </div>
+      <div class="modal-actions" style="justify-content: center;">
+        <button class="btn btn-primary" onclick="document.getElementById('globalSupportModal').style.display='none'">Close</button>
+      </div>
+    </div>
+  </div>
 
   <script src="auth-session.js"></script>
   <script>
@@ -636,7 +742,7 @@
           </div>
         `).join('');
 
-        resNarrative.textContent = data.narrative;
+        resNarrative.value = data.narrative;
         
         panelLoading.classList.remove('show');
         panelResult.classList.add('show');
@@ -651,6 +757,7 @@
     // Reset Form
     btnReset.addEventListener('click', () => {
       form.reset();
+      resNarrative.value = '';
       clearErrors();
       outdatedWarning.classList.remove('show');
       panelResult.classList.remove('show');
@@ -658,28 +765,57 @@
       panelAwaiting.classList.add('show');
       state.isGenerated = false;
       state.inputsChangedAfterGen = false;
-      checkFormValidity();
+      btnGenerate.disabled = true;
     });
 
     // Finalize Protocol
     btnFinalize.addEventListener('click', () => {
-      // Mock Saving to LocalStorage
+      const patientId = document.getElementById('fPatientId').value.trim();
+      if (!patientId) {
+        document.getElementById('wrapPatientId').classList.add('has-error');
+        document.getElementById('errPatientId').classList.add('show');
+        showToast('Please enter a Patient ID to finalize the protocol.');
+        return;
+      }
+      document.getElementById('wrapPatientId').classList.remove('has-error');
+      document.getElementById('errPatientId').classList.remove('show');
+
       const protocol = {
-        patientId: 'mock-pt-001',
+        type: 'treatmentProtocol',
+        patientId,
+        patientName: document.getElementById('fPatientName').value.trim() || 'Unknown',
         date: new Date().toISOString(),
         disease: document.getElementById('resDiseaseTitle').innerText.replace('\n', ' '),
-        primaryMed: document.getElementById('resMedName').textContent
+        primaryMed: document.getElementById('resMedName').textContent,
+        narrative: document.getElementById('resNarrative').value
       };
       
-      let saved = JSON.parse(localStorage.getItem('smartHospital_Protocols') || '[]');
+      const key = 'smartHospital_PatientRecords';
+      let saved = JSON.parse(localStorage.getItem(key) || '[]');
       saved.push(protocol);
-      localStorage.setItem('smartHospital_Protocols', JSON.stringify(saved));
+      localStorage.setItem(key, JSON.stringify(saved));
       
-      showToast('Treatment Protocol Finalized & Saved');
+      showToast(`Protocol finalized & saved to patient ${patientId}`);
     });
 
-    // Initial check
-    checkFormValidity();
+    // URL Param Pre-fill
+    (function prefillFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const pid = params.get('patientId');
+      const pname = params.get('patientName');
+      if (pid) {
+        document.getElementById('fPatientId').value = pid;
+        const banner = document.getElementById('patientContextBanner');
+        banner.style.display = 'flex';
+        const nameStr = pname ? ` — ${pname}` : '';
+        document.getElementById('patientContextText').textContent =
+          `Auto-linked to patient: ${pid}${nameStr}`;
+        if (pname) document.getElementById('fPatientName').value = pname;
+      }
+    })();
+
+    // Initial state: generate is disabled until form is valid
+    btnGenerate.disabled = true;
   </script>
 </body>
 </html>
