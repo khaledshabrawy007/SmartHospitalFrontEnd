@@ -225,8 +225,8 @@
     <div class="main-content">
       <div class="dr-toolbar">
         <div class="header-title">
-          <h1>Clinical Overview</h1>
-          <p>Performance metrics and AI operational forecasting</p>
+          <h1>Welcome back, HR Manager.</h1>
+          <p>Clinical Overview - Performance metrics and AI operational forecasting</p>
         </div>
         <div class="dr-actions">
           <div class="date-btn">
@@ -372,7 +372,7 @@
           badgeType: 'urgent',
           desc: 'Projected surge in admissions starting 20:00 tonight.',
           detail: 'AI model predicts a 34% rise in ER intake between 20:00–02:00 based on historical Friday patterns and current weather data. Recommend pre-authorizing 3 float nurses from Ward B-2.',
-          action: 'Redeploy from Float Pool'
+          action: null
         },
         {
           dept: 'General Surgery',
@@ -388,7 +388,7 @@
           badgeType: 'info',
           desc: 'Recommended addition for morning clinic rotation.',
           detail: 'Pediatrics morning clinic has 17 scheduled appointments, 4 flagged as high-complexity. Adding one pediatric specialist for the 08:00–12:00 slot is advised.',
-          action: 'Request Specialist Consult'
+          action: null
         }
       ],
 
@@ -566,7 +566,7 @@
           </div>
           <div class="needs-desc">${s.desc}</div>
           <div class="staff-tooltip">
-            <strong>${s.dept}</strong><br>${s.detail}
+            <strong>${s.dept}</strong><br>${s.desc}
             ${s.action ? `<br><span style="color:#5eead4; font-weight:700; margin-top:6px; display:block;">→ ${s.action}</span>` : ''}
           </div>
         </div>
@@ -647,6 +647,40 @@
         activeAlerts = activeAlerts.filter(a => a.id !== id);
         renderAlerts();
       }, 350);
+    }
+
+    // Dynamic user name mapping
+    const currentUserData = localStorage.getItem("currentUser");
+    let firstName = "HR Manager"; // default
+    if (currentUserData) {
+       try {
+         const user = JSON.parse(currentUserData);
+         if (user.fullName) {
+           firstName = user.fullName.split(' ')[0];
+         } else if (user.name) {
+           firstName = user.name.split(' ')[0];
+         } else if (user.firstName) {
+           firstName = user.firstName;
+         }
+         
+         // Update sidebar name and avatar
+         const sidebarName = document.querySelector(".sidebar-bottom .name");
+         if (sidebarName) {
+           const fullName = user.fullName || user.name || (user.firstName + ' ' + (user.lastName || ''));
+           sidebarName.textContent = fullName;
+           const avatarImg = document.querySelector(".sidebar-bottom img");
+           if (avatarImg) {
+             avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0f172a&color=fff`;
+           }
+         }
+       } catch(e) {
+         console.error("Error parsing currentUser", e);
+       }
+    }
+    
+    const welcomeHeader = document.querySelector(".header-title h1");
+    if (welcomeHeader) {
+      welcomeHeader.textContent = `Welcome back, ${firstName}.`;
     }
   </script>
 </body>

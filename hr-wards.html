@@ -7,195 +7,885 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    /* ── Toast ──────────────────────────────────── */
+    #toastContainer {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 12px; z-index: 99999;
+    }
+    .toast {
+      background: #1e293b; color: white; padding: 14px 22px;
+      border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+      font-size: 0.9rem; font-weight: 600;
+      display: flex; align-items: center; gap: 12px;
+      opacity: 0; transform: translateY(16px); transition: all 0.3s ease;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast-success i { color: #10b981; }
+    .toast-error   i { color: #ef4444; }
+    .toast-warn    i { color: #f59e0b; }
+
+    /* ── Ward Tabs ───────────────────────────────── */
+    .ward-tabs {
+      display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap;
+    }
+    .ward-tab {
+      padding: 9px 20px; border-radius: var(--radius-md);
+      font-size: 0.85rem; font-weight: 700; cursor: pointer;
+      border: 1.5px solid var(--color-border);
+      background: white; color: var(--color-text-muted);
+      transition: all 0.2s;
+    }
+    .ward-tab:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .ward-tab.active {
+      background: var(--color-primary); color: white;
+      border-color: var(--color-primary);
+    }
+
+    /* ── Stats Row ───────────────────────────────── */
+    .stats-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 16px; margin-bottom: 28px;
+    }
+    .stat-card {
+      background: white; border-radius: var(--radius-lg);
+      padding: 20px 24px; box-shadow: var(--shadow-sm);
+      display: flex; align-items: center; gap: 16px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .stat-icon {
+      width: 48px; height: 48px; border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem;
+    }
+    .stat-icon.green  { background: #d1fae5; color: #059669; }
+    .stat-icon.red    { background: #fee2e2; color: #dc2626; }
+    .stat-icon.yellow { background: #fef3c7; color: #d97706; }
+    .stat-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: 2px; }
+    .stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1; }
+    .stat-sub   { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px; }
+
+    /* ── Toolbar ─────────────────────────────────── */
+    .bed-toolbar {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 20px; flex-wrap: wrap;
+    }
+    .bed-search {
+      position: relative; flex: 1; min-width: 200px;
+    }
+    .bed-search i {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: var(--color-text-muted); pointer-events: none;
+    }
+    .bed-search input {
+      width: 100%; padding: 10px 16px 10px 36px;
+      border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      font-family: inherit; font-size: 0.9rem; background: white;
+      outline: none; transition: border-color 0.2s;
+      cursor: text; user-select: auto; -webkit-user-select: auto;
+    }
+    .bed-search input:focus { border-color: var(--color-primary); box-shadow: 0 0 0 3px rgba(10,111,86,0.1); }
+    .filter-pill {
+      padding: 8px 16px; border-radius: 20px; font-size: 0.78rem;
+      font-weight: 700; border: 1.5px solid var(--color-border);
+      background: white; color: var(--color-text-muted); cursor: pointer;
+      transition: all 0.2s; white-space: nowrap;
+    }
+    .filter-pill:hover { border-color: #94a3b8; color: var(--color-text-dark); }
+    .filter-pill.active-all      { border-color: var(--color-text-dark); color: var(--color-text-dark); background: #f1f5f9; }
+    .filter-pill.active-available { border-color: #059669; color: #059669; background: #d1fae5; }
+    .filter-pill.active-occupied  { border-color: #dc2626; color: #dc2626; background: #fee2e2; }
+    .filter-pill.active-maintenance { border-color: #d97706; color: #d97706; background: #fef3c7; }
+
+    /* ── Bed Grid ────────────────────────────────── */
+    .bed-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 12px;
+    }
+
+    .bed-cell {
+      border-radius: var(--radius-md);
+      padding: 12px 8px; aspect-ratio: 1;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 6px;
+      cursor: pointer; position: relative;
+      transition: transform 0.18s, box-shadow 0.18s, opacity 0.2s;
+      border: 2px solid transparent;
+      user-select: none;
+    }
+    .bed-cell:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+    .bed-cell.hidden { display: none; }
+
+    /* States */
+    .bed-cell.available  { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+    .bed-cell.occupied   { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+    .bed-cell.maintenance{ background: #fef9c3; border-color: #fde047; color: #854d0e; }
+
+    .bed-cell .bed-icon  { font-size: 1.5rem; }
+    .bed-cell .bed-id    { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.02em; }
+    .bed-cell .bed-name  { font-size: 0.55rem; font-weight: 600; color: inherit; opacity: 0.75; text-align: center; line-height: 1.2; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    /* Just-changed highlight animation */
+    @keyframes bedPop { 0%{transform:scale(1)} 50%{transform:scale(1.12)} 100%{transform:scale(1)} }
+    .bed-cell.just-changed { animation: bedPop 0.45s ease; }
+
+    /* ── Tooltip ─────────────────────────────────── */
+    .bed-tooltip {
+      display: none;
+      position: absolute; bottom: calc(100% + 8px); left: 50%;
+      transform: translateX(-50%);
+      background: #1e293b; color: white;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 0.75rem; line-height: 1.6;
+      width: 170px; z-index: 200;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+      pointer-events: none;
+    }
+    .bed-tooltip::after {
+      content: ''; position: absolute; top: 100%; left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent; border-top-color: #1e293b;
+    }
+    .bed-cell:hover .bed-tooltip { display: block; }
+    .bed-tooltip strong { display: block; margin-bottom: 2px; }
+
+    /* ── Occupancy Bar ───────────────────────────── */
+    .occ-bar-wrap {
+      background: #e2e8f0; border-radius: 99px;
+      height: 8px; overflow: hidden; margin-top: 8px;
+    }
+    .occ-bar {
+      height: 100%; border-radius: 99px;
+      background: var(--color-primary);
+      transition: width 0.5s ease;
+    }
+    .occ-bar.warn  { background: #f59e0b; }
+    .occ-bar.danger{ background: #ef4444; }
+
+    /* ── Ward panel card ─────────────────────────── */
+    .ward-panel {
+      background: white; border-radius: var(--radius-lg);
+      padding: 28px 32px; box-shadow: var(--shadow-sm);
+    }
+    .ward-panel-header {
+      display: flex; justify-content: space-between;
+      align-items: flex-start; margin-bottom: 24px;
+    }
+    .ward-panel-meta  { font-size: 0.8rem; color: var(--color-text-muted); margin-top: 2px; }
+    .ward-panel-title { font-size: 1.35rem; font-weight: 700; }
+
+    /* ── Bed Action Modal ────────────────────────── */
+    .bed-action-info {
+      background: var(--color-bg-light); border-radius: var(--radius-md);
+      padding: 16px; margin-bottom: 24px;
+      font-size: 0.88rem; line-height: 1.7;
+    }
+    .bed-action-info .row {
+      display: flex; gap: 8px;
+    }
+    .bed-action-info .row .lbl {
+      color: var(--color-text-muted); font-weight: 600; min-width: 90px;
+    }
+    .bed-action-btns {
+      display: flex; gap: 12px;
+    }
+    .btn-danger {
+      background: #fee2e2; color: #b91c1c;
+      border: none; border-radius: var(--radius-md);
+      padding: 10px 20px; font-weight: 700; font-size: 0.9rem;
+      cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 8px;
+    }
+    .btn-danger:hover { background: #fca5a5; }
+    .btn-warn {
+      background: #fef3c7; color: #92400e;
+      border: none; border-radius: var(--radius-md);
+      padding: 10px 20px; font-weight: 700; font-size: 0.9rem;
+      cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 8px;
+    }
+    .btn-warn:hover { background: #fde68a; }
+    .btn-success {
+      background: #d1fae5; color: #065f46;
+      border: none; border-radius: var(--radius-md);
+      padding: 10px 20px; font-weight: 700; font-size: 0.9rem;
+      cursor: pointer; transition: background 0.2s; display: flex; align-items: center; gap: 8px;
+    }
+    .btn-success:hover { background: #a7f3d0; }
+
+    /* Admission modal grid */
+    .adm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  </style>
 </head>
 <body>
 
-  <!-- New Patient Admission Modal -->
-  <div class="modal-overlay" id="admissionModal" style="display:none;">
-    <div class="modal-container">
-      <button class="modal-close" onclick="document.getElementById('admissionModal').style.display='none'"><i class="ph ph-x"></i></button>
-      
-      <div class="modal-header">
-        <h2>New Patient Admission</h2>
-        <p>Register a new patient into the clinical workflow.</p>
-      </div>
-      
+<!-- ════════ ADMISSION MODAL ════════ -->
+<div class="modal-overlay" id="admissionModal" style="display:none;">
+  <div class="modal-container" style="max-width:560px;">
+    <button class="modal-close" onclick="closeAdmissionModal()"><i class="ph ph-x"></i></button>
+    <div class="modal-header">
+      <h2>New Patient Admission</h2>
+      <p>Register a patient and assign a bed in the clinical workflow.</p>
+    </div>
+
+    <div class="adm-grid">
       <div class="form-group">
-        <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Patient ID</label>
+        <label class="form-label">Patient ID</label>
         <div class="input-outline">
-          <i class="ph-fill ph-identification-card" style="margin-right:12px; color:var(--color-text-muted); align-self:center;"></i>
-          <input type="text" placeholder="Ex: PH-2024-8842">
+          <i class="ph-fill ph-identification-card" style="margin-right:10px; color:var(--color-text-muted); align-self:center; flex-shrink:0;"></i>
+          <input type="text" id="admPatientId" placeholder="e.g. PH-2024-8842" style="background:transparent; border:none; outline:none; width:100%;">
         </div>
       </div>
-      
       <div class="form-group">
-        <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Admission Date</label>
+        <label class="form-label">Patient Name</label>
         <div class="input-outline">
-          <i class="ph-fill ph-calendar-blank" style="margin-right:12px; color:var(--color-text-muted); align-self:center;"></i>
-          <input type="date" style="color:var(--color-text-dark);">
+          <i class="ph ph-user" style="margin-right:10px; color:var(--color-text-muted); align-self:center; flex-shrink:0;"></i>
+          <input type="text" id="admPatientName" placeholder="Full name" style="background:transparent; border:none; outline:none; width:100%;">
         </div>
       </div>
-      
+    </div>
+
+    <div class="adm-grid">
       <div class="form-group">
-        <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Reason for Visit</label>
-        <div class="input-outline" style="height:auto; align-items:flex-start;">
-          <textarea placeholder="Detail clinical symptoms or scheduled procedure..." style="width:100%; min-height:100px; border:none; background:transparent; font-family:inherit; outline:none; resize:none;"></textarea>
+        <label class="form-label">Bed ID</label>
+        <div class="input-outline" style="background:#f0fdf4; border-color:#6ee7b7;">
+          <i class="ph-fill ph-bed" style="margin-right:10px; color:#059669; align-self:center; flex-shrink:0;"></i>
+          <input type="text" id="admBedId" placeholder="Auto-filled on bed click" style="background:transparent; border:none; outline:none; width:100%; font-weight:700; color:#059669;">
         </div>
       </div>
-      
-      <div class="ai-insight-box" style="margin-bottom:0; background:#f0fdf4; border-left-color:#16a34a; padding:12px 16px; flex-direction:row; margin-bottom:24px;">
-        <i class="ph-fill ph-info" style="color:#16a34a; font-size:1.25rem;"></i>
-        <div style="font-size:0.85rem; color:#166534; font-weight:600;">Allocating North Wing Bed B-102 automatically upon registration.</div>
+      <div class="form-group">
+        <label class="form-label">Admission Date</label>
+        <div class="input-outline">
+          <i class="ph-fill ph-calendar-blank" style="margin-right:10px; color:var(--color-text-muted); align-self:center; flex-shrink:0;"></i>
+          <input type="date" id="admDate" style="color:var(--color-text-dark); background:transparent; border:none; outline:none; width:100%;">
+        </div>
       </div>
-      
-      <div class="modal-actions">
-        <button class="btn-ghost" onclick="document.getElementById('admissionModal').style.display='none'">Cancel</button>
-        <button class="btn btn-primary" onclick="document.getElementById('admissionModal').style.display='none'">Register Admission</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Reason for Visit</label>
+      <div class="input-outline" style="height:auto; align-items:flex-start; padding-top:12px;">
+        <textarea id="admReason" placeholder="Detail clinical symptoms or scheduled procedure..." style="width:100%; min-height:80px; border:none; background:transparent; font-family:inherit; outline:none; resize:none; cursor:text; user-select:auto;"></textarea>
       </div>
+    </div>
+
+    <div class="ai-insight-box" style="margin-top:0; margin-bottom:24px; flex-direction:row; align-items:center;">
+      <i class="ph-fill ph-info" style="color:var(--color-primary); font-size:1.25rem; flex-shrink:0;"></i>
+      <div id="admInsightText" style="font-size:0.85rem; color:var(--color-primary); font-weight:600;">
+        Click any available bed to auto-fill the Bed ID.
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeAdmissionModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="registerAdmission()">
+        <i class="ph ph-check"></i> Register Admission
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ BED ACTION MODAL ════════ -->
+<div class="modal-overlay" id="bedModal" style="display:none;">
+  <div class="modal-container" style="max-width:420px;">
+    <button class="modal-close" onclick="closeBedModal()"><i class="ph ph-x"></i></button>
+    <div class="modal-header">
+      <h2 id="bedModalTitle">Bed Detail</h2>
+      <p id="bedModalSub"></p>
+    </div>
+    <div class="bed-action-info" id="bedModalInfo"></div>
+    <div class="bed-action-btns" id="bedModalBtns"></div>
+  </div>
+</div>
+
+<!-- ════════ APP LAYOUT ════════ -->
+<div class="app-container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <span style="display:block;">SmartHospital</span>
+      <span style="font-size:0.6rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Clinical HR Portal</span>
+    </div>
+    <div class="nav-menu">
+      <a href="hr-dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
+      <a href="hr-staff.html"     class="nav-item"><i class="ph ph-users-three"></i> Staff Management</a>
+      <a href="hr-shifts.html"    class="nav-item"><i class="ph ph-clock"></i> Shifts</a>
+      <a href="hr-wards.html"     class="nav-item active"><i class="ph-fill ph-buildings"></i> Wards</a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="user-profile-sm">
+        <img src="https://ui-avatars.com/api/?name=HR+Manager&background=0f172a&color=fff" alt="HR Manager">
+        <div class="info">
+          <span class="name">HR Manager</span>
+          <span class="role">Admin Access</span>
+        </div>
+      </div>
+      <a href="#" class="bottom-nav-item" onclick="document.getElementById('globalSupportModal').style.display='flex'">
+        <i class="ph ph-headphones"></i> Support
+      </a>
+      <a href="index.html" class="bottom-nav-item" style="color:#dc2626;">
+        <i class="ph ph-sign-out"></i> Log Out
+      </a>
     </div>
   </div>
 
-  <div class="app-container">
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="logo">
-        <span style="display:block;">SmartHospital</span>
-        <span style="font-size: 0.6rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Clinical HR Portal</span>
+  <!-- Main Content -->
+  <div class="main-content">
+    <!-- Toolbar -->
+    <div class="dr-toolbar">
+      <div class="header-title">
+        <span class="sub-header-text">Clinical Operations / Bed Management</span>
+        <h1 style="font-size:2rem; font-weight:700; margin-bottom:8px;">Ward & Bed Capacity</h1>
+        <p style="color:var(--color-text-muted);">Real-time clinical occupancy across all hospital wards</p>
       </div>
-      
-      <div class="nav-menu">
-        <a href="hr-dashboard.html" class="nav-item">
-          <i class="ph ph-squares-four"></i> Dashboard
-        </a>
-        <a href="hr-staff.html" class="nav-item">
-          <i class="ph ph-users-three"></i> Staff Management
-        </a>
-        <a href="hr-shifts.html" class="nav-item">
-          <i class="ph ph-clock"></i> Shifts
-        </a>
-        <a href="hr-wards.html" class="nav-item active">
-          <i class="ph-fill ph-buildings"></i> Wards
-        </a>
-      </div>
-      
-      <div class="sidebar-bottom">
-        <div class="user-profile-sm">
-          <img src="https://ui-avatars.com/api/?name=HR+Manager&background=0f172a&color=fff" alt="HR Manager">
-          <div class="info">
-            <span class="name">HR Manager</span>
-            <span class="role">Admin Access</span>
-          </div>
-        </div>
-        
-        <a href="#" class="bottom-nav-item" onclick="document.getElementById('globalSupportModal').style.display='flex'">
-          <i class="ph ph-headphones"></i> Support
-        </a>
-        <a href="index.html" class="bottom-nav-item" style="color: #dc2626;">
-          <i class="ph ph-sign-out"></i> Log Out
-        </a>
+      <div class="dr-actions">
+        <button class="btn btn-primary" onclick="openAdmissionModal(null)">
+          <i class="ph-bold ph-plus"></i> Add Admission
+        </button>
       </div>
     </div>
 
-    <!-- Main Content -->
-    <div class="main-content">
-      <div class="dr-toolbar">
-        <div class="header-title">
-          <h1 style="font-size:2rem; font-weight:700; margin-bottom:8px;">Ward & Bed Capacity</h1>
-          <p style="color:var(--color-text-dark); font-size:1.05rem;">Real-time clinical occupancy and predictive resource forecasting</p>
-        </div>
-        
-        <div class="dr-actions">
-          <button class="btn btn-primary" onclick="document.getElementById('admissionModal').style.display='flex'">
-            <i class="ph-bold ph-plus"></i> Add Admission
-          </button>
-        </div>
-      </div>
-      
-      <div class="data-table-card" style="padding: 32px; margin-bottom: 32px;">
-        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px;">
-          <div>
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-              <span class="tag-green-pill">ACTIVE</span>
-              <h2 style="font-size:1.5rem; font-weight:700;">Pediatrics</h2>
-            </div>
-            <p style="color:var(--color-text-muted);">North Pavilion, Level 1</p>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:0.75rem; font-weight:700; color:var(--color-text-muted); text-transform:uppercase;">Occupancy</div>
-            <div style="font-size:1.25rem; font-weight:700; color:var(--color-primary);">72 / 80 Beds</div>
-          </div>
-        </div>
-        
-        <div style="display:flex; gap:16px; margin-bottom:24px; font-size:0.75rem; font-weight:700; text-transform:uppercase;">
-          <span style="display:flex; align-items:center; gap:6px;"><i class="ph-fill ph-circle w-green"></i> Available (8)</span>
-          <span style="display:flex; align-items:center; gap:6px;"><i class="ph-fill ph-circle" style="color:#f59e0b;"></i> Maintenance (0)</span>
-        </div>
-        
-        <div class="bed-grid">
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-01</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-02</span></div>
-            <div class="bed-cubicle" style="background:#e2e8f0; color:#111827;"><i class="ph ph-bed"></i><span>PH A-03</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-04</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-05</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-06</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-07</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-08</span></div>
-            
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-09</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-10</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-11</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-12</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-13</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-14</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-15</span></div>
-            <div class="bed-cubicle"><i class="ph-fill ph-bed"></i><span>PH A-16</span></div>
+    <!-- Ward Tabs -->
+    <div class="ward-tabs" id="wardTabs"></div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-icon green"><i class="ph-fill ph-bed"></i></div>
+        <div>
+          <div class="stat-label">Available Beds</div>
+          <div class="stat-value" id="statAvailable">—</div>
+          <div class="stat-sub">Ready for admission</div>
         </div>
       </div>
-      
+      <div class="stat-card">
+        <div class="stat-icon red"><i class="ph-fill ph-user-circle-gear"></i></div>
+        <div>
+          <div class="stat-label">Occupied Beds</div>
+          <div class="stat-value" id="statOccupied">—</div>
+          <div class="occ-bar-wrap" style="width:120px;">
+            <div class="occ-bar" id="occBar" style="width:0%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon yellow"><i class="ph-fill ph-wrench"></i></div>
+        <div>
+          <div class="stat-label">Under Maintenance</div>
+          <div class="stat-value" id="statMaintenance">—</div>
+          <div class="stat-sub">Temporarily unavailable</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ward Panel -->
+    <div class="ward-panel">
+      <div class="ward-panel-header">
+        <div>
+          <div id="wardPanelTitle" class="ward-panel-title"></div>
+          <div id="wardPanelMeta"  class="ward-panel-meta"></div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; color:var(--color-text-muted); margin-bottom:2px;">Occupancy</div>
+          <div id="wardOccLabel" style="font-size:1.25rem; font-weight:700; color:var(--color-primary);"></div>
+        </div>
+      </div>
+
+      <!-- Bed Toolbar: search + filter -->
+      <div class="bed-toolbar">
+        <div class="bed-search">
+          <i class="ph ph-magnifying-glass"></i>
+          <input type="text" id="patientSearch" placeholder="Search patient name or bed ID…" oninput="applyFilter()">
+        </div>
+        <button class="filter-pill active-all" id="fAll"         onclick="setFilter('all')">All</button>
+        <button class="filter-pill"           id="fAvailable"   onclick="setFilter('available')">🟢 Available</button>
+        <button class="filter-pill"           id="fOccupied"    onclick="setFilter('occupied')">🔴 Occupied</button>
+        <button class="filter-pill"           id="fMaintenance" onclick="setFilter('maintenance')">🟡 Maintenance</button>
+      </div>
+
+      <!-- Bed Grid -->
+      <div class="bed-grid" id="bedGrid"></div>
+    </div>
+
+  </div><!-- /main-content -->
+</div><!-- /app-container -->
+
+<!-- Global Support Modal -->
+<div class="modal-overlay" id="globalSupportModal" style="display:none; justify-content:center; align-items:center; z-index:9999;">
+  <div class="modal-container" style="max-width:400px; text-align:center;">
+    <button class="modal-close" onclick="document.getElementById('globalSupportModal').style.display='none'"><i class="ph ph-x"></i></button>
+    <div class="modal-header">
+      <i class="ph-fill ph-lifebuoy" style="font-size:3rem; color:var(--color-primary); margin-bottom:16px; display:inline-block;"></i>
+      <h2>Support Center</h2>
+      <p>We're here to help! Reach out to us 24/7.</p>
+    </div>
+    <div style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6; text-align:left;">
+      <strong>Email:</strong> <a href="mailto:support@smarthospital.com" style="color:var(--color-primary); text-decoration:none;">support@smarthospital.com</a><br>
+      <strong>Phone:</strong> +1 (800) 555-0199<br>
+      <strong>Live Chat:</strong> Currently Offline
+    </div>
+    <div class="modal-actions" style="justify-content:center;">
+      <button class="btn btn-primary" onclick="document.getElementById('globalSupportModal').style.display='none'">Close</button>
     </div>
   </div>
+</div>
 
-  <script>
-    // Ensure modal interacts properly based on background blur preference
-    document.querySelector('.modal-close').addEventListener('click', () => {
-      document.querySelector('.app-container').style.filter = 'none';
-      document.getElementById('admissionModal').style.display = 'none';
-    });
-    document.querySelectorAll('.btn-primary, .btn-ghost').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if(btn.closest('.modal-actions')) {
-            document.querySelector('.app-container').style.filter = 'none';
-        }
-      });
-    });
-    
-    // Add Admission click
-    const addBtn = document.querySelector('.dr-actions .btn-primary');
-    if(addBtn) {
-        addBtn.addEventListener('click', () => {
-             document.querySelector('.app-container').style.filter = 'blur(2px)';
-        });
+<div id="toastContainer"></div>
+
+<script src="auth-session.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA — Ward definitions + beds
+// ═══════════════════════════════════════════════════════
+const WARDS = [
+  {
+    id: 'pediatrics',
+    name: 'Pediatrics',
+    location: 'North Pavilion, Level 1',
+    prefix: 'PED',
+    totalBeds: 20
+  },
+  {
+    id: 'icu',
+    name: 'ICU Block A',
+    location: 'West Wing, Level 3',
+    prefix: 'ICU-A',
+    totalBeds: 16
+  },
+  {
+    id: 'cardiology',
+    name: 'Cardiology Ward',
+    location: 'East Wing, Level 2',
+    prefix: 'CAR',
+    totalBeds: 18
+  },
+  {
+    id: 'emergency',
+    name: 'Emergency Room',
+    location: 'Ground Floor, South Entry',
+    prefix: 'ER',
+    totalBeds: 14
+  },
+  {
+    id: 'maternity',
+    name: 'Maternity & Obstetrics',
+    location: 'North Pavilion, Level 2',
+    prefix: 'MAT',
+    totalBeds: 16
+  },
+  {
+    id: 'surgery',
+    name: 'General Surgery',
+    location: 'Central Block, Level 4',
+    prefix: 'SUR',
+    totalBeds: 12
+  }
+];
+
+// Generate beds for each ward with realistic seed data
+function generateBeds(ward) {
+  const beds = [];
+  const seedOccupied = {
+    pediatrics: [1,2,4,5,7,8,10,11,13,14,16,17,19],
+    icu:        [1,2,3,4,5,6,7,8,9,10,11,12,14],
+    cardiology: [1,2,3,5,6,8,9,11,12,14,15,17],
+    emergency:  [1,2,3,4,6,7,9,10],
+    maternity:  [1,2,3,4,5,6,8,9,11,12],
+    surgery:    [1,2,4,5,7,8,10]
+  }[ward.id] || [];
+
+  const seedMaintenance = {
+    pediatrics: [3,15],
+    icu:        [13],
+    cardiology: [7,16],
+    emergency:  [5],
+    maternity:  [7,13],
+    surgery:    [3,9]
+  }[ward.id] || [];
+
+  const samplePatients = [
+    { name: 'Lena Morrison',    id: 'PH-2024-1102', reason: 'Post-op recovery' },
+    { name: 'James Al-Farsi',   id: 'PH-2024-1187', reason: 'Cardiac monitoring' },
+    { name: 'Sofia Delgado',    id: 'PH-2024-1254', reason: 'Respiratory distress' },
+    { name: 'Omar Benhara',     id: 'PH-2024-1301', reason: 'Scheduled procedure' },
+    { name: 'Nadia Chen',       id: 'PH-2024-1389', reason: 'Fever & observation' },
+    { name: 'Thomas Eriksen',   id: 'PH-2024-1422', reason: 'Pediatric case' },
+    { name: 'Amina Yusuf',      id: 'PH-2024-1477', reason: 'Labour & delivery' },
+    { name: 'Rafael Costa',     id: 'PH-2024-1533', reason: 'Trauma assessment' },
+    { name: 'Priya Menon',      id: 'PH-2024-1608', reason: 'ICU monitoring' },
+    { name: 'David Okonkwo',    id: 'PH-2024-1654', reason: 'General surgery' },
+    { name: 'Fatima Al-Zahra',  id: 'PH-2024-1701', reason: 'Neonatal care' },
+    { name: 'Lucas Petrov',     id: 'PH-2024-1749', reason: 'Neurological eval' },
+    { name: 'Hannah Müller',    id: 'PH-2024-1803', reason: 'Cardiology follow-up' }
+  ];
+
+  let pIdx = 0;
+  for (let i = 1; i <= ward.totalBeds; i++) {
+    const bedId = `${ward.prefix}-${String(i).padStart(2,'0')}`;
+    let status = 'available';
+    let patient = null;
+    if (seedMaintenance.includes(i)) {
+      status = 'maintenance';
+    } else if (seedOccupied.includes(i)) {
+      status = 'occupied';
+      patient = { ...samplePatients[pIdx % samplePatients.length], admDate: '2026-04-10' };
+      pIdx++;
     }
-  </script>
-  <!-- Global Support Modal -->
-  <div class="modal-overlay" id="globalSupportModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
-    <div class="modal-container" style="max-width: 400px; text-align: center;">
-      <button class="modal-close" onclick="document.getElementById('globalSupportModal').style.display='none'"><i class="ph ph-x"></i></button>
-      <div class="modal-header">
-        <i class="ph-fill ph-lifebuoy" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 16px; display: inline-block;"></i>
-        <h2>Support Center</h2>
-        <p>We're here to help! Reach out to us 24/7.</p>
+    beds.push({ id: bedId, num: i, status, patient });
+  }
+  return beds;
+}
+
+// Build the state object
+const state = {
+  currentWardId: 'pediatrics',
+  currentFilter: 'all',
+  wards: {}
+};
+
+WARDS.forEach(w => {
+  state.wards[w.id] = { ...w, beds: generateBeds(w) };
+});
+
+// ═══════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════
+function currentWard() { return state.wards[state.currentWardId]; }
+
+function toDateStr(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function showToast(msg, type='success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  const icon = type==='success'?'ph-check-circle':type==='warn'?'ph-warning':'ph-x-circle';
+  t.innerHTML = `<i class="ph-fill ${icon}" style="font-size:1.25rem;"></i> <span>${msg}</span>`;
+  c.appendChild(t);
+  setTimeout(()=>t.classList.add('show'),10);
+  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},3200);
+}
+
+function bedIcon(status) {
+  if (status==='available')   return '<i class="ph-fill ph-bed bed-icon"></i>';
+  if (status==='occupied')    return '<i class="ph-fill ph-user-circle-gear bed-icon"></i>';
+  if (status==='maintenance') return '<i class="ph-fill ph-wrench bed-icon"></i>';
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER WARD TABS
+// ═══════════════════════════════════════════════════════
+function renderTabs() {
+  const container = document.getElementById('wardTabs');
+  container.innerHTML = WARDS.map(w => `
+    <button class="ward-tab ${w.id === state.currentWardId ? 'active' : ''}"
+            onclick="switchWard('${w.id}')">
+      ${w.name}
+    </button>`).join('');
+}
+
+function switchWard(wardId) {
+  state.currentWardId = wardId;
+  state.currentFilter = 'all';
+  document.getElementById('patientSearch').value = '';
+  renderTabs();
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER STATS
+// ═══════════════════════════════════════════════════════
+function renderStats() {
+  const ward = currentWard();
+  const beds = ward.beds;
+  const avail = beds.filter(b=>b.status==='available').length;
+  const occup = beds.filter(b=>b.status==='occupied').length;
+  const maint = beds.filter(b=>b.status==='maintenance').length;
+  const total = beds.length;
+  const pct   = Math.round(occup/total*100);
+
+  document.getElementById('statAvailable').textContent   = avail;
+  document.getElementById('statOccupied').textContent    = `${occup}/${total}`;
+  document.getElementById('statMaintenance').textContent = maint;
+
+  const bar = document.getElementById('occBar');
+  bar.style.width = pct+'%';
+  bar.className = 'occ-bar' + (pct>=90?' danger':pct>=70?' warn':'');
+
+  document.getElementById('wardPanelTitle').textContent = ward.name;
+  document.getElementById('wardPanelMeta').textContent  = ward.location;
+  document.getElementById('wardOccLabel').textContent   = `${occup} / ${total} Beds`;
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER BED GRID
+// ═══════════════════════════════════════════════════════
+function renderBedGrid() {
+  const ward   = currentWard();
+  const search = document.getElementById('patientSearch').value.toLowerCase().trim();
+  const grid   = document.getElementById('bedGrid');
+
+  grid.innerHTML = ward.beds.map(bed => {
+    // Tooltip content
+    let tipLines = `<strong>${bed.id}</strong>Status: ${capitalize(bed.status)}`;
+    if (bed.status==='occupied' && bed.patient) {
+      tipLines += `<br>Patient: ${bed.patient.name}<br>Admitted: ${bed.patient.admDate}`;
+    }
+    if (bed.status==='maintenance') tipLines += `<br>Under maintenance`;
+
+    // Visibility: filter + search
+    let hide = false;
+    if (state.currentFilter !== 'all' && bed.status !== state.currentFilter) hide = true;
+    if (search) {
+      const matchBed = bed.id.toLowerCase().includes(search);
+      const matchPat = bed.patient && bed.patient.name.toLowerCase().includes(search);
+      if (!matchBed && !matchPat) hide = true;
+    }
+
+    return `
+      <div class="bed-cell ${bed.status} ${hide?'hidden':''}"
+           id="bedcell-${bed.id}"
+           onclick="handleBedClick('${bed.id}')"
+           data-id="${bed.id}" data-status="${bed.status}">
+        ${bedIcon(bed.status)}
+        <span class="bed-id">${bed.id}</span>
+        ${bed.patient ? `<span class="bed-name">${bed.patient.name.split(' ')[0]}</span>` : ''}
+        <div class="bed-tooltip">${tipLines}</div>
+      </div>`;
+  }).join('');
+}
+
+function capitalize(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
+
+// ═══════════════════════════════════════════════════════
+// FILTER
+// ═══════════════════════════════════════════════════════
+function setFilter(f) {
+  state.currentFilter = f;
+  ['fAll','fAvailable','fOccupied','fMaintenance'].forEach(id=>{
+    document.getElementById(id).className='filter-pill';
+  });
+  const map = {all:'fAll',available:'fAvailable',occupied:'fOccupied',maintenance:'fMaintenance'};
+  const cls = {all:'active-all',available:'active-available',occupied:'active-occupied',maintenance:'active-maintenance'};
+  document.getElementById(map[f]).classList.add(cls[f]);
+  renderBedGrid();
+}
+
+function applyFilter() { renderBedGrid(); }
+
+// ═══════════════════════════════════════════════════════
+// BED CLICK HANDLER
+// ═══════════════════════════════════════════════════════
+function handleBedClick(bedId) {
+  const ward = currentWard();
+  const bed  = ward.beds.find(b=>b.id===bedId);
+  if (!bed) return;
+
+  if (bed.status === 'available') {
+    // Show options: Admit or set Maintenance
+    document.getElementById('bedModalTitle').textContent = bed.id;
+    document.getElementById('bedModalSub').textContent   = '🟢 Available — Choose an Action';
+    document.getElementById('bedModalInfo').innerHTML = `
+      <div class="row"><span class="lbl">Bed ID</span><span>${bed.id}</span></div>
+      <div class="row"><span class="lbl">Status</span><span style="color:#059669; font-weight:700;">Available</span></div>
+      <div class="row"><span class="lbl">Ward</span><span>${ward.name}</span></div>`;
+    document.getElementById('bedModalBtns').style.flexDirection = 'column';
+    document.getElementById('bedModalBtns').style.gap = '0';
+    document.getElementById('bedModalBtns').innerHTML = `
+      <div style="display:flex; gap:12px; margin-bottom:0;">
+        <button class="btn btn-primary" onclick="closeBedModal(); openAdmissionModal('${bedId}')" style="flex:1;">
+          <i class="ph ph-user-plus"></i> Admit Patient
+        </button>
+        <button class="btn-warn" onclick="markMaintenance('${bedId}')" style="flex:1;">
+          <i class="ph ph-wrench"></i> Maintenance
+        </button>
       </div>
-      <div style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6; text-align: left;">
-        <strong>Email:</strong> <a href="mailto:support@smarthospital.com" style="color: var(--color-primary); text-decoration: none;">support@smarthospital.com</a><br>
-        <strong>Phone:</strong> +1 (800) 555-0199<br>
-        <strong>Live Chat:</strong> Currently Offline
-      </div>
-      <div class="modal-actions" style="justify-content: center;">
-        <button class="btn btn-primary" onclick="document.getElementById('globalSupportModal').style.display='none'">Close</button>
-      </div>
-    </div>
-  </div>
-  <script src="auth-session.js"></script>
+      <div style="display:flex; justify-content:flex-end; padding-top:16px; margin-top:16px; border-top:1px solid var(--color-border);">
+        <button class="btn-ghost" onclick="closeBedModal()" style="background:#e2e8f0; border-radius:var(--radius-md); color:#374151;">Cancel</button>
+      </div>`;
+    document.getElementById('bedModal').style.display = 'flex';
+    return;
+  }
+
+  // Open bed detail modal for occupied / maintenance
+  const modal = document.getElementById('bedModal');
+  document.getElementById('bedModalTitle').textContent = bed.id;
+
+  if (bed.status === 'occupied') {
+    document.getElementById('bedModalSub').textContent = '🔴 Occupied — Patient Information';
+    document.getElementById('bedModalInfo').innerHTML = `
+      <div class="row"><span class="lbl">Bed ID</span><span>${bed.id}</span></div>
+      <div class="row"><span class="lbl">Status</span><span style="color:#dc2626; font-weight:700;">Occupied</span></div>
+      <div class="row"><span class="lbl">Patient</span><span><strong>${bed.patient.name}</strong></span></div>
+      <div class="row"><span class="lbl">Patient ID</span><span>${bed.patient.id}</span></div>
+      <div class="row"><span class="lbl">Admitted</span><span>${bed.patient.admDate}</span></div>
+      <div class="row"><span class="lbl">Reason</span><span>${bed.patient.reason}</span></div>`;
+    document.getElementById('bedModalBtns').innerHTML = `
+      <button class="btn-danger" onclick="dischargePatient('${bedId}')">
+        <i class="ph ph-sign-out"></i> Discharge Patient
+      </button>
+      <button class="btn-ghost" onclick="closeBedModal()">Close</button>`;
+  }
+
+  if (bed.status === 'maintenance') {
+    document.getElementById('bedModalSub').innerHTML = '🟡 <span style="color:#d97706; font-weight:700;">Under Maintenance</span>';
+    document.getElementById('bedModalInfo').innerHTML = `
+      <div class="row"><span class="lbl">Bed ID</span><span>${bed.id}</span></div>
+      <div class="row"><span class="lbl">Status</span><span style="color:#d97706; font-weight:700;">Under Maintenance</span></div>
+      <div class="row"><span class="lbl">Ward</span><span>${ward.name}</span></div>
+      <div style="margin-top:12px; font-size:0.85rem; color:var(--color-text-muted);">This bed is currently unavailable for patient admission. Mark it as available once servicing is complete.</div>`;
+    document.getElementById('bedModalBtns').innerHTML = `
+      <button class="btn-success" onclick="markAvailable('${bedId}')">
+        <i class="ph ph-check-circle"></i> Mark as Available
+      </button>
+      <button class="btn-ghost" onclick="closeBedModal()">Close</button>`;
+  }
+
+  modal.style.display = 'flex';
+}
+
+function closeBedModal() {
+  document.getElementById('bedModal').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════════
+// BED ACTIONS
+// ═══════════════════════════════════════════════════════
+function dischargePatient(bedId) {
+  const ward = currentWard();
+  const bed  = ward.beds.find(b=>b.id===bedId);
+  if (!bed || bed.status!=='occupied') {
+    showToast('No patient to discharge.','error'); return;
+  }
+  const patName = bed.patient.name;
+  bed.status  = 'available';
+  bed.patient = null;
+  closeBedModal();
+  renderAll();
+  flashBed(bedId);
+  showToast(`${patName} discharged. Bed ${bedId} is now available.`,'success');
+}
+
+function markAvailable(bedId) {
+  const ward = currentWard();
+  const bed  = ward.beds.find(b=>b.id===bedId);
+  if (!bed || bed.status!=='maintenance') {
+    showToast('Bed is not under maintenance.','error'); return;
+  }
+  bed.status = 'available';
+  closeBedModal();
+  renderAll();
+  flashBed(bedId);
+  showToast(`Bed ${bedId} marked as available.`,'success');
+}
+
+function markMaintenance(bedId) {
+  const ward = currentWard();
+  const bed  = ward.beds.find(b=>b.id===bedId);
+  if (!bed || bed.status!=='available') {
+    showToast('Only available beds can be set to maintenance.','error'); return;
+  }
+  bed.status = 'maintenance';
+  closeBedModal();
+  renderAll();
+  flashBed(bedId);
+  showToast(`Bed ${bedId} is now under maintenance.`,'warn');
+}
+
+function flashBed(bedId) {
+  setTimeout(()=>{
+    const el = document.getElementById(`bedcell-${bedId}`);
+    if(el){ el.classList.add('just-changed'); setTimeout(()=>el.classList.remove('just-changed'),500); }
+  },50);
+}
+
+// ═══════════════════════════════════════════════════════
+// ADMISSION MODAL
+// ═══════════════════════════════════════════════════════
+function openAdmissionModal(bedId) {
+  const today = toDateStr(new Date());
+  document.getElementById('admPatientId').value   = '';
+  document.getElementById('admPatientName').value = '';
+  document.getElementById('admReason').value      = '';
+  document.getElementById('admDate').value        = today;
+  document.getElementById('admDate').min          = today; // No past dates
+
+  if (bedId) {
+    document.getElementById('admBedId').value = bedId;
+    document.getElementById('admInsightText').textContent =
+      `Bed ${bedId} (${currentWard().name}) will be assigned upon registration.`;
+  } else {
+    document.getElementById('admBedId').value = '';
+    document.getElementById('admInsightText').textContent =
+      'Click any available bed first, or type a Bed ID manually.';
+  }
+
+  document.getElementById('admissionModal').style.display = 'flex';
+}
+
+function closeAdmissionModal() {
+  document.getElementById('admissionModal').style.display = 'none';
+}
+
+function registerAdmission() {
+  const patId   = document.getElementById('admPatientId').value.trim();
+  const patName = document.getElementById('admPatientName').value.trim();
+  const bedId   = document.getElementById('admBedId').value.trim();
+  const admDate = document.getElementById('admDate').value;
+  const reason  = document.getElementById('admReason').value.trim();
+
+  // Validation
+  if (!patId)   { showToast('Please enter a Patient ID.','error'); return; }
+  if (!patName) { showToast('Please enter the patient name.','error'); return; }
+  if (!bedId)   { showToast('Please select or enter a Bed ID.','error'); return; }
+  if (!admDate) { showToast('Please select an admission date.','error'); return; }
+  if (!reason)  { showToast('Please enter a reason for the visit.','error'); return; }
+
+  // Past date check
+  const today = toDateStr(new Date());
+  if (admDate < today) {
+    showToast('Admission date cannot be in the past.','error'); return;
+  }
+
+  // Find the bed across all wards (bed might belong to any ward)
+  let targetBed  = null;
+  let targetWard = null;
+  for (const wId of Object.keys(state.wards)) {
+    const found = state.wards[wId].beds.find(b=>b.id===bedId);
+    if (found) { targetBed=found; targetWard=state.wards[wId]; break; }
+  }
+
+  if (!targetBed) { showToast(`Bed ID "${bedId}" not found in any ward.`,'error'); return; }
+  if (targetBed.status==='occupied')    { showToast(`Bed ${bedId} is already occupied.`,'error'); return; }
+  if (targetBed.status==='maintenance') { showToast(`Bed ${bedId} is under maintenance and cannot be assigned.`,'warn'); return; }
+
+  // Admit!
+  targetBed.status  = 'occupied';
+  targetBed.patient = { name: patName, id: patId, admDate, reason };
+
+  closeAdmissionModal();
+  // Switch to the ward of the admitted bed
+  state.currentWardId = targetWard.id;
+  renderAll();
+  flashBed(bedId);
+  showToast(`${patName} admitted to bed ${bedId} in ${targetWard.name}.`,'success');
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════
+function renderAll() {
+  renderTabs();
+  renderStats();
+  renderBedGrid();
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderAll();
+});
+</script>
 </body>
 </html>

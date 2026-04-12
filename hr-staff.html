@@ -21,6 +21,8 @@
       padding: 24px;
       box-shadow: var(--shadow-sm);
       border-left: 4px solid var(--color-primary);
+      display: flex;
+      flex-direction: column;
     }
     
     .ac-top {
@@ -57,6 +59,7 @@
     .ac-actions {
       display: flex;
       gap: 16px;
+      margin-top: auto;
     }
     
     .ac-actions button {
@@ -85,6 +88,66 @@
     .w-green { color: #10b981; }
     .w-gray { color: #cbd5e1; font-style: italic; font-weight: 400;}
 
+    /* Toasts */
+    #toastContainer {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 99999;
+    }
+    
+    .toast {
+      background-color: #1e293b;
+      color: white;
+      padding: 16px 24px;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      font-size: 0.9rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast-success i { color: #10b981; }
+    .toast-error i { color: #ef4444; }
+
+    /* Dropdown form */
+    .form-select {
+      appearance: none;
+      background-color: white;
+      border: 1px solid var(--color-border);
+      padding: 10px 40px 10px 16px;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      color: var(--color-text-dark);
+      font-weight: 600;
+      cursor: pointer;
+      outline: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath fill='%2364748b' d='M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 16px;
+    }
+    
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--color-text-muted);
+      font-size: 0.95rem;
+      grid-column: 1 / -1;
+    }
   </style>
 </head>
 <body>
@@ -138,72 +201,34 @@
           <h1>Staff Management</h1>
         </div>
         
-        <div class="dr-actions">
-          <div style="position:relative;">
-            <i class="ph ph-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--color-text-muted);"></i>
-            <input type="text" placeholder="Quick search personnel..." style="padding:12px 16px 12px 36px; border:none; border-radius:var(--radius-md); box-shadow:var(--shadow-sm); width:280px; outline:none; font-family:inherit;">
-          </div>
-        </div>
       </div>
       
       <div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
         <h2 style="font-size:1.25rem; font-weight:700;">Pending Profile Approvals</h2>
-        <span class="tag-red-pill" style="background:#fee2e2; color:#b91c1c;">2 ACTION REQUIRED</span>
+        <span id="approvalsCount" class="tag-red-pill" style="background:#fee2e2; color:#b91c1c;">2 ACTION REQUIRED</span>
       </div>
       
-      <div class="approval-grid">
-        <!-- Card 1 -->
-        <div class="approval-card">
-          <div class="ac-top">
-            <img src="https://ui-avatars.com/api/?name=Aris+Thorne&background=0284c7&color=fff" alt="Dr. Aris Thorne">
-            <div class="ac-info">
-              <h3>Dr. Aris Thorne</h3>
-              <p>Senior Neurosurgeon</p>
-            </div>
-          </div>
-          
-          <div class="ac-status-box">
-            <h4><i class="ph-fill ph-shield-check"></i> Credentials Verification</h4>
-            <p>License: MD-9928-TX. Background check cleared via VeriMed Systems.</p>
-          </div>
-          
-          <div class="ac-actions">
-            <button class="btn btn-primary">APPROVE</button>
-            <button class="btn btn-reject">REJECT</button>
-          </div>
-        </div>
-        
-        <!-- Card 2 -->
-        <div class="approval-card">
-          <div class="ac-top">
-            <img src="https://ui-avatars.com/api/?name=Sarah+Chen&background=ca8a04&color=fff" alt="Dr. Sarah Chen">
-            <div class="ac-info">
-              <h3>Dr. Sarah Chen</h3>
-              <p>Cardiology Fellow</p>
-            </div>
-          </div>
-          
-          <div class="ac-status-box">
-            <h4><i class="ph-fill ph-file-text"></i> Onboarding Progress</h4>
-            <p>Medical Board documentation under final review. Ready for ward sync.</p>
-          </div>
-          
-          <div class="ac-actions">
-            <button class="btn btn-primary">APPROVE</button>
-            <button class="btn btn-reject">REJECT</button>
-          </div>
-        </div>
+      <div class="approval-grid" id="approvalsGrid">
+        <!-- JS Rendered -->
       </div>
       
       
-      <div class="dt-header" style="padding:0; border:none; margin-bottom:20px; display:flex; align-items:center;">
+      <div class="dt-header" style="padding:0; border:none; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between;">
         <div style="display:flex; align-items:center; gap:16px;">
           <h2 style="font-size:1.5rem; font-weight:700;">Medical Staff Directory</h2>
-          <span style="font-size:0.75rem; background:rgba(0,0,0,0.05); padding:4px 12px; border-radius:20px; font-weight:600;">124 Total Staff</span>
+          <span id="staffCount" style="font-size:0.75rem; background:rgba(0,0,0,0.05); padding:4px 12px; border-radius:20px; font-weight:600;"></span>
         </div>
-        <button class="btn-filter">
-          <i class="ph ph-faders"></i> Filter By Role
-        </button>
+        <div style="display:flex; align-items:center; gap:16px;">
+          <div style="position:relative;">
+            <i class="ph ph-magnifying-glass" style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--color-text-muted);"></i>
+            <input type="text" id="searchInput" placeholder="Quick search personnel..." style="padding:12px 16px 12px 36px; border:none; border-radius:var(--radius-md); box-shadow:var(--shadow-sm); width:280px; outline:none; font-family:inherit;">
+          </div>
+          <select id="roleFilter" class="form-select">
+          <option value="All">Filter By Role: All</option>
+          <option value="Doctor">Doctor</option>
+          <option value="Nurse">Nurse</option>
+        </select>
+        </div>
       </div>
       
       <div class="data-table-card">
@@ -217,91 +242,16 @@
               <th style="text-align:right;">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>
-                <div class="td-profile">
-                  <div class="td-avatar" style="background:#d1fae5; color:#059669;">JH</div>
-                  <div>
-                    <div class="td-name">James Hiddleston</div>
-                    <div class="td-id">ID: ST-001242</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="role-badge role-dr">DOCTOR</span></td>
-              <td style="color:var(--color-text-dark); font-weight:500;">Emergency Medicine</td>
-              <td><span class="ward-assign"><i class="ph-fill ph-circle w-green"></i> ER South Wing</span></td>
-              <td style="text-align:right;">
-                <button class="btn-filter" style="border:none; background:var(--color-bg-light); color:var(--color-primary); float:right;">
-                  <i class="ph ph-arrows-left-right"></i> ASSIGN TO WARD
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <div class="td-profile">
-                  <div class="td-avatar">MR</div>
-                  <div>
-                    <div class="td-name">Maya Rodriguez</div>
-                    <div class="td-id">ID: ST-001258</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="role-badge role-nurse">NURSE</span></td>
-              <td style="color:var(--color-text-dark); font-weight:500;">Critical Care</td>
-              <td><span class="ward-assign"><i class="ph-fill ph-circle w-green"></i> ICU Block C</span></td>
-              <td style="text-align:right;">
-                <button class="btn-filter" style="border:none; background:var(--color-bg-light); color:var(--color-primary); float:right;">
-                  <i class="ph ph-arrows-left-right"></i> ASSIGN TO WARD
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <div class="td-profile">
-                  <div class="td-avatar" style="background:#fee2e2; color:#b91c1c;">BK</div>
-                  <div>
-                    <div class="td-name">Benjamin Kim</div>
-                    <div class="td-id">ID: ST-001290</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="role-badge role-dr">DOCTOR</span></td>
-              <td style="color:var(--color-text-dark); font-weight:500;">Radiology</td>
-              <td><span class="ward-assign w-gray"><i class="ph-fill ph-circle"></i> Unassigned</span></td>
-              <td style="text-align:right;">
-                <button class="btn-filter" style="border:none; background:var(--color-bg-light); color:var(--color-primary); float:right;">
-                  <i class="ph ph-arrows-left-right"></i> ASSIGN TO WARD
-                </button>
-              </td>
-            </tr>
-            <tr>
-              <td>
-                <div class="td-profile">
-                  <div class="td-avatar" style="background:#f3e8ff; color:#7e22ce;">LF</div>
-                  <div>
-                    <div class="td-name">Lucia Ferrari</div>
-                    <div class="td-id">ID: ST-001302</div>
-                  </div>
-                </div>
-              </td>
-              <td><span class="role-badge role-nurse">NURSE</span></td>
-              <td style="color:var(--color-text-dark); font-weight:500;">Neonatal Nursing</td>
-              <td><span class="ward-assign"><i class="ph-fill ph-circle w-green"></i> Maternity Unit</span></td>
-              <td style="text-align:right;">
-                <button class="btn-filter" style="border:none; background:var(--color-bg-light); color:var(--color-primary); float:right;">
-                  <i class="ph ph-arrows-left-right"></i> ASSIGN TO WARD
-                </button>
-              </td>
-            </tr>
+          <tbody id="staffTableBody">
+            <!-- JS Rendered -->
           </tbody>
         </table>
         
         <div class="dt-footer">
-          <span>Showing 4 of 124 records</span>
+          <span id="paginationInfo">Showing 4 of X records</span>
           <div class="dt-pagination">
-            <button><i class="ph ph-caret-left"></i></button>
-            <button><i class="ph ph-caret-right"></i></button>
+            <button id="btnPrev"><i class="ph ph-caret-left"></i></button>
+            <button id="btnNext"><i class="ph ph-caret-right"></i></button>
           </div>
         </div>
       </div>
@@ -328,6 +278,272 @@
       </div>
     </div>
   </div>
+
+  <!-- Ward Assignment Modal -->
+  <div class="modal-overlay" id="wardModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
+    <div class="modal-container" style="max-width: 400px;">
+      <button class="modal-close" onclick="closeWardModal()"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <h2 id="wardModalTitle">Assign Ward</h2>
+        <p>Select a ward for <span id="wardModalStaffName" style="font-weight:700; color:var(--color-primary);"></span></p>
+      </div>
+      <div style="margin-bottom:24px;">
+        <select id="wardSelect" class="form-select" style="width: 100%;">
+          <option value="ER South Wing">ER South Wing</option>
+          <option value="ICU Block C">ICU Block C</option>
+          <option value="Maternity Unit">Maternity Unit</option>
+          <option value="General Surgery">General Surgery</option>
+          <option value="Pediatrics Ward">Pediatrics Ward</option>
+          <option value="Unassigned">Unassigned</option>
+        </select>
+        <input type="hidden" id="wardModalStaffId">
+      </div>
+      <div class="modal-actions" style="justify-content: flex-end;">
+        <button class="btn btn-outline" onclick="closeWardModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="assignWard()">Confirm Assignment</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastContainer"></div>
+
   <script src="auth-session.js"></script>
+  <script>
+    // Mock Data State
+    const mockData = {
+      approvals: [
+        { id: 'app1', name: 'Dr. Aris Thorne', role: 'Senior Neurosurgeon', statusIcon: 'ph-shield-check', statusTitle: 'Credentials Verification', statusDesc: 'License: MD-9928-TX. Background check cleared via VeriMed Systems.', img: 'https://ui-avatars.com/api/?name=Aris+Thorne&background=0284c7&color=fff' },
+        { id: 'app2', name: 'Dr. Sarah Chen', role: 'Cardiology Fellow', statusIcon: 'ph-file-text', statusTitle: 'Onboarding Progress', statusDesc: 'Medical Board documentation under final review. Ready for ward sync.', img: 'https://ui-avatars.com/api/?name=Sarah+Chen&background=ca8a04&color=fff' }
+      ],
+      staff: [
+        { id: 'ST-001242', name: 'James Hiddleston', initials: 'JH', role: 'Doctor', spec: 'Emergency Medicine', ward: 'ER South Wing', wardClass: 'w-green', bg: '#d1fae5', color: '#059669' },
+        { id: 'ST-001258', name: 'Maya Rodriguez', initials: 'MR', role: 'Nurse', spec: 'Critical Care', ward: 'ICU Block C', wardClass: 'w-green', bg: '#f1f5f9', color: '#64748b' },
+        { id: 'ST-001290', name: 'Benjamin Kim', initials: 'BK', role: 'Doctor', spec: 'Radiology', ward: 'Unassigned', wardClass: 'w-gray', bg: '#fee2e2', color: '#b91c1c' },
+        { id: 'ST-001302', name: 'Lucia Ferrari', initials: 'LF', role: 'Nurse', spec: 'Neonatal Nursing', ward: 'Maternity Unit', wardClass: 'w-green', bg: '#f3e8ff', color: '#7e22ce' },
+        { id: 'ST-001315', name: 'Omar Al-Fayed', initials: 'OA', role: 'Doctor', spec: 'Pediatrics', ward: 'Pediatrics Ward', wardClass: 'w-green', bg: '#e0f2fe', color: '#0284c7' },
+        { id: 'ST-001321', name: 'Elena Rostova', initials: 'ER', role: 'Nurse', spec: 'General Practice', ward: 'Unassigned', wardClass: 'w-gray', bg: '#ffedd5', color: '#c2410c' }
+      ]
+    };
+
+    // Pagination & Filter State
+    let currentPage = 1;
+    const rowsPerPage = 4;
+    let currentSearch = '';
+    let currentRole = 'All';
+    let filteredStaff = [...mockData.staff];
+
+    // ---- DOM Elements ----
+    const searchInput = document.getElementById('searchInput');
+    const roleFilter = document.getElementById('roleFilter');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+
+    // ---- Event Listeners ----
+    searchInput.addEventListener('input', (e) => {
+      currentSearch = e.target.value.toLowerCase();
+      currentPage = 1;
+      applyFilters();
+    });
+
+    roleFilter.addEventListener('change', (e) => {
+      currentRole = e.target.value;
+      currentPage = 1;
+      applyFilters();
+    });
+
+    btnPrev.addEventListener('click', () => {
+      if (currentPage > 1) { currentPage--; renderStaffTable(); }
+    });
+
+    btnNext.addEventListener('click', () => {
+      const maxPage = Math.ceil(filteredStaff.length / rowsPerPage);
+      if (currentPage < maxPage) { currentPage++; renderStaffTable(); }
+    });
+
+    // ---- Initialization ----
+    document.addEventListener('DOMContentLoaded', () => {
+      renderApprovals();
+      applyFilters(); // Renders staff table initially
+    });
+
+    // ---- Toast Logic ----
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      
+      const icon = type === 'success' ? 'ph-check-circle' : 'ph-x-circle';
+      toast.innerHTML = `<i class="ph-fill ${icon}" style="font-size:1.25rem;"></i> <span>${message}</span>`;
+      
+      container.appendChild(toast);
+      
+      // Trigger animation
+      setTimeout(() => toast.classList.add('show'), 10);
+      
+      // Remove after 3s
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ---- Approvals Logic ----
+    function renderApprovals() {
+      const grid = document.getElementById('approvalsGrid');
+      const countEl = document.getElementById('approvalsCount');
+      
+      countEl.textContent = `${mockData.approvals.length} ACTION REQUIRED`;
+      
+      if (mockData.approvals.length === 0) {
+        countEl.style.display = 'none';
+        grid.style.display = 'block'; // switch off grid mapping
+        grid.innerHTML = `<div class="empty-state"><i class="ph ph-check-circle" style="font-size:3rem; color:#10b981; margin-bottom:12px; display:block;"></i>No pending approvals. All caught up!</div>`;
+        return;
+      }
+      
+      grid.style.display = 'grid';
+      grid.innerHTML = mockData.approvals.map(app => `
+        <div class="approval-card" id="card-${app.id}">
+          <div class="ac-top">
+            <img src="${app.img}" alt="${app.name}">
+            <div class="ac-info">
+              <h3>${app.name}</h3>
+              <p>${app.role}</p>
+            </div>
+          </div>
+          
+          <div class="ac-status-box">
+            <h4><i class="ph-fill ${app.statusIcon}"></i> ${app.statusTitle}</h4>
+            <p>${app.statusDesc}</p>
+          </div>
+          
+          <div class="ac-actions">
+            <button class="btn btn-primary" onclick="approveProfile('${app.id}')">APPROVE</button>
+            <button class="btn btn-reject" onclick="rejectProfile('${app.id}')">REJECT</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function approveProfile(id) {
+      mockData.approvals = mockData.approvals.filter(a => a.id !== id);
+      const card = document.getElementById(`card-${id}`);
+      card.style.opacity = '0';
+      setTimeout(() => {
+        renderApprovals();
+        showToast('Profile approved successfully.');
+      }, 200);
+    }
+
+    function rejectProfile(id) {
+      mockData.approvals = mockData.approvals.filter(a => a.id !== id);
+      const card = document.getElementById(`card-${id}`);
+      card.style.opacity = '0';
+      setTimeout(() => {
+        renderApprovals();
+        showToast('Profile rejected.', 'error');
+      }, 200);
+    }
+
+    // ---- Staff Directory Logic ----
+    function applyFilters() {
+      filteredStaff = mockData.staff.filter(s => {
+        const matchesSearch = s.name.toLowerCase().includes(currentSearch) || s.id.toLowerCase().includes(currentSearch);
+        const matchesRole = currentRole === 'All' || s.role === currentRole;
+        return matchesSearch && matchesRole;
+      });
+      renderStaffTable();
+    }
+
+    function renderStaffTable() {
+      const tbody = document.getElementById('staffTableBody');
+      const paginationInfo = document.getElementById('paginationInfo');
+      const countEl = document.getElementById('staffCount');
+      
+      countEl.textContent = `${filteredStaff.length} Total Staff`;
+      
+      if (filteredStaff.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="ph ph-users" style="font-size:3rem; margin-bottom:12px; display:block;"></i>No staff found matching criteria.</div></td></tr>`;
+        paginationInfo.textContent = `Showing 0 records`;
+        btnPrev.disabled = true;
+        btnNext.disabled = true;
+        return;
+      }
+      
+      // Pagination Math
+      const totalRows = filteredStaff.length;
+      const totalPages = Math.ceil(totalRows / rowsPerPage);
+      if (currentPage > totalPages) currentPage = totalPages;
+      if (currentPage < 1) currentPage = 1;
+      
+      const startIdx = (currentPage - 1) * rowsPerPage;
+      const endIdx = startIdx + rowsPerPage;
+      const visibleData = filteredStaff.slice(startIdx, endIdx);
+      
+      paginationInfo.textContent = `Showing ${startIdx + 1} to ${Math.min(endIdx, totalRows)} of ${totalRows} records`;
+      
+      btnPrev.disabled = currentPage === 1;
+      btnNext.disabled = currentPage === totalPages;
+      btnPrev.style.opacity = btnPrev.disabled ? '0.5' : '1';
+      btnNext.style.opacity = btnNext.disabled ? '0.5' : '1';
+      
+      tbody.innerHTML = visibleData.map(s => {
+        const roleBadge = s.role === 'Doctor' ? 'role-dr' : 'role-nurse';
+        const wardIconColor = s.wardClass === 'w-gray' ? '' : 'w-green';
+        
+        return `
+        <tr>
+          <td>
+            <div class="td-profile">
+              <div class="td-avatar" style="background:${s.bg}; color:${s.color};">${s.initials}</div>
+              <div>
+                <div class="td-name">${s.name}</div>
+                <div class="td-id">ID: ${s.id}</div>
+              </div>
+            </div>
+          </td>
+          <td><span class="role-badge ${roleBadge}">${s.role.toUpperCase()}</span></td>
+          <td style="color:var(--color-text-dark); font-weight:500;">${s.spec}</td>
+          <td><span class="ward-assign ${s.wardClass}"><i class="ph-fill ph-circle ${wardIconColor}"></i> ${s.ward}</span></td>
+          <td style="text-align:right;">
+            <button class="btn-filter" style="border:none; background:var(--color-bg-light); color:var(--color-primary); float:right;" onclick="openWardModal('${s.id}')">
+              <i class="ph ph-arrows-left-right"></i> ASSIGN TO WARD
+            </button>
+          </td>
+        </tr>
+      `}).join('');
+    }
+
+    // ---- Ward Assignment Logic ----
+    function openWardModal(id) {
+      const staff = mockData.staff.find(s => s.id === id);
+      if (!staff) return;
+      
+      document.getElementById('wardModalStaffId').value = id;
+      document.getElementById('wardModalStaffName').textContent = staff.name;
+      document.getElementById('wardSelect').value = staff.ward;
+      
+      document.getElementById('wardModal').style.display = 'flex';
+    }
+
+    function closeWardModal() {
+      document.getElementById('wardModal').style.display = 'none';
+    }
+
+    function assignWard() {
+      const id = document.getElementById('wardModalStaffId').value;
+      const selectedWard = document.getElementById('wardSelect').value;
+      
+      const staff = mockData.staff.find(s => s.id === id);
+      if (staff) {
+        staff.ward = selectedWard;
+        staff.wardClass = selectedWard === 'Unassigned' ? 'w-gray' : 'w-green';
+      }
+      
+      closeWardModal();
+      applyFilters(); // Re-render table completely to show state change
+      showToast('Assigned successfully.');
+    }
+  </script>
 </body>
 </html>

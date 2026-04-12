@@ -7,77 +7,284 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    /* ── Toast ──────────────────────────────────────────── */
+    #toastContainer {
+      position: fixed; bottom: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 12px; z-index: 99999;
+    }
+    .toast {
+      background-color: #1e293b; color: white; padding: 16px 24px;
+      border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
+      font-size: 0.9rem; font-weight: 600;
+      display: flex; align-items: center; gap: 12px;
+      opacity: 0; transform: translateY(20px); transition: all 0.3s ease;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast-success i { color: #10b981; }
+    .toast-error   i { color: #ef4444; }
+
+    /* ── Popover ────────────────────────────────────────── */
+    .popover-menu {
+      position: absolute; background: white; box-shadow: var(--shadow-lg);
+      border-radius: var(--radius-md); border: 1px solid var(--color-border);
+      padding: 8px 0; z-index: 100; min-width: 150px;
+    }
+    .popover-menu div {
+      padding: 9px 16px; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; color: var(--color-text-dark); transition: background 0.2s;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .popover-menu div:hover { background: var(--color-bg-light); }
+
+    /* ── Week view today column ─────────────────────────── */
+    .day-col.today {
+      background: rgba(10,111,86,0.03); border-radius: var(--radius-md); padding-bottom: 24px;
+    }
+    .day-col.today .day-number {
+      background: var(--color-primary); color: white;
+      display: inline-flex; width: 36px; height: 36px;
+      align-items: center; justify-content: center; border-radius: 50%;
+    }
+
+    /* ── Shift card ─────────────────────────────────────── */
+    .shift-card {
+      transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;
+      animation: fadeIn 0.35s ease forwards;
+      min-height: 150px; display: flex; flex-direction: column; justify-content: space-between;
+      position: relative;
+    }
+    .shift-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .shift-card.past {
+      opacity: 0.72;
+      background-color: #fafafa;
+    }
+    .shift-card.past:hover { transform: none; box-shadow: var(--shadow-sm); }
+    .completed-badge {
+      background: #d1fae5; color: #065f46;
+      font-size: 0.58rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.04em; padding: 2px 8px; border-radius: 20px;
+      display: inline-flex; align-items: center; gap: 3px;
+      margin-top: 5px; margin-bottom: 8px;
+    }
+    @keyframes fadeIn { from { opacity:0; transform:scale(0.95); } to { opacity:1; transform:scale(1); } }
+
+    /* ── Week nav ───────────────────────────────────────── */
+    .week-nav {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 0;
+    }
+    .week-nav-btn {
+      width: 32px; height: 32px; border-radius: 50%;
+      border: 1px solid var(--color-border); background: white;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--color-text-muted); transition: all 0.2s;
+      font-size: 0.95rem;
+    }
+    .week-nav-btn:hover { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+    .week-nav-label {
+      font-size: 0.9rem; font-weight: 700; color: var(--color-text-dark);
+      min-width: 220px; text-align: center;
+    }
+
+    /* ── Month grid ─────────────────────────────────────── */
+    .month-wrapper { animation: fadeIn 0.3s ease; }
+    .month-nav {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    }
+    .month-nav-label {
+      font-size: 1.05rem; font-weight: 700; min-width: 160px; text-align: center;
+    }
+    .month-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 1px; background: var(--color-border);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); overflow: hidden;
+    }
+    .month-day-header {
+      background: var(--color-bg-light); text-align: center;
+      padding: 10px 0; font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted);
+    }
+    .month-cell {
+      background: white; min-height: 110px; padding: 8px;
+      animation: fadeIn 0.3s ease;
+    }
+    .month-cell.other-month { background: #fafafa; }
+    .month-cell.today-cell  { background: rgba(10,111,86,0.04); }
+    .month-cell-number {
+      font-size: 0.8rem; font-weight: 700; color: var(--color-text-muted);
+      margin-bottom: 6px; width: 26px; height: 26px;
+      display: flex; align-items: center; justify-content: center; border-radius: 50%;
+    }
+    .month-cell.today-cell .month-cell-number { background: var(--color-primary); color: white; }
+    .month-shift-dot {
+      font-size: 0.62rem; font-weight: 700; padding: 2px 6px;
+      border-radius: 4px; margin-bottom: 3px; cursor: pointer;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      display: block; transition: opacity 0.2s;
+    }
+    .month-shift-dot:hover { opacity: 0.75; }
+
+    /* ── Shift type selector (modal) ────────────────────── */
+    .shift-type-group {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 0;
+    }
+    .shift-type-card {
+      border: 2px solid var(--color-border); border-radius: var(--radius-md);
+      padding: 14px 10px; text-align: center; cursor: pointer;
+      transition: all 0.2s; background: white;
+    }
+    .shift-type-card:hover { border-color: #94a3b8; background: var(--color-bg-light); }
+    .shift-type-card.selected-morning { border-color: #10b981; background: #f0fdf8; }
+    .shift-type-card.selected-afternoon { border-color: #f59e0b; background: #fffbeb; }
+    .shift-type-card.selected-night { border-color: #6366f1; background: #eef2ff; }
+    .stc-icon { font-size: 1.5rem; margin-bottom: 6px; }
+    .stc-label { font-size: 0.8rem; font-weight: 700; margin-bottom: 2px; }
+    .stc-time { font-size: 0.7rem; color: var(--color-text-muted); }
+
+    /* ── time preview badge ─────────────────────────────── */
+    .time-preview {
+      background: var(--color-bg-light); border-radius: var(--radius-md);
+      padding: 12px 16px; display: flex; align-items: center; gap: 10px;
+      font-size: 0.9rem; font-weight: 700; color: var(--color-text-dark);
+    }
+    .time-preview i { color: var(--color-primary); font-size: 1.1rem; }
+
+    /* ── cal-tick override ──────────────────────────────── */
+    .cal-tick { cursor: pointer; }
+    .cal-tick.active { background-color: var(--color-bg-light); }
+  </style>
 </head>
 <body>
 
-  <!-- Create Shift Modal (Hidden initially, using a simple JS toggle to show) -->
-  <div class="modal-overlay" id="shiftModal" style="display: none;">
-    <div class="modal-container">
-      <button class="modal-close" onclick="document.getElementById('shiftModal').style.display='none'"><i class="ph ph-x"></i></button>
-      
+  <!-- ════════════ CREATE / EDIT SHIFT MODAL ════════════ -->
+  <div class="modal-overlay" id="shiftModal" style="display:none;">
+    <div class="modal-container" style="max-width:560px;">
+      <button class="modal-close" onclick="closeShiftModal()"><i class="ph ph-x"></i></button>
+
       <div class="modal-header">
-        <h2>Create New Shift</h2>
-        <p>Assign requirements for hospital ward coverage</p>
+        <h2 id="modalTitle">Create New Shift</h2>
+        <p>Assign a clinical shift for hospital ward coverage</p>
       </div>
-      
-      <div class="form-group">
-        <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Ward Selection</label>
-        <div class="input-outline">
-          <select><option>Cardiology</option></select>
-        </div>
-      </div>
-      
+
+      <!-- Ward + Date row -->
       <div class="form-grid-2">
         <div class="form-group">
-          <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Date Selection</label>
-          <div class="input-outline">
-            <input type="date" value="2023-11-24" style="color:var(--color-text-dark); background:transparent;">
+          <label class="form-label">Ward / Department</label>
+          <div class="input-outline" style="height:auto; padding:0;">
+            <select id="sWard" style="width:100%; border:none; outline:none; background:transparent; padding:12px 16px; height:100%;">
+              <optgroup label="Emergency">
+                <option value="Emergency Room">Emergency Room (ER)</option>
+                <option value="Trauma Unit">Trauma Unit</option>
+              </optgroup>
+              <optgroup label="Surgery">
+                <option value="General Surgery">General Surgery</option>
+                <option value="Orthopedic Surgery">Orthopedic Surgery</option>
+                <option value="Neurosurgery">Neurosurgery</option>
+                <option value="Cardiovascular Surgery">Cardiovascular Surgery</option>
+              </optgroup>
+              <optgroup label="Internal Medicine">
+                <option value="Cardiology Ward">Cardiology Ward</option>
+                <option value="Neurology Ward">Neurology Ward</option>
+                <option value="Oncology Ward">Oncology Ward</option>
+                <option value="Gastroenterology">Gastroenterology</option>
+                <option value="Pulmonology">Pulmonology</option>
+              </optgroup>
+              <optgroup label="Specialized">
+                <option value="Pediatrics">Pediatrics</option>
+                <option value="Maternity & Obstetrics">Maternity & Obstetrics</option>
+                <option value="ICU Block A">ICU Block A</option>
+                <option value="ICU Block B">ICU Block B</option>
+                <option value="Radiology & Imaging">Radiology & Imaging</option>
+                <option value="Psychiatry Unit">Psychiatry Unit</option>
+              </optgroup>
+              <optgroup label="Support">
+                <option value="On-Call Team">On-Call Team</option>
+                <option value="Outpatient Clinic">Outpatient Clinic</option>
+                <option value="Rehabilitation">Rehabilitation</option>
+              </optgroup>
+            </select>
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Required Staff Count</label>
+          <label class="form-label">Date</label>
           <div class="input-outline">
-            <input type="number" value="8">
+            <input type="date" id="sDate" style="color:var(--color-text-dark); background:transparent; width:100%; border:none; outline:none;">
           </div>
         </div>
       </div>
-      
+
+      <!-- Staff -->
       <div class="form-group">
-        <label class="form-label" style="text-transform:uppercase; letter-spacing:0.05em; font-size:0.65rem;">Shift Type</label>
-        <div class="toggle-group" style="padding:4px;">
-          <div class="toggle-btn active" style="color:var(--color-primary);">Morning</div>
-          <div class="toggle-btn">Afternoon</div>
-          <div class="toggle-btn">Night</div>
+        <label class="form-label">Assign Staff Member</label>
+        <div class="input-outline" style="height:auto; padding:0;">
+          <select id="sUser" style="width:100%; border:none; outline:none; background:transparent; padding:12px 16px;">
+            <optgroup label="Physicians">
+              <option value="Dr. Ariston Shabrawy">Dr. Ariston Shabrawy — Neurosurgery</option>
+              <option value="Dr. Miller Thompson">Dr. Miller Thompson — Cardiology</option>
+              <option value="Dr. Samantha Davis">Dr. Samantha Davis — Pediatrics</option>
+              <option value="Dr. Cooper Williams">Dr. Cooper Williams — Emergency Medicine</option>
+              <option value="Dr. Morgan Chen">Dr. Morgan Chen — On-Call Generalist</option>
+              <option value="Dr. Elena Rostova">Dr. Elena Rostova — Oncology</option>
+              <option value="Dr. Omar Al-Fayed">Dr. Omar Al-Fayed — Orthopedics</option>
+              <option value="Dr. Sarah Lindqvist">Dr. Sarah Lindqvist — Radiology</option>
+              <option value="Dr. James Hiddleston">Dr. James Hiddleston — General Surgery</option>
+              <option value="Dr. Priya Nair">Dr. Priya Nair — Gynecology & Obstetrics</option>
+            </optgroup>
+
+          </select>
         </div>
       </div>
-      
-      <div class="ai-insight-box">
-        <div class="ai-insight-text">
-          <i class="ph-fill ph-sparkle"></i>
-          <div>AI Insight: AI recommends <u>8 staff</u> for this shift based on forecasted occupancy.</div>
-        </div>
-        <div>
-          <button class="btn btn-primary" style="padding:6px 16px; font-size:0.75rem; display:inline-flex; align-items:center; gap:8px;">
-            <i class="ph-fill ph-check-circle"></i> Apply Suggestion
-          </button>
+
+      <!-- Shift type selector -->
+      <div class="form-group">
+        <label class="form-label">Shift Type <span style="color:var(--color-text-muted); text-transform:none; font-weight:400; font-size:0.7rem;">(each shift is exactly 8 hours)</span></label>
+        <div class="shift-type-group" id="shiftTypeGroup">
+          <div class="shift-type-card" id="stc-morning" onclick="selectShiftType('MORNING')">
+            <div class="stc-icon">🌅</div>
+            <div class="stc-label" style="color:#065f46;">MORNING</div>
+            <div class="stc-time">06:00 – 14:00</div>
+          </div>
+          <div class="shift-type-card" id="stc-afternoon" onclick="selectShiftType('AFTERNOON')">
+            <div class="stc-icon">☀️</div>
+            <div class="stc-label" style="color:#92400e;">AFTERNOON</div>
+            <div class="stc-time">14:00 – 22:00</div>
+          </div>
+          <div class="shift-type-card" id="stc-night" onclick="selectShiftType('NIGHT')">
+            <div class="stc-icon">🌙</div>
+            <div class="stc-label" style="color:#3730a3;">NIGHT</div>
+            <div class="stc-time">22:00 – 06:00</div>
+          </div>
         </div>
       </div>
-      
+
+      <!-- Time preview -->
+      <div class="time-preview" id="timePreview" style="margin-bottom:4px;">
+        <i class="ph-fill ph-clock"></i>
+        <span id="timePreviewText">Select a shift type above</span>
+      </div>
+
+      <input type="hidden" id="sEditingId">
+      <input type="hidden" id="sShiftType" value="">
+
       <div class="modal-actions">
-        <button class="btn-ghost" onclick="document.getElementById('shiftModal').style.display='none'">Cancel</button>
-        <button class="btn btn-primary">Create Shift</button>
+        <button class="btn-ghost" onclick="closeShiftModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveShift()">
+          <i class="ph ph-floppy-disk"></i> Save Shift
+        </button>
       </div>
     </div>
   </div>
 
+  <!-- ════════════ APP LAYOUT ════════════ -->
   <div class="app-container">
     <!-- Sidebar -->
     <div class="sidebar">
       <div class="logo">
         <span style="display:block;">SmartHospital</span>
-        <span style="font-size: 0.6rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Clinical HR Portal</span>
+        <span style="font-size:0.6rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Clinical HR Portal</span>
       </div>
-      
+
       <div class="nav-menu">
         <a href="hr-dashboard.html" class="nav-item">
           <i class="ph ph-squares-four"></i> Dashboard
@@ -92,7 +299,7 @@
           <i class="ph ph-buildings"></i> Wards
         </a>
       </div>
-      
+
       <div class="sidebar-bottom">
         <div class="user-profile-sm">
           <img src="https://ui-avatars.com/api/?name=HR+Manager&background=0f172a&color=fff" alt="HR Manager">
@@ -101,11 +308,10 @@
             <span class="role">Admin Access</span>
           </div>
         </div>
-        
         <a href="#" class="bottom-nav-item" onclick="document.getElementById('globalSupportModal').style.display='flex'">
           <i class="ph ph-headphones"></i> Support
         </a>
-        <a href="index.html" class="bottom-nav-item" style="color: #dc2626;">
+        <a href="index.html" class="bottom-nav-item" style="color:#dc2626;">
           <i class="ph ph-sign-out"></i> Log Out
         </a>
       </div>
@@ -113,162 +319,485 @@
 
     <!-- Main Content -->
     <div class="main-content">
+      <!-- Toolbar -->
       <div class="dr-toolbar" style="align-items:flex-end;">
         <div>
           <span class="sub-header-text">Clinical Excellence / Shift Management</span>
-          <h1 style="font-size:2rem; font-weight:700; margin-bottom:8px;">Weekly Schedule</h1>
-          <p style="color:var(--color-text-dark); font-size:1.05rem;">Manage clinical rotations for Oct 23-Oct 29, 2023</p>
+          <h1 style="font-size:2rem; font-weight:700; margin-bottom:8px;" id="pageTitle">Weekly Schedule</h1>
+          <p id="rangeLabel" style="color:var(--color-text-dark); font-size:1.05rem;">Loading...</p>
         </div>
-        
         <div class="dr-actions">
+          <!-- Week/Month toggle -->
           <div class="calendar-switch">
-            <div class="cal-tick active">Week</div>
-            <div class="cal-tick" style="color:var(--color-text-muted);">Month</div>
+            <div class="cal-tick active" id="tabWeek" onclick="switchView('week')">Week</div>
+            <div class="cal-tick" id="tabMonth" onclick="switchView('month')">Month</div>
           </div>
-          <button class="btn btn-primary" onclick="document.getElementById('shiftModal').style.display='flex'">
+          <button class="btn btn-primary" onclick="openCreateModal()">
             <i class="ph-bold ph-plus"></i> CREATE SHIFT
           </button>
         </div>
       </div>
-      
-      <div class="week-grid">
-        <!-- Monday -->
-        <div>
-          <div class="day-col-header">
-            <div class="day-name">MON</div>
-            <div class="day-number">23</div>
-          </div>
-          
-          <div class="shift-card morning">
-            <span class="tag-sm" style="background:#a7f3d0; color:#064e3b; margin-bottom:12px; display:inline-block;">MORNING</span>
-            <h4>Cardiology Ward</h4>
-            <p>06:00 - 14:00</p>
-            <div class="sc-user">
-              <img src="https://ui-avatars.com/api/?name=Aris+S&background=1e293b&color=fff">
-              <span>Dr. Aris S.</span>
-            </div>
+
+      <!-- Week View -->
+      <div id="weekViewWrapper">
+        <!-- Week navigation -->
+        <div style="display:flex; justify-content:center; margin-bottom:8px;">
+          <div class="week-nav">
+            <button class="week-nav-btn" id="btnPrevWeek" onclick="navWeek(-1)" title="Previous Week">
+              <i class="ph ph-caret-left"></i>
+            </button>
+            <span class="week-nav-label" id="weekNavLabel"></span>
+            <button class="week-nav-btn" id="btnNextWeek" onclick="navWeek(1)" title="Next Week">
+              <i class="ph ph-caret-right"></i>
+            </button>
           </div>
         </div>
-        
-        <!-- Tuesday -->
-        <div>
-          <div class="day-col-header">
-            <div class="day-name">TUE</div>
-            <div class="day-number">24</div>
+        <div class="week-grid" id="weekGrid"></div>
+      </div>
+
+      <!-- Month View -->
+      <div id="monthViewWrapper" style="display:none;">
+        <div class="month-wrapper">
+          <div class="month-nav">
+            <button class="week-nav-btn" onclick="navMonth(-1)"><i class="ph ph-caret-left"></i></button>
+            <span class="month-nav-label" id="monthNavLabel"></span>
+            <button class="week-nav-btn" onclick="navMonth(1)"><i class="ph ph-caret-right"></i></button>
           </div>
-          
-          <div class="shift-card afternoon">
-            <span class="tag-sm" style="background:#fde68a; color:#b45309; margin-bottom:12px; display:inline-block;">AFTERNOON</span>
-            <h4>Emergency Room</h4>
-            <p>14:00 - 22:00</p>
-            <div class="sc-user">
-              <img src="https://ui-avatars.com/api/?name=Dr+Mill&background=334155&color=fff">
-              <span>Dr. Mill...</span>
-            </div>
-          </div>
+          <div id="monthGrid"></div>
         </div>
-        
-        <!-- Wednesday -->
-        <div>
-          <div class="day-col-header">
-            <div class="day-name">WED</div>
-            <div class="day-number">25</div>
-          </div>
-          
-          <div class="shift-card morning">
-            <span class="tag-sm" style="background:#a7f3d0; color:#064e3b; margin-bottom:12px; display:inline-block;">MORNING</span>
-            <h4>Pediatrics</h4>
-            <p>06:00 - 14:00</p>
-            <div class="sc-user">
-              <img src="https://ui-avatars.com/api/?name=Dr+Sam&background=475569&color=fff">
-              <span>Dr. Sam...</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Thursday -->
-        <div>
-          <div class="day-col-header">
-            <div class="day-name">THU</div>
-            <div class="day-number">26</div>
-          </div>
-          
-          <div class="no-shift">
-            NO SHIFTS
-          </div>
-        </div>
-        
-        <!-- Friday -->
-        <div>
-          <div class="day-col-header">
-            <div class="day-name">FRI</div>
-            <div class="day-number">27</div>
-          </div>
-          
-          <div class="shift-card morning">
-            <span class="tag-sm" style="background:#a7f3d0; color:#064e3b; margin-bottom:12px; display:inline-block;">MORNING</span>
-            <h4>Cardiology Ward</h4>
-            <p>06:00 - 14:00</p>
-            <div class="sc-user">
-              <div class="td-avatar initials" style="background:#f1f5f9; color:#475569;">SC</div>
-              <span>Dr. Coo...</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Saturday -->
-        <div>
-          <div class="day-col-header">
-            <div class="day-name">SAT</div>
-            <div class="day-number">28</div>
-          </div>
-          
-          <div class="shift-card night">
-            <span class="tag-sm" style="background:#e0e7ff; color:#3730a3; margin-bottom:12px; display:inline-block;">NIGHT</span>
-            <h4>On-Call Team</h4>
-            <p>22:00 - 06:00</p>
-            <div class="sc-user">
-              <div class="td-avatar initials" style="background:#f1f5f9; color:#475569;">JM</div>
-              <span>Dr. Mor...</span>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Sunday -->
-        <div>
-          <div class="day-col-header">
-            <div class="day-name">SUN</div>
-            <div class="day-number">29</div>
-          </div>
-          
-          <div class="no-shift">
-            HOLIDAY
-          </div>
-        </div>
-        
       </div>
     </div>
   </div>
 
   <!-- Global Support Modal -->
-  <div class="modal-overlay" id="globalSupportModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
-    <div class="modal-container" style="max-width: 400px; text-align: center;">
+  <div class="modal-overlay" id="globalSupportModal" style="display:none; justify-content:center; align-items:center; z-index:9999;">
+    <div class="modal-container" style="max-width:400px; text-align:center;">
       <button class="modal-close" onclick="document.getElementById('globalSupportModal').style.display='none'"><i class="ph ph-x"></i></button>
       <div class="modal-header">
-        <i class="ph-fill ph-lifebuoy" style="font-size: 3rem; color: var(--color-primary); margin-bottom: 16px; display: inline-block;"></i>
+        <i class="ph-fill ph-lifebuoy" style="font-size:3rem; color:var(--color-primary); margin-bottom:16px; display:inline-block;"></i>
         <h2>Support Center</h2>
         <p>We're here to help! Reach out to us 24/7.</p>
       </div>
-      <div style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6; text-align: left;">
-        <strong>Email:</strong> <a href="mailto:support@smarthospital.com" style="color: var(--color-primary); text-decoration: none;">support@smarthospital.com</a><br>
+      <div style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6; text-align:left;">
+        <strong>Email:</strong> <a href="mailto:support@smarthospital.com" style="color:var(--color-primary); text-decoration:none;">support@smarthospital.com</a><br>
         <strong>Phone:</strong> +1 (800) 555-0199<br>
         <strong>Live Chat:</strong> Currently Offline
       </div>
-      <div class="modal-actions" style="justify-content: center;">
+      <div class="modal-actions" style="justify-content:center;">
         <button class="btn btn-primary" onclick="document.getElementById('globalSupportModal').style.display='none'">Close</button>
       </div>
     </div>
   </div>
+
+  <div id="toastContainer"></div>
+
   <script src="auth-session.js"></script>
+  <script>
+    // ═══════════════════════════════════════════════════════
+    // SHIFT TYPE CONFIG — single source of truth for 8-hr shifts
+    // ═══════════════════════════════════════════════════════
+    const SHIFT_TYPES = {
+      MORNING:   { label: 'MORNING',   typeClass: 'morning',   start: '06:00', end: '14:00', tagBg: '#a7f3d0', tagColor: '#064e3b', borderColor: '#10b981', selClass: 'selected-morning'   },
+      AFTERNOON: { label: 'AFTERNOON', typeClass: 'afternoon', start: '14:00', end: '22:00', tagBg: '#fde68a', tagColor: '#b45309', borderColor: '#f59e0b', selClass: 'selected-afternoon' },
+      NIGHT:     { label: 'NIGHT',     typeClass: 'night',     start: '22:00', end: '06:00', tagBg: '#e0e7ff', tagColor: '#3730a3', borderColor: '#6366f1', selClass: 'selected-night'     }
+    };
+
+    // ═══════════════════════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════════════════════
+    let currentView = 'week';
+
+    // Week offset from current week (0 = this week, -1 = last week, etc.)
+    let weekOffset = 0;
+
+    // Month offset from current month
+    let monthOffset = 0;
+
+    // Shifts data — seeded relative to today so always realistic
+    const mockState = { shifts: [] };
+
+    // ═══════════════════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════════════════
+    function toDateStr(d) {
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    function getMondayOfWeek(offset = 0) {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const dow = today.getDay();
+      const diffToMon = dow === 0 ? -6 : 1 - dow;
+      const mon = new Date(today);
+      mon.setDate(today.getDate() + diffToMon + offset * 7);
+      return mon;
+    }
+
+    function getFirstDayOfMonth(offset = 0) {
+      const today = new Date();
+      return new Date(today.getFullYear(), today.getMonth() + offset, 1);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // SEED MOCK DATA — dates always relative to today
+    // ═══════════════════════════════════════════════════════
+    (function seedShifts() {
+      const mon = getMondayOfWeek(0);
+      function ds(offset) {
+        const d = new Date(mon);
+        d.setDate(mon.getDate() + offset);
+        return toDateStr(d);
+      }
+      function nextWeekDs(offset) {
+        const d = new Date(mon);
+        d.setDate(mon.getDate() + 7 + offset);
+        return toDateStr(d);
+      }
+
+      mockState.shifts = [
+        { id: 'sh1', date: ds(0), type: 'MORNING',   dept: 'Cardiology Ward',   user: 'Dr. Ariston Shabrawy' },
+        { id: 'sh2', date: ds(1), type: 'AFTERNOON', dept: 'Emergency Room',    user: 'Dr. Cooper Williams' },
+        { id: 'sh3', date: ds(2), type: 'MORNING',   dept: 'Pediatrics',        user: 'Dr. Samantha Davis' },
+        { id: 'sh4', date: ds(2), type: 'NIGHT',     dept: 'ICU Block A',       user: 'RN Maya Rodriguez' },
+        { id: 'sh5', date: ds(3), type: 'AFTERNOON', dept: 'Neurology Ward',    user: 'Dr. Elena Rostova' },
+        { id: 'sh6', date: ds(4), type: 'MORNING',   dept: 'Cardiology Ward',   user: 'Dr. Miller Thompson' },
+        { id: 'sh7', date: ds(5), type: 'NIGHT',     dept: 'On-Call Team',      user: 'Dr. Morgan Chen' },
+        { id: 'sh8', date: nextWeekDs(0), type: 'MORNING',   dept: 'General Surgery',   user: 'Dr. James Hiddleston' },
+        { id: 'sh9', date: nextWeekDs(1), type: 'AFTERNOON', dept: 'Maternity & Obstetrics', user: 'Dr. Priya Nair' },
+        { id: 'sh10',date: nextWeekDs(3), type: 'NIGHT',     dept: 'ICU Block B',       user: 'RN Benjamin Kim' },
+      ];
+    })();
+
+    // ═══════════════════════════════════════════════════════
+    // VIEW SWITCH
+    // ═══════════════════════════════════════════════════════
+    function switchView(view) {
+      currentView = view;
+      document.getElementById('weekViewWrapper').style.display  = view === 'week'  ? 'block' : 'none';
+      document.getElementById('monthViewWrapper').style.display = view === 'month' ? 'block' : 'none';
+
+      const tabWeek  = document.getElementById('tabWeek');
+      const tabMonth = document.getElementById('tabMonth');
+      tabWeek.classList.toggle('active', view === 'week');
+      tabMonth.classList.toggle('active', view === 'month');
+
+      document.getElementById('pageTitle').textContent = view === 'week' ? 'Weekly Schedule' : 'Monthly Schedule';
+
+      if (view === 'week')  renderWeek();
+      else                  renderMonth();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // WEEK NAVIGATION
+    // ═══════════════════════════════════════════════════════
+    function navWeek(direction) {
+      weekOffset += direction;
+      renderWeek();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // RENDER WEEK
+    // ═══════════════════════════════════════════════════════
+    function renderWeek() {
+      const grid  = document.getElementById('weekGrid');
+      const days  = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+      const today = new Date(); today.setHours(0,0,0,0);
+      const mon   = getMondayOfWeek(weekOffset);
+
+      let html = '';
+      let startStr = '', endStr = '';
+
+      for (let i = 0; i < 7; i++) {
+        const cur = new Date(mon);
+        cur.setDate(mon.getDate() + i);
+        const dateStr = toDateStr(cur);
+        const dateNum = cur.getDate();
+        const isToday = cur.getTime() === today.getTime();
+        const dayShifts = mockState.shifts.filter(s => s.date === dateStr);
+
+        if (i === 0) startStr = cur.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        if (i === 6) endStr   = cur.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+        const isPast = cur.getTime() < today.getTime();
+        let shiftsHtml = '';
+        if (dayShifts.length > 0) {
+          shiftsHtml = dayShifts.map(s => {
+            const cfg = SHIFT_TYPES[s.type];
+            const pastClass = isPast ? ' past' : '';
+            const completedBadge = isPast
+              ? `<span class="completed-badge"><i class="ph-fill ph-check-circle"></i> Completed</span>`
+              : '';
+            return `
+              <div class="shift-card ${cfg.typeClass}${pastClass}" onclick="openPopover(event,'${s.id}')">
+                <div>
+                  <span class="tag-sm" style="background:${cfg.tagBg}; color:${cfg.tagColor}; display:inline-block; margin-bottom:${isPast ? '0' : '10px'}">${cfg.label}</span>
+                  ${completedBadge}
+                  <h4 style="margin-bottom:2px;">${s.dept}</h4>
+                  <p>${cfg.start} – ${cfg.end}</p>
+                </div>
+                <div class="sc-user" style="margin-top:auto;">
+                  <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(s.user)}&background=1e293b&color=fff">
+                  <span>${s.user}</span>
+                </div>
+              </div>`;
+          }).join('');
+        } else {
+          shiftsHtml = `<div class="no-shift">NO SHIFTS</div>`;
+        }
+
+        html += `
+          <div class="day-col ${isToday ? 'today' : ''}">
+            <div class="day-col-header">
+              <div class="day-name">${days[i]}</div>
+              <div class="day-number">${dateNum}</div>
+            </div>
+            ${shiftsHtml}
+          </div>`;
+      }
+
+      grid.innerHTML = html;
+
+      // Update nav label
+      document.getElementById('weekNavLabel').textContent = `${startStr} – ${endStr}`;
+      // Update page subtitle
+      document.getElementById('rangeLabel').textContent =
+        weekOffset === 0
+          ? `Manage clinical rotations for the current week`
+          : weekOffset > 0
+            ? `Viewing ${weekOffset} week${weekOffset>1?'s':''} ahead`
+            : `Viewing ${Math.abs(weekOffset)} week${Math.abs(weekOffset)>1?'s':''} ago`;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // MONTH NAVIGATION
+    // ═══════════════════════════════════════════════════════
+    function navMonth(direction) {
+      monthOffset += direction;
+      renderMonth();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // RENDER MONTH
+    // ═══════════════════════════════════════════════════════
+    function renderMonth() {
+      const container = document.getElementById('monthGrid');
+      const today = new Date(); today.setHours(0,0,0,0);
+      const firstDay = getFirstDayOfMonth(monthOffset);
+      const year  = firstDay.getFullYear();
+      const month = firstDay.getMonth();
+
+      // Update labels
+      document.getElementById('monthNavLabel').textContent =
+        firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      document.getElementById('rangeLabel').textContent =
+        `Viewing all scheduled shifts for ${firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+
+      // Start calendar grid from Monday before the 1st
+      const startDow = firstDay.getDay(); // 0=Sun
+      const startOffset = startDow === 0 ? -6 : 1 - startDow;
+      const gridStart = new Date(firstDay);
+      gridStart.setDate(1 + startOffset);
+
+      // Build 42 day cells (6 weeks × 7 days)
+      const dayHeaders = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+      let html = '<div class="month-grid">';
+
+      // Headers
+      dayHeaders.forEach(d => {
+        html += `<div class="month-day-header">${d}</div>`;
+      });
+
+      for (let i = 0; i < 42; i++) {
+        const cellDate = new Date(gridStart);
+        cellDate.setDate(gridStart.getDate() + i);
+        const dateStr   = toDateStr(cellDate);
+        const isThisMonth = cellDate.getMonth() === month;
+        const isToday     = cellDate.getTime() === today.getTime();
+
+        const dayShifts = mockState.shifts.filter(s => s.date === dateStr);
+
+        let cellClass = 'month-cell';
+        if (!isThisMonth) cellClass += ' other-month';
+        if (isToday)      cellClass += ' today-cell';
+
+        let dotsHtml = dayShifts.map(s => {
+          const cfg = SHIFT_TYPES[s.type];
+          return `<span class="month-shift-dot" style="background:${cfg.tagBg}; color:${cfg.tagColor};" onclick="openPopover(event,'${s.id}')">${cfg.label} · ${s.user.split(' ')[1] || s.user}</span>`;
+        }).join('');
+
+        html += `
+          <div class="${cellClass}">
+            <div class="month-cell-number">${cellDate.getDate()}</div>
+            ${dotsHtml}
+          </div>`;
+      }
+
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // POPOVER (Edit / Delete)
+    // ═══════════════════════════════════════════════════════
+    function openPopover(e, shiftId) {
+      e.stopPropagation();
+      document.querySelectorAll('.popover-menu').forEach(el => el.remove());
+
+      const div = document.createElement('div');
+      div.className = 'popover-menu';
+      div.innerHTML = `
+        <div onclick="editShift(event,'${shiftId}')" style="border-bottom:1px solid #f1f5f9;">
+          <i class="ph ph-pencil-simple"></i> Edit Shift
+        </div>
+        <div onclick="deleteShift(event,'${shiftId}')" style="color:#ef4444;">
+          <i class="ph ph-trash"></i> Delete Shift
+        </div>`;
+
+      div.style.left = e.pageX + 'px';
+      div.style.top  = (e.pageY + 100 > window.innerHeight) ? (e.pageY - 80) + 'px' : e.pageY + 'px';
+      document.body.appendChild(div);
+    }
+
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.popover-menu').forEach(el => el.remove());
+    });
+
+    function deleteShift(e, id) {
+      e.stopPropagation();
+      mockState.shifts = mockState.shifts.filter(s => s.id !== id);
+      document.querySelectorAll('.popover-menu').forEach(el => el.remove());
+      currentView === 'week' ? renderWeek() : renderMonth();
+      showToast('Shift deleted successfully.', 'success');
+    }
+
+    function editShift(e, id) {
+      e.stopPropagation();
+      document.querySelectorAll('.popover-menu').forEach(el => el.remove());
+      const shift = mockState.shifts.find(s => s.id === id);
+      if (!shift) return;
+
+      document.getElementById('modalTitle').textContent = 'Edit Shift';
+      document.getElementById('sEditingId').value = shift.id;
+      document.getElementById('sWard').value = shift.dept;
+      document.getElementById('sDate').value = shift.date;
+      document.getElementById('sUser').value = shift.user;
+      selectShiftType(shift.type, true);
+      document.getElementById('shiftModal').style.display = 'flex';
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // MODAL HELPERS
+    // ═══════════════════════════════════════════════════════
+    function openCreateModal() {
+      document.getElementById('modalTitle').textContent = 'Create New Shift';
+      document.getElementById('sEditingId').value = '';
+      document.getElementById('sWard').selectedIndex = 0;
+      document.getElementById('sDate').value = toDateStr(new Date());
+      document.getElementById('sUser').selectedIndex = 0;
+      // Clear shift type selection
+      clearShiftTypeSelection();
+      document.getElementById('sShiftType').value = '';
+      document.getElementById('timePreviewText').textContent = 'Select a shift type above';
+      document.getElementById('shiftModal').style.display = 'flex';
+    }
+
+    function closeShiftModal() {
+      document.getElementById('shiftModal').style.display = 'none';
+      clearShiftTypeSelection();
+    }
+
+    function clearShiftTypeSelection() {
+      ['stc-morning','stc-afternoon','stc-night'].forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.remove('selected-morning','selected-afternoon','selected-night');
+      });
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // SHIFT TYPE SELECTION
+    // ═══════════════════════════════════════════════════════
+    function selectShiftType(type, skipClear = false) {
+      if (!skipClear) clearShiftTypeSelection();
+
+      const cfg = SHIFT_TYPES[type];
+      if (!cfg) return;
+
+      document.getElementById('sShiftType').value = type;
+
+      const cardMap = { MORNING: 'stc-morning', AFTERNOON: 'stc-afternoon', NIGHT: 'stc-night' };
+      document.getElementById(cardMap[type]).classList.add(cfg.selClass);
+
+      document.getElementById('timePreviewText').textContent =
+        `${type} shift: ${cfg.start} → ${cfg.end} (8 hours)`;
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // SAVE SHIFT
+    // ═══════════════════════════════════════════════════════
+    function saveShift() {
+      const idInput  = document.getElementById('sEditingId').value;
+      const date     = document.getElementById('sDate').value;
+      const dept     = document.getElementById('sWard').value;
+      const user     = document.getElementById('sUser').value;
+      const type     = document.getElementById('sShiftType').value;
+
+      if (!date) { showToast('Please select a date.', 'error'); return; }
+      if (!type) { showToast('Please select a shift type.', 'error'); return; }
+
+      const cfg = SHIFT_TYPES[type];
+
+      // Block shifts whose start time has already passed (new shifts only)
+      if (!idInput) {
+        const shiftStart = new Date(`${date}T${cfg.start}:00`);
+        if (shiftStart <= new Date()) {
+          showToast(`${cfg.label} shift (${cfg.start}) has already passed. Pick a future slot.`, 'error');
+          return;
+        }
+      }
+
+      // Conflict check — same staff same day (unless editing same record)
+      const conflict = mockState.shifts.find(s => s.user === user && s.date === date && s.id !== idInput);
+      if (conflict) {
+        showToast(`${user.split(' ').slice(0,2).join(' ')} is already assigned on ${date}.`, 'error');
+        return;
+      }
+
+      if (idInput) {
+        const shift = mockState.shifts.find(s => s.id === idInput);
+        if (shift) {
+          shift.date = date; shift.dept = dept; shift.user = user; shift.type = type;
+          showToast('Shift updated successfully.', 'success');
+        }
+      } else {
+        const newId = 'sh' + Date.now();
+        mockState.shifts.push({ id: newId, date, type, dept, user });
+        showToast('Shift created successfully.', 'success');
+      }
+
+      closeShiftModal();
+      currentView === 'week' ? renderWeek() : renderMonth();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // TOAST
+    // ═══════════════════════════════════════════════════════
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      const icon = type === 'success' ? 'ph-check-circle' : 'ph-x-circle';
+      toast.innerHTML = `<i class="ph-fill ${icon}" style="font-size:1.25rem;"></i> <span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 300); }, 3000);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', () => {
+      renderWeek();
+    });
+  </script>
 </body>
 </html>
