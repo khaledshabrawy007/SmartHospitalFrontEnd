@@ -438,6 +438,23 @@
 
     const loginForm = document.getElementById('loginForm');
 
+    // ── Auto-select tab from home page portal card ────
+    const savedRole = sessionStorage.getItem('loginRole');
+    if (savedRole) {
+      sessionStorage.removeItem('loginRole'); // consume it
+      const tabs = document.querySelectorAll('.role-tab');
+      tabs.forEach(tab => {
+        const text = tab.innerText.trim().toUpperCase();
+        if (
+          (savedRole === 'patient' && text === 'PATIENT') ||
+          (savedRole === 'doctor'  && text === 'DOCTOR')  ||
+          (savedRole === 'hr'      && text.includes('MANAGER'))
+        ) {
+          tab.click(); // triggers full tab-switch logic below
+        }
+      });
+    }
+
     document.querySelectorAll('.role-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));

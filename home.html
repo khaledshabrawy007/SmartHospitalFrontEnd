@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SmartHospital – Precision Care, Powered by Intelligence</title>
+  <meta name="description" content="SmartHospital is an AI-driven clinical management platform for patients, doctors, and HR managers — seamlessly unified in one intelligent ecosystem.">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <style>
+    /* ── Reset & Root ─────────────────────────────────── */
+    :root {
+      --nav-h: 72px;
+      --gradient-primary: linear-gradient(135deg, #064032 0%, #0a6f56 50%, #0d9068 100%);
+      --gradient-accent: linear-gradient(135deg, #37d6a5, #0a6f56);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: #ffffff;
+      overflow-x: hidden;
+    }
+
+    /* ── Navbar ───────────────────────────────────────── */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--nav-h);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 64px;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(226,232,240,0.6);
+      transition: box-shadow 0.3s;
+    }
+
+    .navbar.scrolled {
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--color-text-dark);
+      text-decoration: none;
+    }
+
+    .nav-logo-icon {
+      width: 36px;
+      height: 36px;
+      background-color: var(--color-primary);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.1rem;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 36px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--color-text-dark);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn-nav-outline {
+      padding: 9px 20px;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 600;
+      border: 1.5px solid var(--color-border);
+      color: var(--color-text-dark);
+      text-decoration: none;
+      transition: all 0.2s;
+    }
+
+    .btn-nav-outline:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .btn-nav-primary {
+      padding: 9px 20px;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      font-weight: 600;
+      background-color: var(--color-primary);
+      color: white;
+      text-decoration: none;
+      transition: background-color 0.2s, transform 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-nav-primary:hover {
+      background-color: var(--color-primary-hover);
+      transform: translateY(-1px);
+      color: white;
+    }
+
+    /* ── Hero ─────────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      background: var(--gradient-primary);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: calc(var(--nav-h) + 60px) 40px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Animated background blobs */
+    .hero::before, .hero::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.25;
+      animation: blob-float 8s ease-in-out infinite alternate;
+    }
+
+    .hero::before {
+      width: 600px; height: 600px;
+      background: #37d6a5;
+      top: -200px; right: -100px;
+    }
+
+    .hero::after {
+      width: 400px; height: 400px;
+      background: #064032;
+      bottom: -100px; left: -50px;
+      animation-delay: 3s;
+    }
+
+    @keyframes blob-float {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(30px, 20px) scale(1.05); }
+    }
+
+    /* Grid overlay texture */
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 40px;
+      padding: 6px 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.9);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 28px;
+      backdrop-filter: blur(8px);
+      position: relative;
+      z-index: 1;
+      animation: fade-up 0.6s ease both;
+    }
+
+    .hero-badge .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--color-primary-light);
+      animation: pulse-dot 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%  { opacity: 0.5; transform: scale(0.75); }
+    }
+
+    .hero-title {
+      font-size: clamp(2.8rem, 6vw, 5rem);
+      font-weight: 800;
+      line-height: 1.08;
+      color: white;
+      max-width: 850px;
+      position: relative;
+      z-index: 1;
+      animation: fade-up 0.7s ease 0.1s both;
+    }
+
+    .hero-title .accent {
+      color: var(--color-primary-light);
+      position: relative;
+    }
+
+    .hero-title .accent::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0; right: 0;
+      height: 3px;
+      background: var(--color-primary-light);
+      border-radius: 2px;
+      opacity: 0.5;
+    }
+
+    .hero-subtitle {
+      font-size: 1.125rem;
+      color: rgba(255,255,255,0.75);
+      max-width: 600px;
+      line-height: 1.7;
+      margin-top: 24px;
+      position: relative;
+      z-index: 1;
+      animation: fade-up 0.7s ease 0.2s both;
+    }
+
+    .hero-cta {
+      display: flex;
+      gap: 16px;
+      margin-top: 44px;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+      animation: fade-up 0.7s ease 0.3s both;
+    }
+
+    .btn-hero-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 36px;
+      background-color: white;
+      color: var(--color-primary);
+      font-weight: 700;
+      font-size: 1rem;
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+
+    .btn-hero-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+      color: var(--color-primary);
+    }
+
+    .btn-hero-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 36px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      border: 1.5px solid rgba(255,255,255,0.3);
+      backdrop-filter: blur(8px);
+      transition: background 0.2s, transform 0.25s;
+    }
+
+    .btn-hero-outline:hover {
+      background: rgba(255,255,255,0.18);
+      transform: translateY(-3px);
+      color: white;
+    }
+
+    /* Hero Stats Row */
+    .hero-stats {
+      display: flex;
+      gap: 0;
+      margin-top: 64px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: var(--radius-xl);
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+      animation: fade-up 0.7s ease 0.45s both;
+    }
+
+    .hero-stat {
+      padding: 24px 40px;
+      text-align: center;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .hero-stat:last-child { border-right: none; }
+
+    .hero-stat-number {
+      font-size: 2rem;
+      font-weight: 800;
+      color: white;
+      line-height: 1;
+    }
+
+    .hero-stat-number span {
+      color: var(--color-primary-light);
+    }
+
+    .hero-stat-label {
+      font-size: 0.75rem;
+      color: rgba(255,255,255,0.6);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 6px;
+    }
+
+    /* ── Scroll Animation ─────────────────────────────── */
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.65s ease, transform 0.65s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Section Base ─────────────────────────────────── */
+    section {
+      padding: 100px 64px;
+    }
+
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(10,111,86,0.08);
+      color: var(--color-primary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 5px 14px;
+      border-radius: 30px;
+      margin-bottom: 16px;
+    }
+
+    .section-heading {
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      font-weight: 800;
+      line-height: 1.15;
+      color: var(--color-text-dark);
+      margin-bottom: 16px;
+    }
+
+    .section-sub {
+      font-size: 1.05rem;
+      color: var(--color-text-muted);
+      line-height: 1.7;
+      max-width: 560px;
+    }
+
+    /* ── Roles Section ────────────────────────────────── */
+    .roles-section {
+      background: var(--color-bg-light);
+    }
+
+    .roles-header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+
+    .roles-header .section-sub {
+      margin: 0 auto;
+    }
+
+    .roles-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .role-card {
+      background: white;
+      border-radius: 20px;
+      padding: 40px 36px;
+      border: 1.5px solid var(--color-border);
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+      text-decoration: none;
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .role-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--card-accent, var(--gradient-primary));
+      border-radius: 20px 20px 0 0;
+      transform: scaleX(0);
+      transition: transform 0.35s ease;
+    }
+
+    .role-card:hover::before { transform: scaleX(1); }
+
+    .role-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 48px rgba(10,111,86,0.12);
+      border-color: transparent;
+    }
+
+    .role-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.75rem;
+      margin-bottom: 24px;
+    }
+
+    .role-icon.green  { background: rgba(10,111,86,0.1);  color: var(--color-primary); }
+    .role-icon.blue   { background: rgba(14,165,233,0.1); color: #0ea5e9; }
+    .role-icon.purple { background: rgba(139,92,246,0.1); color: #8b5cf6; }
+
+    .role-card h3 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--color-text-dark);
+      margin-bottom: 10px;
+    }
+
+    .role-card p {
+      font-size: 0.9rem;
+      color: var(--color-text-muted);
+      line-height: 1.65;
+      margin-bottom: 24px;
+    }
+
+    .role-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .role-features li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: var(--color-text-dark);
+      font-weight: 500;
+    }
+
+    .role-features li i {
+      font-size: 1rem;
+      color: var(--color-primary);
+      flex-shrink: 0;
+    }
+
+    .role-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: var(--color-primary);
+      text-decoration: none;
+      transition: gap 0.2s;
+    }
+
+    .role-card:hover .role-link { gap: 10px; }
+
+    /* ── Features Section ─────────────────────────────── */
+    .features-section {
+      background: white;
+    }
+
+    .features-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .features-visual {
+      position: relative;
+    }
+
+    .features-card-stack {
+      position: relative;
+      height: 420px;
+    }
+
+    .fcard {
+      position: absolute;
+      background: white;
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      padding: 20px;
+      border: 1px solid var(--color-border);
+    }
+
+    .fcard-main {
+      width: 320px;
+      top: 30px; left: 20px;
+    }
+
+    .fcard-mini1 {
+      width: 180px;
+      bottom: 60px; right: 0;
+      animation: float-card 4s ease-in-out infinite alternate;
+    }
+
+    .fcard-mini2 {
+      width: 200px;
+      top: 0; right: 40px;
+      animation: float-card 3.5s ease-in-out infinite alternate-reverse;
+    }
+
+    @keyframes float-card {
+      from { transform: translateY(0); }
+      to   { transform: translateY(-12px); }
+    }
+
+    .fcard-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .fcard-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .fcard-dot.green  { background: #22c55e; }
+    .fcard-dot.yellow { background: #eab308; }
+    .fcard-dot.red    { background: #ef4444; }
+
+    .fcard-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--color-text-dark);
+      flex: 1;
+    }
+
+    .fcard-bar-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .fcard-bar {
+      height: 8px;
+      border-radius: 4px;
+      background: var(--color-bg-light);
+      overflow: hidden;
+    }
+
+    .fcard-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--gradient-accent);
+    }
+
+    .fcard-label {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .fcard-stat {
+      text-align: center;
+    }
+
+    .fcard-stat-num {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--color-primary);
+    }
+
+    .fcard-stat-label {
+      font-size: 0.7rem;
+      color: var(--color-text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .fcard-risk {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .risk-circle {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      border: 3px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .risk-circle.low  { border-color: #22c55e; color: #22c55e; }
+    .risk-circle.med  { border-color: #f59e0b; color: #f59e0b; }
+    .risk-circle.high { border-color: #ef4444; color: #ef4444; }
+
+    .fcard-risk-info p {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+
+    .fcard-risk-info strong {
+      font-size: 0.8rem;
+      color: var(--color-text-dark);
+      display: block;
+    }
+
+    /* Features list */
+    .features-list {
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+      margin-top: 40px;
+    }
+
+    .feature-item {
+      display: flex;
+      gap: 20px;
+    }
+
+    .feature-item-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(10,111,86,0.08);
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .feature-item-text h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-text-dark);
+      margin-bottom: 4px;
+    }
+
+    .feature-item-text p {
+      font-size: 0.875rem;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── Stats Counter Section ────────────────────────── */
+    .stats-section {
+      background: var(--gradient-primary);
+      padding: 80px 64px;
+    }
+
+    .stats-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      text-align: center;
+    }
+
+    .stat-item {
+      padding: 20px;
+      border-right: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .stat-item:last-child { border-right: none; }
+
+    .stat-icon {
+      font-size: 2rem;
+      color: var(--color-primary-light);
+      margin-bottom: 12px;
+    }
+
+    .stat-number {
+      font-size: 3rem;
+      font-weight: 800;
+      color: white;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.65);
+      font-weight: 600;
+    }
+
+    /* ── How It Works ─────────────────────────────────── */
+    .how-section {
+      background: var(--color-bg-light);
+    }
+
+    .how-header { text-align: center; margin-bottom: 60px; }
+    .how-header .section-sub { margin: 0 auto; }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 24px;
+      max-width: 1180px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .steps-grid::before {
+      content: '';
+      position: absolute;
+      top: 36px;
+      left: calc(12.5% + 20px);
+      right: calc(12.5% + 20px);
+      height: 2px;
+      background: linear-gradient(90deg, var(--color-primary-light), var(--color-primary));
+      z-index: 0;
+    }
+
+    .step-card {
+      background: white;
+      border-radius: 16px;
+      padding: 32px 24px;
+      text-align: center;
+      border: 1.5px solid var(--color-border);
+      position: relative;
+      z-index: 1;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .step-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .step-number {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background-color: var(--color-primary);
+      color: white;
+      font-size: 1.25rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: 0 4px 12px rgba(10,111,86,0.2);
+    }
+
+    .step-card h4 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-text-dark);
+      margin-bottom: 8px;
+    }
+
+    .step-card p {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      line-height: 1.6;
+    }
+
+    /* ── Testimonials ─────────────────────────────────── */
+    .testimonials-section {
+      background: white;
+    }
+
+    .testimonials-header { text-align: center; margin-bottom: 56px; }
+
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .tcard {
+      background: var(--color-bg-light);
+      border-radius: 16px;
+      padding: 32px;
+      border: 1px solid var(--color-border);
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .tcard:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .tcard-stars {
+      display: flex;
+      gap: 3px;
+      margin-bottom: 16px;
+    }
+
+    .tcard-stars i { color: #f59e0b; font-size: 1rem; }
+
+    .tcard-quote {
+      font-size: 0.95rem;
+      color: var(--color-text-dark);
+      line-height: 1.7;
+      margin-bottom: 24px;
+      font-style: italic;
+    }
+
+    .tcard-author {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .tcard-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .tcard-name {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--color-text-dark);
+    }
+
+    .tcard-role {
+      font-size: 0.75rem;
+      color: var(--color-primary);
+      font-weight: 600;
+    }
+
+    /* ── CTA Section ──────────────────────────────────── */
+    .cta-section {
+      background: var(--color-text-dark);
+      padding: 120px 64px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      width: 700px; height: 700px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(55,214,165,0.12) 0%, transparent 70%);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+
+    .cta-section h2 {
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      font-weight: 800;
+      color: white;
+      line-height: 1.1;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-section h2 span { color: var(--color-primary-light); }
+
+    .cta-section p {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.6);
+      max-width: 540px;
+      margin: 0 auto 44px;
+      line-height: 1.7;
+      position: relative;
+      z-index: 1;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .btn-cta-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 40px;
+      background-color: var(--color-primary);
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      transition: background-color 0.2s, transform 0.25s;
+    }
+
+    .btn-cta-primary:hover {
+      background-color: var(--color-primary-hover);
+      transform: translateY(-2px);
+      color: white;
+    }
+
+    .btn-cta-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 40px;
+      background: rgba(255,255,255,0.07);
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      border-radius: var(--radius-lg);
+      text-decoration: none;
+      border: 1.5px solid rgba(255,255,255,0.2);
+      transition: background 0.2s, transform 0.25s;
+    }
+
+    .btn-cta-outline:hover {
+      background: rgba(255,255,255,0.13);
+      transform: translateY(-2px);
+      color: white;
+    }
+
+    /* ── Footer ───────────────────────────────────────── */
+    .footer {
+      background: var(--color-text-dark);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 64px 64px 32px;
+    }
+
+    /* Support Section */
+    .support-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+      margin-bottom: 56px;
+    }
+
+    .support-left h2 {
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 12px;
+      line-height: 1.2;
+    }
+
+    .support-left h2 span { color: var(--color-primary-light); }
+
+    .support-left p {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.5);
+      line-height: 1.7;
+      margin-bottom: 28px;
+    }
+
+    .support-channels {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .support-channel {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px 20px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-lg);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+      text-decoration: none;
+    }
+
+    .support-channel:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: rgba(55,214,165,0.3);
+    }
+
+    .support-channel-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: rgba(55,214,165,0.12);
+      color: var(--color-primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .support-channel-info strong {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 2px;
+    }
+
+    .support-channel-info span {
+      font-size: 0.775rem;
+      color: rgba(255,255,255,0.45);
+    }
+
+    .support-channel-arrow {
+      margin-left: auto;
+      color: rgba(255,255,255,0.25);
+      font-size: 1rem;
+      transition: color 0.2s, transform 0.2s;
+    }
+
+    .support-channel:hover .support-channel-arrow {
+      color: var(--color-primary-light);
+      transform: translateX(4px);
+    }
+
+    /* Support Form */
+    .support-right {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 32px;
+    }
+
+    .support-right h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 6px;
+    }
+
+    .support-right > p {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 24px;
+    }
+
+    .support-form-group {
+      margin-bottom: 16px;
+    }
+
+    .support-form-label {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: rgba(255,255,255,0.45);
+      margin-bottom: 7px;
+    }
+
+    .support-form-input,
+    .support-form-select,
+    .support-form-textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-md);
+      padding: 11px 14px;
+      font-size: 0.875rem;
+      color: white;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .support-form-input::placeholder,
+    .support-form-textarea::placeholder { color: rgba(255,255,255,0.25); }
+
+    .support-form-input:focus,
+    .support-form-select:focus,
+    .support-form-textarea:focus {
+      border-color: var(--color-primary-light);
+      background: rgba(255,255,255,0.09);
+    }
+
+    .support-form-select option { background: #1e293b; color: white; }
+
+    .support-form-textarea {
+      resize: none;
+      height: 90px;
+    }
+
+    .btn-support-submit {
+      width: 100%;
+      padding: 13px;
+      background-color: var(--color-primary);
+      color: white;
+      border: none;
+      border-radius: var(--radius-md);
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 6px;
+      transition: background-color 0.2s;
+    }
+
+    .btn-support-submit:hover { background-color: var(--color-primary-hover); }
+
+    .support-success {
+      display: none;
+      text-align: center;
+      padding: 20px 0 10px;
+    }
+
+    .support-success i {
+      font-size: 2.5rem;
+      color: var(--color-primary-light);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .support-success p {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.6);
+    }
+
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-bottom p {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.3);
+    }
+
+    .compliance-badges {
+      display: flex;
+      gap: 12px;
+    }
+
+    .badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      border: 1px solid rgba(255,255,255,0.12);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+
+    /* ── Responsive ───────────────────────────────────── */
+    @media (max-width: 900px) {
+      section { padding: 70px 28px; }
+      .navbar { padding: 0 28px; }
+      .nav-links { display: none; }
+      .roles-grid { grid-template-columns: 1fr; }
+      .features-layout { grid-template-columns: 1fr; }
+      .features-visual { display: none; }
+      .steps-grid { grid-template-columns: 1fr 1fr; }
+      .steps-grid::before { display: none; }
+      .testimonials-grid { grid-template-columns: 1fr; }
+      .stats-inner { grid-template-columns: 1fr 1fr; }
+      .hero-stats { flex-direction: column; }
+      .footer-top { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── NAVBAR ─────────────────────────────────────── -->
+  <nav class="navbar" id="navbar">
+    <a href="home.html" class="nav-logo">
+      <div class="nav-logo-icon">
+        <i class="ph-fill ph-first-aid"></i>
+      </div>
+      SmartHospital
+    </a>
+
+    <ul class="nav-links">
+      <li><a href="#roles">Portal Access</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#how">How It Works</a></li>
+      <li><a href="#testimonials">Testimonials</a></li>
+    </ul>
+
+    <div class="nav-actions">
+      <a href="index.html" class="btn-nav-outline">Sign In</a>
+      <a href="register.html" class="btn-nav-primary">
+        Get Started <i class="ph ph-arrow-right"></i>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ── HERO ───────────────────────────────────────── -->
+  <section class="hero" id="top">
+    <div class="hero-grid"></div>
+
+    <div class="hero-badge">
+      <span class="dot"></span>
+      AI-Powered Clinical Intelligence Platform
+    </div>
+
+    <h1 class="hero-title">
+      Precision Care,<br>
+      Powered by <span class="accent">Intelligence.</span>
+    </h1>
+
+    <p class="hero-subtitle">
+      SmartHospital unifies patient journeys, clinical workflows, and HR operations into one seamless ecosystem — engineered for the hospitals of tomorrow.
+    </p>
+
+    <div class="hero-cta">
+      <a href="register.html" class="btn-hero-primary">
+        <i class="ph ph-user-plus"></i>
+        Register as Patient
+      </a>
+      <a href="index.html" class="btn-hero-outline">
+        <i class="ph ph-sign-in"></i>
+        Access Your Portal
+      </a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="hero-stat-number">2,400<span>+</span></div>
+        <div class="hero-stat-label">Specialists Onboard</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-number">98<span>%</span></div>
+        <div class="hero-stat-label">Patient Satisfaction</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-number">50<span>K+</span></div>
+        <div class="hero-stat-label">Appointments Scheduled</div>
+      </div>
+      <div class="hero-stat">
+        <div class="hero-stat-number">3</div>
+        <div class="hero-stat-label">Role-Based Portals</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ROLES SECTION ──────────────────────────────── -->
+  <section class="roles-section" id="roles">
+    <div class="roles-header reveal">
+      <div class="section-tag">
+        <i class="ph-fill ph-shield-check"></i> Portal Access
+      </div>
+      <h2 class="section-heading">One Platform, Three Powerful Portals</h2>
+      <p class="section-sub">Every role gets a purpose-built workspace tailored to their clinical or administrative needs.</p>
+    </div>
+
+    <div class="roles-grid">
+      <!-- Patient -->
+      <a href="index.html" class="role-card reveal" style="--card-accent: linear-gradient(90deg,#0a6f56,#37d6a5);" id="patient-portal-card" onclick="sessionStorage.setItem('loginRole','patient')">
+        <div class="role-icon green">
+          <i class="ph-fill ph-heartbeat"></i>
+        </div>
+        <h3>Patient Portal</h3>
+        <p>Take control of your health journey. Book appointments, review your medical history, and connect with top specialists from anywhere.</p>
+        <ul class="role-features">
+          <li><i class="ph-fill ph-check-circle"></i> Online appointment booking</li>
+          <li><i class="ph-fill ph-check-circle"></i> Full medical history access</li>
+          <li><i class="ph-fill ph-check-circle"></i> Specialist search & filtering</li>
+          <li><i class="ph-fill ph-check-circle"></i> Automated reminders</li>
+        </ul>
+        <span class="role-link">Access Portal <i class="ph ph-arrow-right"></i></span>
+      </a>
+
+      <!-- Doctor -->
+      <a href="index.html" class="role-card reveal" style="--card-accent: linear-gradient(90deg,#0ea5e9,#38bdf8);" id="doctor-portal-card" onclick="sessionStorage.setItem('loginRole','doctor')">
+        <div class="role-icon blue">
+          <i class="ph-fill ph-stethoscope"></i>
+        </div>
+        <h3>Doctor Portal</h3>
+        <p>Manage your patient list, review lab results, run AI-powered risk assessments, and deliver data-driven treatment recommendations.</p>
+        <ul class="role-features">
+          <li><i class="ph-fill ph-check-circle"></i> Patient management dashboard</li>
+          <li><i class="ph-fill ph-check-circle"></i> AI readmission risk scoring</li>
+          <li><i class="ph-fill ph-check-circle"></i> Treatment recommendations</li>
+          <li><i class="ph-fill ph-check-circle"></i> Appointment scheduling</li>
+        </ul>
+        <span class="role-link">Access Portal <i class="ph ph-arrow-right"></i></span>
+      </a>
+
+      <!-- HR -->
+      <a href="index.html" class="role-card reveal" style="--card-accent: linear-gradient(90deg,#8b5cf6,#a78bfa);" id="hr-portal-card" onclick="sessionStorage.setItem('loginRole','hr')">
+        <div class="role-icon purple">
+          <i class="ph-fill ph-users-three"></i>
+        </div>
+        <h3>HR Manager Portal</h3>
+        <p>Oversee the hospital's most critical resource — its people. Manage staff records, shift schedules, and ward capacity in real time.</p>
+        <ul class="role-features">
+          <li><i class="ph-fill ph-check-circle"></i> Staff directory management</li>
+          <li><i class="ph-fill ph-check-circle"></i> Dynamic shift scheduling</li>
+          <li><i class="ph-fill ph-check-circle"></i> Ward capacity monitoring</li>
+          <li><i class="ph-fill ph-check-circle"></i> HR analytics dashboard</li>
+        </ul>
+        <span class="role-link">Access Portal <i class="ph ph-arrow-right"></i></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ── FEATURES SECTION ───────────────────────────── -->
+  <section class="features-section" id="features">
+    <div class="features-layout">
+      <!-- Visual -->
+      <div class="features-visual reveal">
+        <div class="features-card-stack">
+          <!-- Main card: Risk breakdown -->
+          <div class="fcard fcard-main">
+            <div class="fcard-header">
+              <span class="fcard-dot green"></span>
+              <span class="fcard-dot yellow"></span>
+              <span class="fcard-dot red"></span>
+              <span class="fcard-title">AI Risk Assessment · Live</span>
+            </div>
+            <div class="fcard-bar-row">
+              <div class="fcard-label">Readmission Risk</div>
+              <div class="fcard-bar"><div class="fcard-bar-fill" style="width:34%"></div></div>
+              <div class="fcard-label">Complication Probability</div>
+              <div class="fcard-bar"><div class="fcard-bar-fill" style="width:58%"></div></div>
+              <div class="fcard-label">Recovery Score</div>
+              <div class="fcard-bar"><div class="fcard-bar-fill" style="width:81%"></div></div>
+            </div>
+          </div>
+
+          <!-- Mini card: Uptime stat -->
+          <div class="fcard fcard-mini1">
+            <div class="fcard-stat">
+              <div class="fcard-stat-num">99.9%</div>
+              <div class="fcard-stat-label">Platform Uptime</div>
+            </div>
+          </div>
+
+          <!-- Mini card: Risk patient -->
+          <div class="fcard fcard-mini2">
+            <div class="fcard-risk">
+              <div class="risk-circle low">LOW</div>
+              <div class="fcard-risk-info">
+                <strong>Dr. Amira H.</strong>
+                <p>Cardiology · Ward 3</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Text side -->
+      <div class="reveal">
+        <div class="section-tag">
+          <i class="ph-fill ph-brain"></i> Core Features
+        </div>
+        <h2 class="section-heading">Clinical Power at Every Touch Point</h2>
+        <p class="section-sub">From AI diagnostics to shift management — every feature is built for speed, accuracy, and clinician trust.</p>
+
+        <div class="features-list">
+          <div class="feature-item">
+            <div class="feature-item-icon"><i class="ph-fill ph-brain"></i></div>
+            <div class="feature-item-text">
+              <h4>AI Readmission Risk Engine</h4>
+              <p>A mock ML model analyzes 20+ clinical indicators to predict a patient's 30-day readmission risk with a COLOR-coded severity score.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-icon"><i class="ph-fill ph-calendar-check"></i></div>
+            <div class="feature-item-text">
+              <h4>Smart Appointment Scheduling</h4>
+              <p>Dynamic time-slot generation based on doctor availability, date, and specialty — with instant booking confirmation.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-icon"><i class="ph-fill ph-chart-bar"></i></div>
+            <div class="feature-item-text">
+              <h4>Real-Time HR Analytics</h4>
+              <p>Track staff coverage, shift utilization, and ward occupancy with live-updated dashboards and visual indicators.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-item-icon"><i class="ph-fill ph-lock-key"></i></div>
+            <div class="feature-item-text">
+              <h4>Role-Based Secure Access</h4>
+              <p>HIPAA-aligned session management with role-specific routing — patients, doctors, and HR managers each get their own secure environment.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── STATS SECTION ──────────────────────────────── -->
+  <section class="stats-section">
+    <div class="stats-inner">
+      <div class="stat-item reveal">
+        <div class="stat-icon"><i class="ph-fill ph-users"></i></div>
+        <div class="stat-number" data-target="2400">0</div>
+        <div class="stat-label">Registered Specialists</div>
+      </div>
+      <div class="stat-item reveal">
+        <div class="stat-icon"><i class="ph-fill ph-calendar-check"></i></div>
+        <div class="stat-number" data-target="50000">0</div>
+        <div class="stat-label">Appointments Managed</div>
+      </div>
+      <div class="stat-item reveal">
+        <div class="stat-icon"><i class="ph-fill ph-hospital"></i></div>
+        <div class="stat-number" data-target="120">0</div>
+        <div class="stat-label">Hospital Wards Monitored</div>
+      </div>
+      <div class="stat-item reveal">
+        <div class="stat-icon"><i class="ph-fill ph-shield-check"></i></div>
+        <div class="stat-number" data-target="99">0</div>
+        <div class="stat-label">% Uptime SLA</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HOW IT WORKS ───────────────────────────────── -->
+  <section class="how-section" id="how">
+    <div class="how-header reveal">
+      <div class="section-tag">
+        <i class="ph-fill ph-path"></i> How It Works
+      </div>
+      <h2 class="section-heading">Up and Running in Minutes</h2>
+      <p class="section-sub">Getting started with SmartHospital is fast, simple, and secure — no lengthy onboarding required.</p>
+    </div>
+
+    <div class="steps-grid">
+      <div class="step-card reveal">
+        <div class="step-number">1</div>
+        <h4>Create Your Account</h4>
+        <p>Register as a patient, apply as a doctor, or log in as an HR manager using your credentials.</p>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-number">2</div>
+        <h4>Access Your Portal</h4>
+        <p>The system routes you automatically to your tailored workspace based on your assigned role.</p>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-number">3</div>
+        <h4>Manage Your Workflow</h4>
+        <p>Book appointments, review records, schedule shifts, or run AI assessments — all in one place.</p>
+      </div>
+      <div class="step-card reveal">
+        <div class="step-number">4</div>
+        <h4>Stay Informed</h4>
+        <p>Receive instant notifications, risk alerts, and analytics to keep every decision data-driven.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── TESTIMONIALS ───────────────────────────────── -->
+  <section class="testimonials-section" id="testimonials">
+    <div class="testimonials-header reveal">
+      <div class="section-tag">
+        <i class="ph-fill ph-quotes"></i> Testimonials
+      </div>
+      <h2 class="section-heading">Trusted by Clinicians & Administrators</h2>
+    </div>
+
+    <div class="testimonials-grid">
+      <div class="tcard reveal">
+        <div class="tcard-stars">
+          <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
+        </div>
+        <p class="tcard-quote">"The AI risk engine has transformed how I triage high-risk patients. I can now act proactively before readmission becomes a crisis."</p>
+        <div class="tcard-author">
+          <img class="tcard-avatar" src="" alt="Dr. Sarah M" id="t-avatar1">
+          <div>
+            <div class="tcard-name">Dr. Sarah Mitchell</div>
+            <div class="tcard-role">Senior Cardiologist</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tcard reveal">
+        <div class="tcard-stars">
+          <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i>
+        </div>
+        <p class="tcard-quote">"Booking my appointments used to take days of back-and-forth calls. Now it takes two minutes and I get an instant confirmation."</p>
+        <div class="tcard-author">
+          <img class="tcard-avatar" src="" alt="James K" id="t-avatar2">
+          <div>
+            <div class="tcard-name">James Kowalski</div>
+            <div class="tcard-role">Patient · Cardiology Ward</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tcard reveal">
+        <div class="tcard-stars">
+          <i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star"></i><i class="ph-fill ph-star-half"></i>
+        </div>
+        <p class="tcard-quote">"Managing 80+ staff members and their shift rotations used to be a nightmare. SmartHospital's HR portal makes it effortless."</p>
+        <div class="tcard-author">
+          <img class="tcard-avatar" src="" alt="Nadia R" id="t-avatar3">
+          <div>
+            <div class="tcard-name">Nadia Rahman</div>
+            <div class="tcard-role">HR Director · General Hospital</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CTA ────────────────────────────────────────── -->
+  <section class="cta-section">
+    <h2 class="reveal">Ready to Transform<br><span>Your Hospital?</span></h2>
+    <p class="reveal">Join thousands of clinicians and administrators who trust SmartHospital to power their most critical workflows.</p>
+    <div class="cta-buttons reveal">
+      <a href="register.html" class="btn-cta-primary" id="cta-register-btn">
+        <i class="ph-fill ph-user-plus"></i>
+        Register Now — It's Free
+      </a>
+      <a href="index.html" class="btn-cta-outline" id="cta-login-btn">
+        <i class="ph ph-sign-in"></i>
+        Sign In to Portal
+      </a>
+    </div>
+  </section>
+
+  <!-- ── FOOTER / SUPPORT ──────────────────────────── -->
+  <footer class="footer" id="support">
+
+    <div class="support-section">
+      <!-- Left: Brand + channels -->
+      <div class="support-left">
+        <a href="home.html" class="nav-logo" style="color:white; margin-bottom:20px; display:inline-flex;">
+          <div class="nav-logo-icon"><i class="ph-fill ph-first-aid"></i></div>
+          SmartHospital
+        </a>
+        <h2 style="margin-top:20px;">We're here to <span>help you.</span></h2>
+        <p>Have a question, a technical issue, or need clinical support? Our team is available 24/7 to assist patients, doctors, and HR staff.</p>
+
+        <div class="support-channels">
+          <a class="support-channel" href="mailto:support@smarthospital.com" id="support-email-link">
+            <div class="support-channel-icon"><i class="ph-fill ph-envelope-simple"></i></div>
+            <div class="support-channel-info">
+              <strong>Email Support</strong>
+              <span>support@smarthospital.com · Reply within 2h</span>
+            </div>
+            <i class="ph ph-arrow-right support-channel-arrow"></i>
+          </a>
+
+          <a class="support-channel" href="tel:+18005550199" id="support-phone-link">
+            <div class="support-channel-icon"><i class="ph-fill ph-phone-call"></i></div>
+            <div class="support-channel-info">
+              <strong>Phone Support</strong>
+              <span>+1 800-555-0199 · Available 24/7</span>
+            </div>
+            <i class="ph ph-arrow-right support-channel-arrow"></i>
+          </a>
+
+          <a class="support-channel" href="#" id="support-chat-link" onclick="event.preventDefault();">
+            <div class="support-channel-icon"><i class="ph-fill ph-chat-circle-dots"></i></div>
+            <div class="support-channel-info">
+              <strong>Live Chat</strong>
+              <span>Chat with a clinical coordinator now</span>
+            </div>
+            <i class="ph ph-arrow-right support-channel-arrow"></i>
+          </a>
+
+          <a class="support-channel" href="#" id="support-faq-link" onclick="event.preventDefault();">
+            <div class="support-channel-icon"><i class="ph-fill ph-question"></i></div>
+            <div class="support-channel-info">
+              <strong>Help Center & FAQ</strong>
+              <span>Browse guides, tutorials, and FAQs</span>
+            </div>
+            <i class="ph ph-arrow-right support-channel-arrow"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Right: Quick message form -->
+      <div class="support-right">
+        <h3>Send us a Message</h3>
+        <p>Fill in the form and our support team will get back to you shortly.</p>
+
+        <form id="supportForm">
+          <div class="support-form-group">
+            <label class="support-form-label">Full Name</label>
+            <input class="support-form-input" type="text" placeholder="e.g. Dr. Amira Hassan" id="support-name" required>
+          </div>
+          <div class="support-form-group">
+            <label class="support-form-label">Email</label>
+            <input class="support-form-input" type="email" placeholder="your@email.com" id="support-email-input" required>
+          </div>
+          <div class="support-form-group">
+            <label class="support-form-label">Category</label>
+            <select class="support-form-select" id="support-category">
+              <option value="">Select a topic…</option>
+              <option>Appointment Issue</option>
+              <option>Account & Login</option>
+              <option>Medical Records</option>
+              <option>HR / Shift Management</option>
+              <option>AI Risk Assessment</option>
+              <option>Technical Problem</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="support-form-group">
+            <label class="support-form-label">Message</label>
+            <textarea class="support-form-textarea" placeholder="Describe your issue or question…" id="support-message" required></textarea>
+          </div>
+          <button type="submit" class="btn-support-submit" id="support-submit-btn">
+            <i class="ph-fill ph-paper-plane-tilt"></i> Send Message
+          </button>
+        </form>
+
+        <div class="support-success" id="supportSuccess">
+          <i class="ph-fill ph-check-circle"></i>
+          <p>Your message has been sent! Our team will respond within 2 hours.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 SmartHospital. All rights reserved.</p>
+      <div class="compliance-badges">
+        <span class="badge">HIPAA</span>
+        <span class="badge">ISO 27001</span>
+        <span class="badge">HL7</span>
+        <span class="badge">Data Privacy</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // ── Navbar scroll shadow ──────────────────────────
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 20);
+    });
+
+    // ── Scroll reveal ─────────────────────────────────
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          // Stagger siblings
+          const siblings = entry.target.parentElement.querySelectorAll('.reveal');
+          siblings.forEach((el, idx) => {
+            if (el === entry.target) {
+              setTimeout(() => el.classList.add('visible'), idx * 80);
+            }
+          });
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
+
+    // ── Animated counters ─────────────────────────────
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const el = entry.target;
+          const target = parseInt(el.dataset.target, 10);
+          const suffix = target >= 1000 ? (target >= 10000 ? 'K+' : '+') : (el.dataset.target === '99' ? '%' : '');
+          const displayTarget = target >= 10000 ? Math.round(target / 1000) : target;
+          let current = 0;
+          const duration = 1600;
+          const step = Math.ceil(displayTarget / (duration / 16));
+          const timer = setInterval(() => {
+            current = Math.min(current + step, displayTarget);
+            el.textContent = current.toLocaleString() + suffix;
+            if (current >= displayTarget) clearInterval(timer);
+          }, 16);
+          counterObserver.unobserve(el);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.stat-number[data-target]').forEach(el => counterObserver.observe(el));
+
+    // ── Testimonial avatars ───────────────────────────
+    document.getElementById('t-avatar1').src = 'https://ui-avatars.com/api/?name=Sarah+M&background=0a6f56&color=fff&size=88';
+    document.getElementById('t-avatar2').src = 'https://ui-avatars.com/api/?name=James+K&background=0D8ABC&color=fff&size=88';
+    document.getElementById('t-avatar3').src = 'https://ui-avatars.com/api/?name=Nadia+R&background=8b5cf6&color=fff&size=88';
+
+    // ── Support form ─────────────────────────────────
+    const supportForm = document.getElementById('supportForm');
+    const supportSuccess = document.getElementById('supportSuccess');
+
+    supportForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('support-submit-btn');
+      btn.innerHTML = '<i class="ph ph-spinner" style="animation:spin 1s linear infinite"></i> Sending…';
+      btn.disabled = true;
+      setTimeout(() => {
+        supportForm.style.display = 'none';
+        supportSuccess.style.display = 'block';
+      }, 1200);
+    });
+
+    // ── Nav link: Support scrolls to footer ──────────
+    document.querySelectorAll('a[href="#support"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        document.getElementById('support').scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+  </script>
+  <style>
+    @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+  </style>
+
+</body>
+</html>
