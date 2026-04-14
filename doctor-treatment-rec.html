@@ -204,40 +204,59 @@
       gap: 12px;
       pointer-events: none;
     }
-
     .toast {
       pointer-events: auto;
       display: flex;
       align-items: center;
       gap: 12px;
-      min-width: 300px;
-      max-width: 420px;
-      padding: 14px 18px;
+      min-width: 320px;
+      max-width: 440px;
+      padding: 16px 20px;
       border-radius: 12px;
       background: #ffffff;
       box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
       border-left: 4px solid #0a6f56;
-      font-size: 0.9rem;
-      font-weight: 500;
       color: #0f172a;
+      font-size: 0.93rem;
+      font-weight: 500;
       transform: translateX(120%);
       opacity: 0;
-      animation: toastIn 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
+      animation: toastSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative;
+      overflow: hidden;
     }
-
-    .toast.toast-hide {
-      animation: toastOut 0.3s ease-in forwards;
+    .toast.toast-hide { animation: toastSlideOut 0.35s cubic-bezier(0.55, 0, 1, 0.45) forwards; }
+    .toast.toast-success { border-left-color: #0a6f56; }
+    .toast.toast-error   { border-left-color: #dc2626; }
+    .toast.toast-warning { border-left-color: #f59e0b; }
+    .toast-icon {
+      font-size: 1.4rem; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%;
     }
-    .toast-icon { font-size: 1.3rem; color: #0a6f56; flex-shrink: 0; }
-
-    @keyframes toastIn {
-      from { transform: translateX(120%); opacity: 0; }
-      to   { transform: translateX(0);    opacity: 1; }
+    .toast-success .toast-icon { background: rgba(10,111,86,0.1);  color: #0a6f56; }
+    .toast-error   .toast-icon { background: rgba(220,38,38,0.1);  color: #dc2626; }
+    .toast-warning .toast-icon { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .toast-body { flex: 1; }
+    .toast-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; }
+    .toast-msg   { font-weight: 400; color: #64748b; font-size: 0.88rem; }
+    .toast-close {
+      background: none; border: none; cursor: pointer;
+      color: #94a3b8; font-size: 1.2rem; padding: 4px;
+      border-radius: 6px; transition: all 0.15s; display: flex; align-items: center;
     }
-    @keyframes toastOut {
-      from { transform: translateX(0);    opacity: 1; }
-      to   { transform: translateX(120%); opacity: 0; }
+    .toast-close:hover { background: #f1f5f9; color: #475569; }
+    .toast-progress {
+      position: absolute; bottom: 0; left: 4px; right: 0;
+      height: 3px; border-radius: 0 0 12px 0; overflow: hidden;
     }
+    .toast-progress-bar { height: 100%; border-radius: 3px; animation: toastProgress 4s linear forwards; }
+    .toast-success .toast-progress-bar { background: #0a6f56; }
+    .toast-error   .toast-progress-bar { background: #dc2626; }
+    .toast-warning .toast-progress-bar { background: #f59e0b; }
+    @keyframes toastSlideIn  { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0);    opacity: 1; } }
+    @keyframes toastSlideOut { from { transform: translateX(0);    opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+    @keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
   </style>
 </head>
 <body>
@@ -245,9 +264,10 @@
   <div class="app-container">
     <!-- Sidebar -->
     <div class="sidebar">
-      <div class="logo">
+      <a href="doctor-patients.html" class="logo">
+        <div class="nav-logo-icon"><i class="ph-fill ph-first-aid"></i></div>
         SmartHospital
-      </div>
+      </a>
       
       <div class="nav-menu">
         <a href="doctor-patients.html" class="nav-item">
@@ -579,18 +599,31 @@
       inputsChangedAfterGen: false
     };
 
-    // Show Toast
-    function showToast(message) {
+    // ── Toast ──────────────────────────────────────────────────
+    function showToast(message, type = 'success', title) {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.innerHTML = `<i class="ph-fill ph-check-circle toast-icon"></i> <span>${message}</span>`;
+      toast.className = `toast toast-${type}`;
+      const icons  = { success: 'ph-fill ph-check-circle', error: 'ph-fill ph-x-circle', warning: 'ph-fill ph-warning' };
+      const titles = { success: title || 'Success', error: title || 'Error', warning: title || 'Warning' };
+      toast.innerHTML = `
+        <div class="toast-icon"><i class="${icons[type]}"></i></div>
+        <div class="toast-body">
+          <div class="toast-title">${titles[type]}</div>
+          <div class="toast-msg">${message}</div>
+        </div>
+        <button class="toast-close" onclick="dismissToast(this)"><i class="ph ph-x"></i></button>
+        <div class="toast-progress"><div class="toast-progress-bar"></div></div>
+      `;
       container.appendChild(toast);
-      
       setTimeout(() => {
-        toast.classList.add('toast-hide');
-        setTimeout(() => toast.remove(), 350);
-      }, 3000);
+        if (toast.parentNode) { toast.classList.add('toast-hide'); setTimeout(() => toast.remove(), 400); }
+      }, 4000);
+    }
+    function dismissToast(btn) {
+      const toast = btn.closest('.toast');
+      toast.classList.add('toast-hide');
+      setTimeout(() => toast.remove(), 400);
     }
 
     // Input Validation
@@ -744,6 +777,9 @@
 
         resNarrative.value = data.narrative;
         
+        const disease = data.diseaseHtml.replace('<br>', ' ');
+        showToast(`Neural network generated a ${disease} protocol with ${data.confidence.toLowerCase()}.`, 'success', 'Recommendation Generated');
+        
         panelLoading.classList.remove('show');
         panelResult.classList.add('show');
         
@@ -765,6 +801,7 @@
       panelAwaiting.classList.add('show');
       state.isGenerated = false;
       state.inputsChangedAfterGen = false;
+      showToast('Patient vitals form has been cleared. Ready for a new assessment.', 'success', 'Form Reset');
       btnGenerate.disabled = true;
     });
 
@@ -774,7 +811,7 @@
       if (!patientId) {
         document.getElementById('wrapPatientId').classList.add('has-error');
         document.getElementById('errPatientId').classList.add('show');
-        showToast('Please enter a Patient ID to finalize the protocol.');
+        showToast('Please enter a Patient ID before finalizing the protocol.', 'error', 'Patient ID Required');
         return;
       }
       document.getElementById('wrapPatientId').classList.remove('has-error');
@@ -795,10 +832,11 @@
       saved.push(protocol);
       localStorage.setItem(key, JSON.stringify(saved));
       
-      showToast(`Protocol finalized & saved to patient ${patientId}`);
+      const patName = document.getElementById('fPatientName').value.trim();
+      const displayName = patName ? ` (${patName})` : '';
+      showToast(`Treatment protocol saved to patient ${patientId}${displayName} successfully.`, 'success', 'Protocol Finalized');
     });
 
-    // URL Param Pre-fill
     (function prefillFromUrl() {
       const params = new URLSearchParams(window.location.search);
       const pid = params.get('patientId');

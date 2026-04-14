@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SmartHospital - Patients History</title>
+  <title>SmartHospital</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -184,9 +184,10 @@
   <div class="app-container">
     <!-- Sidebar -->
     <div class="sidebar">
-      <div class="logo">
+      <a href="doctor-patients.html" class="logo">
+        <div class="nav-logo-icon"><i class="ph-fill ph-first-aid"></i></div>
         SmartHospital
-      </div>
+      </a>
       
       <div class="nav-menu">
         <a href="doctor-patients.html" class="nav-item active">
@@ -225,7 +226,7 @@
     <div class="main-content">
       <div class="dr-toolbar">
         <div class="header-title">
-          <h1>Patients History</h1>
+          <h1 id="drWelcomeHeader">Welcome back, Doctor.</h1>
           <p>Review and manage active patient files across departments.</p>
         </div>
       </div>
@@ -556,6 +557,18 @@
     // ── Init ───────────────────────────────────────────────────
     updateCounts();
     renderPatients();
+
+    // ── Dynamic Doctor Welcome ──────────────────────────────────
+    const currentUserData = localStorage.getItem('currentUser');
+    if (currentUserData) {
+      try {
+        const user = JSON.parse(currentUserData);
+        const fullName = user.fullName || user.firstName || 'Doctor';
+        // Ensure it starts with Dr.
+        const displayName = fullName.toLowerCase().startsWith('dr') ? fullName : 'Dr. ' + fullName;
+        document.getElementById('drWelcomeHeader').textContent = `Welcome back, ${displayName}.`;
+      } catch(e) {}
+    }
   </script>
 </body>
 </html>

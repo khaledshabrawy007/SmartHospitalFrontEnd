@@ -88,40 +88,78 @@
     .w-green { color: #10b981; }
     .w-gray { color: #cbd5e1; font-style: italic; font-weight: 400;}
 
-    /* Toasts */
-    #toastContainer {
+    /* ── Toast Notification ────────────────────────────── */
+    .toast-container {
       position: fixed;
-      bottom: 24px;
+      top: 24px;
       right: 24px;
+      z-index: 99999;
       display: flex;
       flex-direction: column;
       gap: 12px;
-      z-index: 99999;
+      pointer-events: none;
     }
-    
     .toast {
-      background-color: #1e293b;
-      color: white;
-      padding: 16px 24px;
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-lg);
-      font-size: 0.9rem;
-      font-weight: 600;
+      pointer-events: auto;
       display: flex;
       align-items: center;
       gap: 12px;
+      min-width: 320px;
+      max-width: 440px;
+      padding: 16px 20px;
+      border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+      border-left: 4px solid #0a6f56;
+      color: #0f172a;
+      font-size: 0.93rem;
+      font-weight: 500;
+      transform: translateX(120%);
       opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      animation: toastSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative;
+      overflow: hidden;
     }
-    
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
+    .toast.toast-hide {
+      animation: toastSlideOut 0.35s cubic-bezier(0.55, 0, 1, 0.45) forwards;
     }
-
-    .toast-success i { color: #10b981; }
-    .toast-error i { color: #ef4444; }
+    .toast.toast-success { border-left-color: #0a6f56; }
+    .toast.toast-error   { border-left-color: #dc2626; }
+    .toast.toast-warning { border-left-color: #f59e0b; }
+    .toast-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+    }
+    .toast-success .toast-icon { background: rgba(10,111,86,0.1);  color: #0a6f56; }
+    .toast-error   .toast-icon { background: rgba(220,38,38,0.1);  color: #dc2626; }
+    .toast-warning .toast-icon { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .toast-body { flex: 1; }
+    .toast-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; }
+    .toast-msg   { font-weight: 400; color: #64748b; font-size: 0.88rem; }
+    .toast-close {
+      background: none; border: none; cursor: pointer;
+      color: #94a3b8; font-size: 1.2rem; padding: 4px;
+      border-radius: 6px; transition: all 0.15s;
+      display: flex; align-items: center;
+    }
+    .toast-close:hover { background: #f1f5f9; color: #475569; }
+    .toast-progress {
+      position: absolute; bottom: 0; left: 4px; right: 0;
+      height: 3px; border-radius: 0 0 12px 0; overflow: hidden;
+    }
+    .toast-progress-bar { height: 100%; border-radius: 3px; animation: toastProgress 4s linear forwards; }
+    .toast-success .toast-progress-bar { background: #0a6f56; }
+    .toast-error   .toast-progress-bar { background: #dc2626; }
+    .toast-warning .toast-progress-bar { background: #f59e0b; }
+    @keyframes toastSlideIn  { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0);    opacity: 1; } }
+    @keyframes toastSlideOut { from { transform: translateX(0);    opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+    @keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
 
     /* Dropdown form */
     .form-select {
@@ -155,10 +193,10 @@
   <div class="app-container">
     <!-- Sidebar -->
     <div class="sidebar">
-      <div class="logo">
-        <span style="display:block;">SmartHospital</span>
-        <span style="font-size: 0.6rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Clinical HR Portal</span>
-      </div>
+            <a href="hr-dashboard.html" class="logo">
+        <div class="nav-logo-icon"><i class="ph-fill ph-first-aid"></i></div>
+        SmartHospital
+      </a>
       
       <div class="nav-menu">
         <a href="hr-dashboard.html" class="nav-item">
@@ -305,7 +343,8 @@
     </div>
   </div>
 
-  <div id="toastContainer"></div>
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
 
   <script src="auth-session.js"></script>
   <script>
@@ -367,24 +406,30 @@
     });
 
     // ---- Toast Logic ----
-    function showToast(message, type = 'success') {
+    function showToast(message, type = 'success', title) {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       toast.className = `toast toast-${type}`;
-      
-      const icon = type === 'success' ? 'ph-check-circle' : 'ph-x-circle';
-      toast.innerHTML = `<i class="ph-fill ${icon}" style="font-size:1.25rem;"></i> <span>${message}</span>`;
-      
+      const icons  = { success: 'ph-fill ph-check-circle', error: 'ph-fill ph-x-circle', warning: 'ph-fill ph-warning' };
+      const titles = { success: title || 'Success', error: title || 'Error', warning: title || 'Warning' };
+      toast.innerHTML = `
+        <div class="toast-icon"><i class="${icons[type]}"></i></div>
+        <div class="toast-body">
+          <div class="toast-title">${titles[type]}</div>
+          <div class="toast-msg">${message}</div>
+        </div>
+        <button class="toast-close" onclick="dismissToast(this)"><i class="ph ph-x"></i></button>
+        <div class="toast-progress"><div class="toast-progress-bar"></div></div>
+      `;
       container.appendChild(toast);
-      
-      // Trigger animation
-      setTimeout(() => toast.classList.add('show'), 10);
-      
-      // Remove after 3s
       setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-      }, 3000);
+        if (toast.parentNode) { toast.classList.add('toast-hide'); setTimeout(() => toast.remove(), 400); }
+      }, 4000);
+    }
+    function dismissToast(btn) {
+      const toast = btn.closest('.toast');
+      toast.classList.add('toast-hide');
+      setTimeout(() => toast.remove(), 400);
     }
 
     // ---- Approvals Logic ----
@@ -426,22 +471,26 @@
     }
 
     function approveProfile(id) {
+      const app = mockData.approvals.find(a => a.id === id);
+      const name = app ? app.name : 'Profile';
       mockData.approvals = mockData.approvals.filter(a => a.id !== id);
       const card = document.getElementById(`card-${id}`);
       card.style.opacity = '0';
       setTimeout(() => {
         renderApprovals();
-        showToast('Profile approved successfully.');
+        showToast(`${name} has been approved and added to the directory.`, 'success', 'Profile Approved');
       }, 200);
     }
 
     function rejectProfile(id) {
+      const app = mockData.approvals.find(a => a.id === id);
+      const name = app ? app.name : 'Profile';
       mockData.approvals = mockData.approvals.filter(a => a.id !== id);
       const card = document.getElementById(`card-${id}`);
       card.style.opacity = '0';
       setTimeout(() => {
         renderApprovals();
-        showToast('Profile rejected.', 'error');
+        showToast(`${name}'s application has been rejected and removed.`, 'error', 'Profile Rejected');
       }, 200);
     }
 
@@ -541,8 +590,9 @@
       }
       
       closeWardModal();
-      applyFilters(); // Re-render table completely to show state change
-      showToast('Assigned successfully.');
+      applyFilters();
+      const staffName = staff ? staff.name : 'Staff member';
+      showToast(`${staffName} has been assigned to ${selectedWard}.`, 'success', 'Ward Assigned');
     }
   </script>
 </body>

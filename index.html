@@ -311,12 +311,12 @@
 
   <div class="split-layout">
     <div class="split-left">
-      <div class="logo">
+      <a href="home.html" class="logo" style="text-decoration:none; color:inherit;">
         <div class="logo-icon">
           <i class="ph-fill ph-first-aid"></i>
         </div>
         SmartHospital
-      </div>
+      </a>
       
       <div class="hero-text">
         <h1>Precision Care,<br/><span class="text-highlight">Powered by<br/>Intelligence.</span></h1>
@@ -343,7 +343,7 @@
           <p>Enter your credentials to access the secure portal.</p>
         </div>
         
-        <form id="loginForm" action="dashboard.html">
+        <form id="loginForm" action="dashboard.html" method="get" target="_self">
           <div class="role-tabs">
             <div class="role-tab active">
               <i class="ph-fill ph-user"></i>
@@ -438,23 +438,6 @@
 
     const loginForm = document.getElementById('loginForm');
 
-    // ── Auto-select tab from home page portal card ────
-    const savedRole = sessionStorage.getItem('loginRole');
-    if (savedRole) {
-      sessionStorage.removeItem('loginRole'); // consume it
-      const tabs = document.querySelectorAll('.role-tab');
-      tabs.forEach(tab => {
-        const text = tab.innerText.trim().toUpperCase();
-        if (
-          (savedRole === 'patient' && text === 'PATIENT') ||
-          (savedRole === 'doctor'  && text === 'DOCTOR')  ||
-          (savedRole === 'hr'      && text.includes('MANAGER'))
-        ) {
-          tab.click(); // triggers full tab-switch logic below
-        }
-      });
-    }
-
     document.querySelectorAll('.role-tab').forEach(tab => {
       tab.addEventListener('click', () => {
         document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
@@ -478,20 +461,43 @@
       });
     });
 
+    // ── Auto-select tab from home page portal card ────
+    const savedRole = sessionStorage.getItem('loginRole');
+    if (savedRole) {
+      sessionStorage.removeItem('loginRole'); // consume it
+      const tabs = document.querySelectorAll('.role-tab');
+      tabs.forEach(tab => {
+        const text = tab.innerText.trim().toUpperCase();
+        if (
+          (savedRole === 'patient' && text === 'PATIENT') ||
+          (savedRole === 'doctor'  && text === 'DOCTOR')  ||
+          (savedRole === 'hr'      && text.includes('MANAGER'))
+        ) {
+          tab.click(); // triggers full tab-switch logic below
+        }
+      });
+    }
+
     loginForm.addEventListener('submit', (e) => {
-      // Let it navigate, just store context beforehand
+      e.preventDefault(); // Stop native form submit (prevents new-tab issues)
+
       const emailInput = loginForm.querySelector('input[type="email"]');
       if (emailInput && emailInput.value) {
-        // Simple heuristic to extract a name from email: dr.smith -> Dr Smith
         let namePrefix = emailInput.value.split('@')[0];
         namePrefix = namePrefix.replace(/[._]/g, ' ');
         namePrefix = namePrefix.replace(/\b\w/g, l => l.toUpperCase());
-        
+
         let role = 'Patient Account';
+        let destination = 'dashboard.html';
         const activeTab = document.querySelector('.role-tab.active');
         if (activeTab) {
-          if(activeTab.innerText.includes('DOCTOR')) role = 'Attending Physician';
-          if(activeTab.innerText.includes('MANAGER')) role = 'HR Director';
+          if (activeTab.innerText.includes('DOCTOR')) {
+            role = 'Attending Physician';
+            destination = 'doctor-patients.html';
+          } else if (activeTab.innerText.includes('MANAGER')) {
+            role = 'HR Director';
+            destination = 'hr-dashboard.html';
+          }
         }
 
         localStorage.setItem('currentUser', JSON.stringify({
@@ -500,6 +506,9 @@
           email: emailInput.value,
           role: role
         }));
+
+        // Always navigate in the same tab
+        window.location.href = destination;
       }
     });
 

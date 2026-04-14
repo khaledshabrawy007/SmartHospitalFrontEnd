@@ -8,22 +8,57 @@
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <style>
-    /* ── Toast ──────────────────────────────────── */
-    #toastContainer {
-      position: fixed; bottom: 24px; right: 24px;
-      display: flex; flex-direction: column; gap: 12px; z-index: 99999;
+    /* ── Toast Notification ────────────────────────── */
+    .toast-container {
+      position: fixed; top: 24px; right: 24px;
+      display: flex; flex-direction: column; gap: 12px;
+      z-index: 99999; pointer-events: none;
     }
     .toast {
-      background: #1e293b; color: white; padding: 14px 22px;
-      border-radius: var(--radius-md); box-shadow: var(--shadow-lg);
-      font-size: 0.9rem; font-weight: 600;
+      pointer-events: auto;
       display: flex; align-items: center; gap: 12px;
-      opacity: 0; transform: translateY(16px); transition: all 0.3s ease;
+      min-width: 320px; max-width: 440px;
+      padding: 16px 20px; border-radius: 12px;
+      background: #ffffff;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+      border-left: 4px solid #0a6f56;
+      color: #0f172a; font-size: 0.93rem; font-weight: 500;
+      transform: translateX(120%); opacity: 0;
+      animation: toastSlideIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      position: relative; overflow: hidden;
     }
-    .toast.show { opacity: 1; transform: translateY(0); }
-    .toast-success i { color: #10b981; }
-    .toast-error   i { color: #ef4444; }
-    .toast-warn    i { color: #f59e0b; }
+    .toast.toast-hide { animation: toastSlideOut 0.35s cubic-bezier(0.55, 0, 1, 0.45) forwards; }
+    .toast.toast-success { border-left-color: #0a6f56; }
+    .toast.toast-error   { border-left-color: #dc2626; }
+    .toast.toast-warning { border-left-color: #f59e0b; }
+    .toast-icon {
+      font-size: 1.4rem; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 50%;
+    }
+    .toast-success .toast-icon { background: rgba(10,111,86,0.1);  color: #0a6f56; }
+    .toast-error   .toast-icon { background: rgba(220,38,38,0.1);  color: #dc2626; }
+    .toast-warning .toast-icon { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .toast-body { flex: 1; }
+    .toast-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 2px; }
+    .toast-msg   { font-weight: 400; color: #64748b; font-size: 0.88rem; }
+    .toast-close {
+      background: none; border: none; cursor: pointer;
+      color: #94a3b8; font-size: 1.2rem; padding: 4px;
+      border-radius: 6px; transition: all 0.15s; display: flex; align-items: center;
+    }
+    .toast-close:hover { background: #f1f5f9; color: #475569; }
+    .toast-progress {
+      position: absolute; bottom: 0; left: 4px; right: 0;
+      height: 3px; border-radius: 0 0 12px 0; overflow: hidden;
+    }
+    .toast-progress-bar { height: 100%; border-radius: 3px; animation: toastProgress 4s linear forwards; }
+    .toast-success .toast-progress-bar { background: #0a6f56; }
+    .toast-error   .toast-progress-bar { background: #dc2626; }
+    .toast-warning .toast-progress-bar { background: #f59e0b; }
+    @keyframes toastSlideIn  { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0);    opacity: 1; } }
+    @keyframes toastSlideOut { from { transform: translateX(0);    opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+    @keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
 
     /* ── Ward Tabs ───────────────────────────────── */
     .ward-tabs {
@@ -301,10 +336,10 @@
 <div class="app-container">
   <!-- Sidebar -->
   <div class="sidebar">
-    <div class="logo">
-      <span style="display:block;">SmartHospital</span>
-      <span style="font-size:0.6rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:0.05em; font-weight:700;">Clinical HR Portal</span>
-    </div>
+          <a href="hr-dashboard.html" class="logo">
+        <div class="nav-logo-icon"><i class="ph-fill ph-first-aid"></i></div>
+        SmartHospital
+      </a>
     <div class="nav-menu">
       <a href="hr-dashboard.html" class="nav-item"><i class="ph ph-squares-four"></i> Dashboard</a>
       <a href="hr-staff.html"     class="nav-item"><i class="ph ph-users-three"></i> Staff Management</a>
@@ -429,7 +464,8 @@
   </div>
 </div>
 
-<div id="toastContainer"></div>
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
 
 <script src="auth-session.js"></script>
 <script>
@@ -555,15 +591,33 @@ function toDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 
-function showToast(msg, type='success') {
+function showToast(msg, type='success', title) {
   const c = document.getElementById('toastContainer');
   const t = document.createElement('div');
   t.className = `toast toast-${type}`;
-  const icon = type==='success'?'ph-check-circle':type==='warn'?'ph-warning':'ph-x-circle';
-  t.innerHTML = `<i class="ph-fill ${icon}" style="font-size:1.25rem;"></i> <span>${msg}</span>`;
+  const icons  = { success: 'ph-fill ph-check-circle', error: 'ph-fill ph-x-circle', warning: 'ph-fill ph-warning' };
+  const titles = { success: title || 'Success', error: title || 'Error', warning: title || 'Warning' };
+  // map legacy 'warn' type to 'warning'
+  const resolvedType = type === 'warn' ? 'warning' : type;
+  t.className = `toast toast-${resolvedType}`;
+  t.innerHTML = `
+    <div class="toast-icon"><i class="${icons[resolvedType] || icons.success}"></i></div>
+    <div class="toast-body">
+      <div class="toast-title">${titles[resolvedType] || title || 'Notice'}</div>
+      <div class="toast-msg">${msg}</div>
+    </div>
+    <button class="toast-close" onclick="dismissToast(this)"><i class="ph ph-x"></i></button>
+    <div class="toast-progress"><div class="toast-progress-bar"></div></div>
+  `;
   c.appendChild(t);
-  setTimeout(()=>t.classList.add('show'),10);
-  setTimeout(()=>{t.classList.remove('show');setTimeout(()=>t.remove(),300);},3200);
+  setTimeout(() => {
+    if (t.parentNode) { t.classList.add('toast-hide'); setTimeout(() => t.remove(), 400); }
+  }, 4000);
+}
+function dismissToast(btn) {
+  const toast = btn.closest('.toast');
+  toast.classList.add('toast-hide');
+  setTimeout(() => toast.remove(), 400);
 }
 
 function bedIcon(status) {
@@ -755,7 +809,7 @@ function dischargePatient(bedId) {
   const ward = currentWard();
   const bed  = ward.beds.find(b=>b.id===bedId);
   if (!bed || bed.status!=='occupied') {
-    showToast('No patient to discharge.','error'); return;
+    showToast('No patient to discharge.', 'error', 'Discharge Failed'); return;
   }
   const patName = bed.patient.name;
   bed.status  = 'available';
@@ -763,33 +817,33 @@ function dischargePatient(bedId) {
   closeBedModal();
   renderAll();
   flashBed(bedId);
-  showToast(`${patName} discharged. Bed ${bedId} is now available.`,'success');
+  showToast(`${patName} discharged. Bed ${bedId} is now available.`, 'success', 'Patient Discharged');
 }
 
 function markAvailable(bedId) {
   const ward = currentWard();
   const bed  = ward.beds.find(b=>b.id===bedId);
   if (!bed || bed.status!=='maintenance') {
-    showToast('Bed is not under maintenance.','error'); return;
+    showToast('Bed is not under maintenance.', 'error', 'Action Failed'); return;
   }
   bed.status = 'available';
   closeBedModal();
   renderAll();
   flashBed(bedId);
-  showToast(`Bed ${bedId} marked as available.`,'success');
+  showToast(`Bed ${bedId} is now available for admission.`, 'success', 'Bed Available');
 }
 
 function markMaintenance(bedId) {
   const ward = currentWard();
   const bed  = ward.beds.find(b=>b.id===bedId);
   if (!bed || bed.status!=='available') {
-    showToast('Only available beds can be set to maintenance.','error'); return;
+    showToast('Only available beds can be set to maintenance.', 'error', 'Action Failed'); return;
   }
   bed.status = 'maintenance';
   closeBedModal();
   renderAll();
   flashBed(bedId);
-  showToast(`Bed ${bedId} is now under maintenance.`,'warn');
+  showToast(`Bed ${bedId} is now under maintenance.`, 'warning', 'Maintenance Scheduled');
 }
 
 function flashBed(bedId) {
@@ -835,16 +889,16 @@ function registerAdmission() {
   const reason  = document.getElementById('admReason').value.trim();
 
   // Validation
-  if (!patId)   { showToast('Please enter a Patient ID.','error'); return; }
-  if (!patName) { showToast('Please enter the patient name.','error'); return; }
-  if (!bedId)   { showToast('Please select or enter a Bed ID.','error'); return; }
-  if (!admDate) { showToast('Please select an admission date.','error'); return; }
-  if (!reason)  { showToast('Please enter a reason for the visit.','error'); return; }
+  if (!patId)   { showToast('Please enter a Patient ID.', 'error', 'Missing Field'); return; }
+  if (!patName) { showToast('Please enter the patient name.', 'error', 'Missing Field'); return; }
+  if (!bedId)   { showToast('Please select or enter a Bed ID.', 'error', 'Missing Field'); return; }
+  if (!admDate) { showToast('Please select an admission date.', 'error', 'Missing Field'); return; }
+  if (!reason)  { showToast('Please enter a reason for the visit.', 'error', 'Missing Field'); return; }
 
   // Past date check
   const today = toDateStr(new Date());
   if (admDate < today) {
-    showToast('Admission date cannot be in the past.','error'); return;
+    showToast('Admission date cannot be in the past.', 'error', 'Invalid Date'); return;
   }
 
   // Find the bed across all wards (bed might belong to any ward)
@@ -855,9 +909,9 @@ function registerAdmission() {
     if (found) { targetBed=found; targetWard=state.wards[wId]; break; }
   }
 
-  if (!targetBed) { showToast(`Bed ID "${bedId}" not found in any ward.`,'error'); return; }
-  if (targetBed.status==='occupied')    { showToast(`Bed ${bedId} is already occupied.`,'error'); return; }
-  if (targetBed.status==='maintenance') { showToast(`Bed ${bedId} is under maintenance and cannot be assigned.`,'warn'); return; }
+  if (!targetBed) { showToast(`Bed ID "${bedId}" not found in any ward.`, 'error', 'Bed Not Found'); return; }
+  if (targetBed.status==='occupied')    { showToast(`Bed ${bedId} is already occupied.`, 'error', 'Bed Occupied'); return; }
+  if (targetBed.status==='maintenance') { showToast(`Bed ${bedId} is under maintenance and cannot be assigned.`, 'warning', 'Bed Unavailable'); return; }
 
   // Admit!
   targetBed.status  = 'occupied';
@@ -868,7 +922,7 @@ function registerAdmission() {
   state.currentWardId = targetWard.id;
   renderAll();
   flashBed(bedId);
-  showToast(`${patName} admitted to bed ${bedId} in ${targetWard.name}.`,'success');
+  showToast(`${patName} admitted to bed ${bedId} in ${targetWard.name}.`, 'success', 'Patient Admitted');
 }
 
 // ═══════════════════════════════════════════════════════

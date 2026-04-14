@@ -21,6 +21,22 @@
   font-weight: 700;
   margin-bottom: 40px;
   color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.sidebar .nav-logo-icon {
+  width: 32px;
+  height: 32px;
+  background-color: var(--color-primary);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1rem;
 }
 
 .nav-menu {
@@ -1915,6 +1931,13 @@ input:checked + .slider:before {
   grid-template-columns: repeat(7, 1fr);
   gap: 16px;
   margin-top: 32px;
+  align-items: start;
+}
+
+.day-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .day-col-header {
@@ -1943,6 +1966,9 @@ input:checked + .slider:before {
   padding: 16px;
   border-left: 4px solid var(--color-border);
   margin-bottom: 12px;
+  height: 180px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .shift-card.morning { border-left-color: #10b981; }

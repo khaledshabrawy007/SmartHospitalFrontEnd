@@ -50,15 +50,5 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // Make logo clickable to the first sidebar item across all pages
-    const firstNavItem = document.querySelector('.nav-menu a.nav-item');
-    const logoElements = document.querySelectorAll('.logo');
-    if (firstNavItem && logoElements.length > 0) {
-        logoElements.forEach(logo => {
-            logo.style.cursor = 'pointer';
-            logo.addEventListener('click', () => {
-                window.location.href = firstNavItem.getAttribute('href');
-            });
-        });
-    }
+    // Logo navigation is handled via native <a> href links on each page's .logo element
 });

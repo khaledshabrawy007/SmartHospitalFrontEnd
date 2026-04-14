@@ -1611,24 +1611,6 @@
             </div>
             <i class="ph ph-arrow-right support-channel-arrow"></i>
           </a>
-
-          <a class="support-channel" href="#" id="support-chat-link" onclick="event.preventDefault();">
-            <div class="support-channel-icon"><i class="ph-fill ph-chat-circle-dots"></i></div>
-            <div class="support-channel-info">
-              <strong>Live Chat</strong>
-              <span>Chat with a clinical coordinator now</span>
-            </div>
-            <i class="ph ph-arrow-right support-channel-arrow"></i>
-          </a>
-
-          <a class="support-channel" href="#" id="support-faq-link" onclick="event.preventDefault();">
-            <div class="support-channel-icon"><i class="ph-fill ph-question"></i></div>
-            <div class="support-channel-info">
-              <strong>Help Center & FAQ</strong>
-              <span>Browse guides, tutorials, and FAQs</span>
-            </div>
-            <i class="ph ph-arrow-right support-channel-arrow"></i>
-          </a>
         </div>
       </div>
 
@@ -1646,6 +1628,7 @@
             <label class="support-form-label">Email</label>
             <input class="support-form-input" type="email" placeholder="your@email.com" id="support-email-input" required>
           </div>
+
           <div class="support-form-group">
             <label class="support-form-label">Category</label>
             <select class="support-form-select" id="support-category">
@@ -1762,6 +1745,41 @@
         document.getElementById('support').scrollIntoView({ behavior: 'smooth' });
       });
     });
+    // ── Copy Contact to Clipboard ─────────────────────
+    const copyToClipboard = (id, text) => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigator.clipboard.writeText(text);
+        
+        // Show visual feedback
+        const infoSpan = el.querySelector('.support-channel-info span');
+        const icon = el.querySelector('.support-channel-arrow');
+        
+        if(infoSpan && icon) {
+          const originalText = infoSpan.innerText;
+          const originalClass = icon.className;
+          
+          infoSpan.innerText = "✓ Copied to clipboard!";
+          infoSpan.style.color = "var(--color-primary-light)";
+          infoSpan.style.fontWeight = "600";
+          icon.className = 'ph-bold ph-check support-channel-arrow';
+          icon.style.color = 'var(--color-primary-light)';
+          
+          setTimeout(() => {
+            infoSpan.innerText = originalText;
+            infoSpan.style.color = "";
+            infoSpan.style.fontWeight = "";
+            icon.className = originalClass;
+            icon.style.color = '';
+          }, 2000);
+        }
+      });
+    };
+    
+    copyToClipboard('support-email-link', 'support@smarthospital.com');
+    copyToClipboard('support-phone-link', '+18005550199');
   </script>
   <style>
     @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
