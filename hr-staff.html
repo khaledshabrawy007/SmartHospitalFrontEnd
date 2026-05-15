@@ -362,26 +362,32 @@
 
   <!-- Ward Assignment Modal -->
   <div class="modal-overlay" id="wardModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
-    <div class="modal-container" style="max-width: 400px;">
+    <div class="modal-container" style="max-width: 420px;">
       <button class="modal-close" onclick="closeWardModal()"><i class="ph ph-x"></i></button>
       <div class="modal-header">
-        <h2 id="wardModalTitle">Assign Ward</h2>
-        <p>Select a ward for <span id="wardModalStaffName" style="font-weight:700; color:var(--color-primary);"></span></p>
+        <i class="ph-fill ph-hospital" style="font-size:2rem;color:var(--color-primary);margin-bottom:8px;display:block;"></i>
+        <h2 id="wardModalTitle">Assign to Ward</h2>
+        <p>Select a ward for <span id="wardModalStaffName" style="font-weight:700;color:var(--color-primary);"></span></p>
       </div>
       <div style="margin-bottom:24px;">
-        <select id="wardSelect" class="form-select" style="width: 100%;">
-          <option value="ER South Wing">ER South Wing</option>
-          <option value="ICU Block C">ICU Block C</option>
-          <option value="Maternity Unit">Maternity Unit</option>
-          <option value="General Surgery">General Surgery</option>
-          <option value="Pediatrics Ward">Pediatrics Ward</option>
-          <option value="Unassigned">Unassigned</option>
+        <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:8px;">Ward</label>
+        <select id="wardSelect" class="form-select" style="width:100%;padding:10px 14px;border-radius:8px;font-size:0.95rem;">
+          <option value="">⟳ Loading wards...</option>
         </select>
         <input type="hidden" id="wardModalStaffId">
+        <input type="hidden" id="wardModalStaffType"><!-- Doctor | Nurse -->
+        <p id="wardModalUnassignNote" style="font-size:0.78rem;color:var(--color-text-muted);margin-top:8px;display:none;">
+          ⚠ Nurses cannot be unassigned — reassign to a different ward instead.
+        </p>
       </div>
-      <div class="modal-actions" style="justify-content: flex-end;">
-        <button class="btn btn-outline" onclick="closeWardModal()">Cancel</button>
-        <button class="btn btn-primary" onclick="assignWard()">Confirm Assignment</button>
+      <div class="modal-actions" style="flex-direction:column; gap:10px;">
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button class="btn btn-outline" onclick="closeWardModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="assignWardConfirm()">Confirm</button>
+        </div>
+        <button class="btn" id="wardUnassignBtn"
+          style="background:#fee2e2;color:#b91c1c;border:none;width:100%;justify-content:center;"
+          onclick="unassignWardConfirm()">Remove from Ward</button>
       </div>
     </div>
   </div>
@@ -389,12 +395,29 @@
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>
 
+  <!-- Deactivate Confirmation Modal -->
+  <div class="modal-overlay" id="deactivateModal" style="display:none;justify-content:center;align-items:center;z-index:9999;">
+    <div class="modal-container" style="max-width:400px;text-align:center;">
+      <button class="modal-close" onclick="document.getElementById('deactivateModal').style.display='none'"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <i class="ph-fill ph-warning" style="font-size:2.8rem;color:#f59e0b;margin-bottom:8px;display:block;"></i>
+        <h2>Deactivate Nurse</h2>
+        <p>Are you sure you want to deactivate <strong id="deactivateModalName"></strong>?<br>
+        They will be marked inactive and cannot be assigned to shifts.</p>
+      </div>
+      <div class="modal-actions" style="justify-content:center;gap:12px;">
+        <button class="btn btn-outline" onclick="document.getElementById('deactivateModal').style.display='none'">Cancel</button>
+        <button class="btn" id="confirmDeactivateBtn" style="background:#dc2626;color:#fff;border-color:#dc2626;" onclick="executeDeactivate()">Deactivate</button>
+      </div>
+    </div>
+  </div>
+
   <script src="auth-session.js"></script>
   <script>
-    let allDoctors = [], allNurses = [], pendingDoctors = [], combinedStaff = [], filteredStaff = [];
+    let allDoctors = [], allNurses = [], pendingDoctors = [], combinedStaff = [], filteredStaff = [], allWards = [];
     let currentPage = 1, currentSearch = '', currentRole = 'All';
     const rowsPerPage = 6;
-    let activeRejectId = null, activeKpiId = null;
+    let activeRejectId = null, activeKpiId = null, activeWardStaff = null;
 
     document.addEventListener('DOMContentLoaded', async () => {
       const session = requireAuth(['HRManager']);
@@ -410,8 +433,10 @@
 
     async function loadData() {
       try {
-        const [docs, nurses, pending] = await Promise.all([StaffAPI.getAll(), NursesAPI.getAll(), StaffAPI.getPending()]);
-        allDoctors = docs; allNurses = nurses; pendingDoctors = pending;
+        const [docs, nurses, pending, wards] = await Promise.all([
+          StaffAPI.getAll(), NursesAPI.getAll(), StaffAPI.getPending(), WardsAPI.getAll()
+        ]);
+        allDoctors = docs; allNurses = nurses; pendingDoctors = pending; allWards = wards;
         rebuildCombined();
         renderApprovals();
         applyFilters();
@@ -519,17 +544,44 @@
       tbody.innerHTML = visible.map((s,i) => {
         const [bg,clr] = palettes[i%palettes.length].split('|');
         const isDoc = s.role === 'Doctor';
-        const ward = isDoc ? '—' : (!s.isActive ? '<span style="color:#ef4444;">⊘ Inactive</span>' : `<span class="ward-assign w-green"><i class="ph-fill ph-circle w-green"></i> ${s.wardName||'—'}</span>`);
-        const kpiEncoded = encodeURIComponent(s.kPIs||'');
-        const actions = isDoc
-          ? `<button class="btn-filter" style="border:none;background:var(--color-bg-light);color:var(--color-primary);" onclick="openKpiModal(${s.doctorID},'${s.fullName}',${s.salary||0},'${kpiEncoded}')"><i class="ph ph-chart-line"></i> EDIT KPIs</button>`
-          : `<button class="btn-filter" style="border:none;background:#fee2e2;color:#b91c1c;" onclick="deactivateNurse(${s.nurseID},'${s.fullName}')" ${!s.isActive?'disabled':''} title="${!s.isActive?'Already inactive':''}"><i class="ph ph-prohibit"></i> DEACTIVATE</button>`;
+        const wardDisplay = s.wardName
+          ? `<span class="ward-assign w-green"><i class="ph-fill ph-circle w-green"></i> ${s.wardName}</span>`
+          : `<span class="w-gray">Unassigned</span>`;
+        const inactiveTag = (!isDoc && !s.isActive) ? `<span style="color:#ef4444;">⊘ Inactive</span>` : wardDisplay;
+        const kpiEncoded = encodeURIComponent(s.kpIs||'');
+        const staffId   = isDoc ? s.doctorID : s.nurseID;
+        const wardId    = s.wardID || '';
+
+        const assignBtn = `<button class="btn-filter" title="Assign Ward"
+          style="border:none;background:var(--color-bg-light);color:#0284c7;"
+          onclick="openWardModal(${staffId},'${s.fullName}','${s.role}',${wardId||0})"
+          ><i class="ph ph-hospital"></i> Ward</button>`;
+
+        const kpiBtn = isDoc
+          ? `<button class="btn-filter" title="Edit KPIs"
+              style="border:none;background:var(--color-bg-light);color:var(--color-primary);"
+              onclick="openKpiModal(${s.doctorID},'${s.fullName}',${s.salary ?? 0},'${kpiEncoded}')"
+              ><i class="ph ph-chart-line"></i> KPI</button>
+             <button class="btn-filter" id="autoKpi-${s.doctorID}" title="Auto-compute KPI"
+              style="border:none;background:#d1fae5;color:#065f46;"
+              onclick="autoComputeKpi(${s.doctorID},'${s.fullName}')"
+              ><i class="ph ph-lightning"></i></button>`
+          : s.isActive
+          ? `<button class="btn-filter" title="Deactivate Nurse"
+              style="border:none;background:#fee2e2;color:#b91c1c;"
+              onclick="openDeactivateModal(${s.nurseID},'${s.fullName}')"
+              ><i class="ph ph-prohibit"></i></button>`
+          : `<button class="btn-filter" title="Reactivate Nurse"
+              style="border:none;background:#d1fae5;color:#065f46;"
+              onclick="activateNurse(${s.nurseID},'${s.fullName}')"
+              ><i class="ph ph-check-circle"></i></button>`;
+
         return `<tr>
           <td><div class="td-profile"><div class="td-avatar" style="background:${bg};color:${clr};">${ini(s.fullName)}</div><div><div class="td-name">${s.fullName}</div><div class="td-id">${s.displayId}</div></div></div></td>
           <td><span class="role-badge ${isDoc?'role-dr':'role-nurse'}">${s.role.toUpperCase()}</span></td>
           <td style="color:var(--color-text-dark);font-weight:500;">${s.specialization||'—'}</td>
-          <td>${ward}</td>
-          <td style="text-align:right;">${actions}</td>
+          <td>${inactiveTag}</td>
+          <td style="text-align:right;"><div style="display:flex;gap:6px;justify-content:flex-end;">${assignBtn}${kpiBtn}</div></td>
         </tr>`;
       }).join('');
     }
@@ -537,7 +589,7 @@
     function openKpiModal(doctorId, name, salary, kpisEnc) {
       activeKpiId = doctorId;
       document.getElementById('kpiModalName').textContent = name;
-      document.getElementById('kpiSalary').value = salary||'';
+      document.getElementById('kpiSalary').value = (salary != null && salary !== '') ? salary : '';
       document.getElementById('kpiNotes').value = decodeURIComponent(kpisEnc||'');
       document.getElementById('kpiModal').style.display = 'flex';
     }
@@ -549,7 +601,7 @@
       const btn = document.getElementById('saveKpiBtn'); btn.disabled = true;
       try {
         await StaffAPI.updateKpis(activeKpiId, { salary, kPIs });
-        allDoctors = allDoctors.map(d => d.doctorID===activeKpiId ? {...d,salary,kPIs} : d);
+        allDoctors = allDoctors.map(d => d.doctorID===activeKpiId ? {...d, salary, kpIs: kPIs} : d);
         rebuildCombined(); applyFilters();
         document.getElementById('kpiModal').style.display = 'none';
         showToast('KPIs and salary updated.', 'success', 'KPIs Updated');
@@ -557,14 +609,134 @@
       finally { btn.disabled = false; }
     }
 
-    async function deactivateNurse(nurseId, name) {
-      if (!confirm(`Deactivate ${name}?`)) return;
+    let pendingDeactivateId = null, pendingDeactivateName = null;
+
+    function openDeactivateModal(nurseId, name) {
+      pendingDeactivateId = nurseId;
+      pendingDeactivateName = name;
+      document.getElementById('deactivateModalName').textContent = name;
+      document.getElementById('deactivateModal').style.display = 'flex';
+    }
+
+    async function executeDeactivate() {
+      document.getElementById('deactivateModal').style.display = 'none';
+      if (!pendingDeactivateId) return;
+      const id = pendingDeactivateId, name = pendingDeactivateName;
+      pendingDeactivateId = null; pendingDeactivateName = null;
+      const btn = document.getElementById('confirmDeactivateBtn');
+      if (btn) btn.disabled = true;
       try {
-        await NursesAPI.deactivate(nurseId);
-        allNurses = allNurses.map(n => n.nurseID===nurseId ? {...n,isActive:false} : n);
+        await NursesAPI.deactivate(id);
+        allNurses = allNurses.map(n => n.nurseID===id
+          ? {...n, isActive:false, wardID:null, wardName:null}
+          : n);
         rebuildCombined(); applyFilters();
-        showToast(`${name} deactivated.`, 'error', 'Nurse Deactivated');
+        showToast(`${name} has been deactivated.`, 'error', 'Nurse Deactivated');
       } catch(err) { showToast(err.message||'Could not deactivate.','error'); }
+      finally { if (btn) btn.disabled = false; }
+    }
+
+    async function activateNurse(nurseId, name) {
+      try {
+        await NursesAPI.activate(nurseId);
+        allNurses = allNurses.map(n => n.nurseID===nurseId ? {...n, isActive:true} : n);
+        rebuildCombined(); applyFilters();
+        showToast(`${name} has been reactivated.`, 'success', 'Nurse Reactivated');
+      } catch(err) { showToast(err.message||'Could not reactivate.','error'); }
+    }
+
+    // ── Ward Assignment ────────────────────────────────────────────────────
+    function openWardModal(staffId, name, role, currentWardId) {
+      // Guard: inactive nurses cannot be assigned to a ward
+      if (role === 'Nurse') {
+        const nurse = allNurses.find(n => n.nurseID === staffId);
+        if (nurse && !nurse.isActive) {
+          showToast(
+            `${name} is currently inactive. Reactivate them first before assigning a ward.`,
+            'warning', 'Cannot Assign Ward'
+          );
+          return;
+        }
+      }
+
+      activeWardStaff = { id: staffId, name, role };
+      document.getElementById('wardModalStaffName').textContent = name;
+      document.getElementById('wardModalStaffId').value = staffId;
+      document.getElementById('wardModalStaffType').value = role;
+
+      // All staff can be unassigned — hide the note, show the button
+      document.getElementById('wardUnassignBtn').style.display = '';
+      document.getElementById('wardModalUnassignNote').style.display = 'none';
+
+      // Populate ward dropdown from live data
+      const sel = document.getElementById('wardSelect');
+      sel.innerHTML = allWards.map(w =>
+        `<option value="${w.wardID}" ${w.wardID===currentWardId?'selected':''}>${w.name}</option>`
+      ).join('');
+      if (!sel.innerHTML) sel.innerHTML = '<option value="">No wards available</option>';
+
+      document.getElementById('wardModal').style.display = 'flex';
+    }
+
+    function closeWardModal() {
+      document.getElementById('wardModal').style.display = 'none';
+      activeWardStaff = null;
+    }
+
+    async function assignWardConfirm() {
+      if (!activeWardStaff) return;
+      const staffName = activeWardStaff.name;          // save before closeWardModal() nulls it
+      const staffId   = activeWardStaff.id;
+      const staffRole = activeWardStaff.role;
+      const wardId = parseInt(document.getElementById('wardSelect').value);
+      if (!wardId) { showToast('Please select a ward.', 'warning'); return; }
+      try {
+        if (staffRole === 'Doctor') {
+          const res = await StaffAPI.assignWard(staffId, wardId);
+          allDoctors = allDoctors.map(d => d.doctorID===staffId ? {...d, wardID: wardId, wardName: res.doctor?.wardName} : d);
+        } else {
+          const res = await NursesAPI.assignWard(staffId, wardId);
+          allNurses = allNurses.map(n => n.nurseID===staffId ? {...n, wardID: wardId, wardName: res.nurse?.wardName} : n);
+        }
+        rebuildCombined(); applyFilters();
+        closeWardModal();
+        const wardName = allWards.find(w=>w.wardID===wardId)?.name || 'selected ward';
+        showToast(`${staffName} assigned to ${wardName}.`, 'success', 'Ward Assigned');
+      } catch(err) { showToast(err.message||'Could not assign ward.', 'error'); }
+    }
+
+    async function unassignWardConfirm() {
+      if (!activeWardStaff) return;
+      const staffName = activeWardStaff.name;          // save before closeWardModal() nulls it
+      const staffId   = activeWardStaff.id;
+      const staffRole = activeWardStaff.role;
+      try {
+        if (staffRole === 'Doctor') {
+          await StaffAPI.unassignWard(staffId);
+          allDoctors = allDoctors.map(d => d.doctorID===staffId ? {...d, wardID: null, wardName: null} : d);
+        } else {
+          await NursesAPI.unassignWard(staffId);
+          allNurses = allNurses.map(n => n.nurseID===staffId ? {...n, wardID: null, wardName: null} : n);
+        }
+        rebuildCombined(); applyFilters();
+        closeWardModal();
+        showToast(`${staffName} removed from ward.`, 'info', 'Ward Unassigned');
+      } catch(err) { showToast(err.message||'Could not unassign.', 'error'); }
+    }
+
+    // ── Auto KPI ──────────────────────────────────────────────────────────
+    async function autoComputeKpi(doctorId, name) {
+      const btn = document.getElementById(`autoKpi-${doctorId}`);
+      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ph ph-spinner"></i>'; }
+      try {
+        const res = await StaffAPI.computeKpi(doctorId);
+        allDoctors = allDoctors.map(d => d.doctorID===doctorId ? {...d, kpIs: res.kpi} : d);
+        rebuildCombined(); applyFilters();
+        showToast(`KPI computed: ${res.kpi}`, 'success', `${name} — KPI Updated`);
+      } catch(err) { showToast(err.message||'Could not compute KPI.', 'error'); }
+      finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ph ph-lightning"></i>'; }
+      }
     }
   </script>
 </body>

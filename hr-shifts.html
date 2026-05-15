@@ -415,7 +415,8 @@
         dept: s.wardName,
         wardID: s.wardID,
         user: (s.assignedDoctors && s.assignedDoctors.length > 0) ? s.assignedDoctors[0] : 'No doctor assigned',
-        requiredStaff: s.requiredStaff || 1
+        requiredStaff: s.requiredStaff || 1,
+        isCompleted: s.isCompleted || false      // ← from backend (ShiftCompletionService)
       };
     }
 
@@ -499,14 +500,26 @@
         if (dayShifts.length > 0) {
           shiftsHtml = dayShifts.map(s => {
             const cfg = SHIFT_TYPES[s.type];
-            const pastClass = isPast ? ' past' : '';
-            const completedBadge = isPast
+
+            // Compute whether this shift has ended by exact end time (not just day)
+            const SHIFT_END     = { MORNING: 14, AFTERNOON: 22, NIGHT: 6 };
+            const SHIFT_NEXT_DAY = { MORNING: 0,  AFTERNOON: 0,  NIGHT: 1 };
+            const endHour   = SHIFT_END[s.type]     ?? 23;
+            const dayOffset = SHIFT_NEXT_DAY[s.type] ?? 0;
+            const shiftEnd  = new Date(cur);
+            shiftEnd.setDate(cur.getDate() + dayOffset);
+            shiftEnd.setHours(endHour, 0, 0, 0);
+            const isEnded     = new Date() >= shiftEnd;   // local real-time check
+            const isCompleted = s.isCompleted || isEnded;  // trust DB flag OR compute locally
+
+            const pastClass      = isEnded ? ' past' : '';
+            const completedBadge = isCompleted
               ? `<span class="completed-badge"><i class="ph-fill ph-check-circle"></i> Completed</span>`
               : '';
             return `
               <div class="shift-card ${cfg.typeClass}${pastClass}" onclick="openPopover(event,'${s.id}')">
                 <div>
-                  <span class="tag-sm" style="background:${cfg.tagBg}; color:${cfg.tagColor}; display:inline-block; margin-bottom:${isPast ? '0' : '10px'}">${cfg.label}</span>
+                  <span class="tag-sm" style="background:${cfg.tagBg}; color:${cfg.tagColor}; display:inline-block; margin-bottom:${isCompleted ? '0' : '10px'}">${cfg.label}</span>
                   ${completedBadge}
                   <h4 style="margin-bottom:2px;">${s.dept}</h4>
                   <p>${cfg.start} – ${cfg.end}</p>
@@ -619,15 +632,23 @@
       e.stopPropagation();
       document.querySelectorAll('.popover-menu').forEach(el => el.remove());
 
+      const shift = allShifts.find(s => s.id === parseInt(shiftId));
+      const isLocked = shift?.isCompleted;
+
       const div = document.createElement('div');
       div.className = 'popover-menu';
       div.innerHTML = `
         <div onclick="editShift(event,'${shiftId}')" style="border-bottom:1px solid #f1f5f9;">
           <i class="ph ph-pencil-simple"></i> Edit Shift
         </div>
-        <div onclick="deleteShift(event,'${shiftId}')" style="color:#ef4444;">
-          <i class="ph ph-trash"></i> Delete Shift
-        </div>`;
+        ${isLocked
+          ? `<div style="color:#94a3b8;cursor:not-allowed;opacity:0.55;">
+               <i class="ph ph-lock"></i> Delete (Completed)
+             </div>`
+          : `<div onclick="deleteShift(event,'${shiftId}')" style="color:#ef4444;">
+               <i class="ph ph-trash"></i> Delete Shift
+             </div>`
+        }`;
 
       div.style.left = e.pageX + 'px';
       div.style.top  = (e.pageY + 100 > window.innerHeight) ? (e.pageY - 80) + 'px' : e.pageY + 'px';
@@ -641,6 +662,13 @@
     async function deleteShift(e, id) {
       e.stopPropagation();
       document.querySelectorAll('.popover-menu').forEach(el => el.remove());
+
+      const shift = allShifts.find(s => s.id === parseInt(id));
+      if (shift?.isCompleted) {
+        showToast('Completed shifts cannot be deleted.', 'warning', 'Shift Locked');
+        return;
+      }
+      if (!confirm('Delete this shift? This cannot be undone.')) return;
       try {
         await ShiftsAPI.delete(parseInt(id));
         allShifts = allShifts.filter(s => s.id !== parseInt(id));

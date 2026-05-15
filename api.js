@@ -122,7 +122,10 @@ const StaffAPI = {
     getPending: ()                => apiFetch('/api/staff/pending'),
     approve: (id)                 => apiFetch(`/api/staff/${id}/approve`, { method: 'PATCH' }),
     reject: (id, dto)             => apiFetch(`/api/staff/${id}/reject`, { method: 'PATCH', body: JSON.stringify(dto) }),
-    updateKpis: (id, dto)         => apiFetch(`/api/staff/${id}/kpis`, { method: 'PUT', body: JSON.stringify(dto) })
+    updateKpis: (id, dto)         => apiFetch(`/api/staff/${id}/kpis`, { method: 'PUT', body: JSON.stringify(dto) }),
+    assignWard: (id, wardId)      => apiFetch(`/api/staff/${id}/ward/${wardId}`, { method: 'PATCH' }),
+    unassignWard: (id)            => apiFetch(`/api/staff/${id}/ward`, { method: 'DELETE' }),
+    computeKpi: (id)              => apiFetch(`/api/staff/${id}/compute-kpi`, { method: 'POST' })
 };
 
 // ── Patients API ───────────────────────────────────────────────────────────────
@@ -181,7 +184,10 @@ const NursesAPI = {
     deactivate: (id)                         => apiFetch(`/api/nurses/${id}/deactivate`, { method: 'PATCH' }),
     getByShift: (shiftId)                    => apiFetch(`/api/nurses/shifts/${shiftId}`),
     assignToShift: (shiftId, nurseId)        => apiFetch(`/api/nurses/shifts/${shiftId}/assign/${nurseId}`, { method: 'POST' }),
-    removeFromShift: (shiftId, nurseId)      => apiFetch(`/api/nurses/shifts/${shiftId}/assign/${nurseId}`, { method: 'DELETE' })
+    removeFromShift: (shiftId, nurseId)      => apiFetch(`/api/nurses/shifts/${shiftId}/assign/${nurseId}`, { method: 'DELETE' }),
+    assignWard: (id, wardId)                 => apiFetch(`/api/nurses/${id}/ward/${wardId}`, { method: 'PATCH' }),
+    unassignWard: (id)                       => apiFetch(`/api/nurses/${id}/ward`, { method: 'DELETE' }),
+    activate: (id)                           => apiFetch(`/api/nurses/${id}/activate`, { method: 'PATCH' })
 };
 
 // ── Shifts API ─────────────────────────────────────────────────────────────────
