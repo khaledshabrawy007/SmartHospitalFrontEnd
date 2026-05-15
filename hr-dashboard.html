@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="api.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     /* ── Metric Cards ────────────────────────────── */
@@ -649,39 +650,45 @@
       }, 350);
     }
 
-    // Dynamic user name mapping
-    const currentUserData = localStorage.getItem("currentUser");
-    let firstName = "HR Manager"; // default
-    if (currentUserData) {
-       try {
-         const user = JSON.parse(currentUserData);
-         if (user.fullName) {
-           firstName = user.fullName.split(' ')[0];
-         } else if (user.name) {
-           firstName = user.name.split(' ')[0];
-         } else if (user.firstName) {
-           firstName = user.firstName;
-         }
-         
-         // Update sidebar name and avatar
-         const sidebarName = document.querySelector(".sidebar-bottom .name");
-         if (sidebarName) {
-           const fullName = user.fullName || user.name || (user.firstName + ' ' + (user.lastName || ''));
-           sidebarName.textContent = fullName;
-           const avatarImg = document.querySelector(".sidebar-bottom img");
-           if (avatarImg) {
-             avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0f172a&color=fff`;
-           }
-         }
-       } catch(e) {
-         console.error("Error parsing currentUser", e);
-       }
-    }
-    
-    const welcomeHeader = document.querySelector(".header-title h1");
-    if (welcomeHeader) {
-      welcomeHeader.textContent = `Welcome back, ${firstName}.`;
-    }
+    // Dynamic user name from session
+    document.addEventListener('DOMContentLoaded', async () => {
+      const session = getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+
+      const firstName = (session.fullName || session.email || 'HR Manager').split(' ')[0];
+      const welcomeHeader = document.querySelector('.header-title h1');
+      if (welcomeHeader) welcomeHeader.textContent = `Welcome back, ${firstName}.`;
+
+      // Enrich metric cards with real data
+      try {
+        const [doctors, wards, appointments] = await Promise.allSettled([
+          DoctorsAPI.getAll(),
+          WardsAPI.getAll(),
+          AppointmentsAPI.getAll()
+        ]);
+
+        const doctorCount = doctors.status === 'fulfilled' ? doctors.value.length : '—';
+        const wardCount   = wards.status === 'fulfilled'   ? wards.value.length   : '—';
+        const apptCount   = appointments.status === 'fulfilled' ? appointments.value.filter(a => a.status === 'Scheduled').length : '—';
+
+        // Patch metric values with live counts
+        mockData.metrics[0].value = String(doctorCount);
+        mockData.metrics[0].unit  = ' doctors';
+        mockData.metrics[0].label = 'Active Doctors';
+        mockData.metrics[0].tag   = 'Live';
+        mockData.metrics[1].value = String(wardCount);
+        mockData.metrics[1].unit  = ' wards';
+        mockData.metrics[1].label = 'Active Wards';
+        mockData.metrics[1].tag   = 'Live';
+        mockData.metrics[2].value = String(apptCount);
+        mockData.metrics[2].unit  = ' today';
+        mockData.metrics[2].label = 'Scheduled Appointments';
+        mockData.metrics[2].tag   = 'Live';
+        renderMetrics();
+      } catch (e) {
+        console.warn('Could not load live metrics', e);
+      }
+    });
   </script>
 </body>
 </html>

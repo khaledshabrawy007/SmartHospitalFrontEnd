@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="api.js"></script>
 </head>
 <body>
 
@@ -98,6 +99,52 @@
     </div>
   </div>
 
+  <!-- Rating Modal -->
+  <div class="modal-overlay" id="ratingModal" style="display:none; justify-content:center; align-items:center; z-index:9997;">
+    <div class="modal-container" style="max-width:460px;">
+      <button class="modal-close" onclick="closeRatingModal()"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <h2>Rate Your Doctor</h2>
+        <p id="ratingModalSubtitle" style="color:var(--color-primary); font-size:0.88rem;"></p>
+      </div>
+      <div style="margin-bottom:24px;">
+        <div style="text-align:center; margin-bottom:20px;">
+          <div id="starRow" style="display:flex; justify-content:center; gap:10px; font-size:2.2rem; cursor:pointer;">
+            <span class="star" data-val="1">&#9733;</span>
+            <span class="star" data-val="2">&#9733;</span>
+            <span class="star" data-val="3">&#9733;</span>
+            <span class="star" data-val="4">&#9733;</span>
+            <span class="star" data-val="5">&#9733;</span>
+          </div>
+          <div id="ratingLabel" style="margin-top:8px; font-size:0.88rem; color:var(--color-text-muted);">Tap a star to rate</div>
+        </div>
+        <textarea id="ratingComments" placeholder="Leave a comment (optional)" rows="3"
+          style="width:100%; padding:10px 14px; background:var(--color-bg-light); border:1px solid rgba(255,255,255,0.1); border-radius:8px; color:var(--color-text-dark); font-size:0.92rem; resize:none; box-sizing:border-box;"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="closeRatingModal()">Cancel</button>
+        <button class="btn btn-primary" id="submitRatingBtn" onclick="submitRating()">Submit Rating</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report View Modal -->
+  <div class="modal-overlay" id="reportModal" style="display:none; justify-content:center; align-items:center; z-index:9998;">
+    <div class="modal-container" style="max-width:520px;">
+      <button class="modal-close" onclick="closeReportModal()"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <h2 id="reportModalTitle">Medical Report</h2>
+        <p id="reportModalDate" style="color:var(--color-primary); font-size:0.88rem;"></p>
+      </div>
+      <div id="reportModalBody" style="font-size:0.95rem; line-height:1.6;">
+        <div style="text-align:center; padding:32px; color:var(--color-text-muted);"><i class="ph ph-spinner" style="animation:spin 1s linear infinite; font-size:2rem;"></i><br>Loading report…</div>
+      </div>
+      <div class="modal-actions" style="margin-top:24px;">
+        <button class="btn btn-primary" onclick="closeReportModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Details View Modal -->
   <div class="modal-overlay" id="detailsModal" style="display: none; justify-content: center; align-items: center;">
     <div class="modal-container">
@@ -119,156 +166,130 @@
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const bookingsJson = localStorage.getItem("upcomingBookings");
-      if (bookingsJson && bookingsJson !== "[]") {
-        const bookings = JSON.parse(bookingsJson);
-        const grid = document.getElementById("appointmentsGrid");
-        const emptyMsg = document.getElementById("noAppointmentsMsg");
-        if (emptyMsg && bookings.length > 0) emptyMsg.style.display = "none";
-        
-        [...bookings].reverse().forEach(booking => {
-          const dateParts = booking.date.split(" ");
-          const month = dateParts[0] || "Oct"; 
-          const day = dateParts[1] ? dateParts[1].replace(',', '') : "XX"; 
-          
-          const div = document.createElement("div");
-          div.className = "appt-minimal";
-          div.innerHTML = `
-            <div class="date-badge" style="background-color: var(--color-primary); color: white;">
-              <div class="month">${month}</div>
-              <div class="day">${day}</div>
-            </div>
-            <div class="details">
-              <h4>${booking.doctorDept} Consultation</h4>
-              <p>${booking.time} • ${booking.doctorName}</p>
-              <p><i class="ph-fill ph-monitor-play"></i> Status: ${booking.status} • Remote</p>
-            </div>
-          `;
-          grid.insertBefore(div, grid.firstChild);
-        });
-      }
+    document.addEventListener("DOMContentLoaded", async () => {
+      const session = getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
 
-      // Past Appointments logic from Medical History cache
-      let pastBookingsJson = localStorage.getItem("pastBookings");
-      
-      // If there is no local storage, populate with some default mock data
-      if (!pastBookingsJson || JSON.parse(pastBookingsJson).length === 0) {
-         const mockPastBookings = [
-          { id: 'APT-112', doctorName: 'Dr. Eleanor Vance', doctorDept: 'Radiology', date: 'Apr 03, 2026', time: '09:30 AM', status: 'Completed', rating: 5, actionDate: 'Apr 05' },
-          { id: 'APT-098', doctorName: 'Dr. Julian Thorne', doctorDept: 'Internal Medicine', date: 'Apr 07, 2026', time: '11:15 AM', status: 'Completed', rating: null },
-          { id: 'APT-070', doctorName: 'Dr. Sarah Chen', doctorDept: 'Ophthalmology', date: 'Apr 05, 2026', time: '', status: 'Cancelled', actionDate: 'Apr 05' }
-         ];
-         localStorage.setItem("pastBookings", JSON.stringify(mockPastBookings));
-         pastBookingsJson = JSON.stringify(mockPastBookings);
-      }
+      // Greet by first name
+      const firstName = (session.fullName || 'Patient').split(' ')[0];
+      const welcomeHeader = document.querySelector('.header-title h1');
+      if (welcomeHeader) welcomeHeader.textContent = `Welcome back, ${firstName}.`;
 
-      if (pastBookingsJson) {
-         const pastBookings = JSON.parse(pastBookingsJson);
-         const pastGrid = document.getElementById("pastAppointmentsGrid");
-         pastGrid.innerHTML = "";
-
-         if (pastBookings.length === 0) {
-            pastGrid.innerHTML = "<div style='padding:20px; color:var(--color-text-muted);'>No past appointments found.</div>";
-         } else {
-            pastBookings.forEach(booking => {
-              const div = document.createElement("div");
-              div.className = "list-card";
-              
-              let iconClass = "green";
-              let iconHtml = '<i class="ph-fill ph-calendar-check"></i>';
-              let badgeHtml = '<div class="status-badge status-completed">Completed</div>';
-              let actionHtml = `<a href="#" onclick="openDetailsModal('${booking.doctorName}', '${booking.date}', '${booking.status}')">View Details</a>`;
-
-              if (booking.status === "Cancelled") {
-                iconClass = "red";
-                iconHtml = '<i class="ph-fill ph-calendar-x"></i>';
-                badgeHtml = '<div class="status-badge status-cancelled">Cancelled</div>';
-                actionHtml += `\n<a href="#" class="rebook" onclick="rebookAppointment('${booking.doctorName}', '${booking.doctorDept}')">Rebook</a>`;
-              } else if (booking.status === "No Show") {
-                iconClass = "";
-                iconHtml = '<i class="ph-fill ph-user-minus"></i>';
-                badgeHtml = '<div class="status-badge status-noshow">No Show</div>';
-              }
-
-              div.innerHTML = `
-                <div class="list-card-left">
-                  <div class="icon-box ${iconClass}">
-                    ${iconHtml}
-                  </div>
-                  <div class="card-info">
-                    <h4>Consultation</h4>
-                    <p>${booking.doctorName} • ${booking.doctorDept}</p>
-                    <div class="time">${booking.date} • ${booking.time || 'N/A'}</div>
-                  </div>
-                </div>
-                <div class="list-card-right">
-                  ${badgeHtml}
-                  <div class="card-actions">
-                    ${actionHtml}
-                  </div>
-                </div>
-              `;
-              pastGrid.appendChild(div);
-            });
-         }
-      }
-
-      // Dynamic user name mapping
-      const currentUserData = localStorage.getItem("currentUser");
-      let firstName = "Sarah"; // default
-      if (currentUserData) {
-         try {
-           const user = JSON.parse(currentUserData);
-           if (user.fullName) {
-             firstName = user.fullName.split(' ')[0];
-           } else if (user.name) {
-             firstName = user.name.split(' ')[0];
-           } else if (user.firstName) {
-             firstName = user.firstName;
-           }
-           
-           // Also update sidebar name and avatar safely
-           const sidebarName = document.querySelector(".sidebar-bottom .name");
-           if (sidebarName) {
-             const fullName = user.fullName || user.name || (user.firstName + ' ' + (user.lastName || ''));
-             sidebarName.textContent = fullName;
-             const avatarImg = document.querySelector(".sidebar-bottom img");
-             if (avatarImg) {
-               avatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0f172a&color=fff`;
-             }
-           }
-         } catch(e) {
-           console.error("Error parsing currentUser", e);
-         }
-      }
-      
-      const welcomeHeader = document.querySelector(".header-title h1");
-      if (welcomeHeader) {
-        welcomeHeader.textContent = `Welcome back, ${firstName}.`;
-      }
-
-      // Update current time on the "Last updated" meta tag
+      // Update clock
       function updateTime() {
-        const metaSpan = document.querySelector(".section-header .meta");
-        if (metaSpan) {
-          const now = new Date();
-          let hours = now.getHours();
-          let minutes = now.getMinutes();
-          let ampm = hours >= 12 ? 'PM' : 'AM';
-          hours = hours % 12;
-          hours = hours ? hours : 12;
-          minutes = minutes < 10 ? '0' + minutes : minutes;
-          metaSpan.textContent = `Last updated: Today, ${hours}:${minutes} ${ampm}`;
-        }
+        const metaSpan = document.querySelector('.section-header .meta');
+        if (!metaSpan) return;
+        const now = new Date();
+        let h = now.getHours(), m = now.getMinutes();
+        const ampm = h >= 12 ? 'PM' : 'AM';
+        h = h % 12 || 12;
+        metaSpan.textContent = `Last updated: Today, ${h}:${m < 10 ? '0'+m : m} ${ampm}`;
       }
       updateTime();
       setInterval(updateTime, 60000);
+
+      // Load appointments from backend
+      const grid         = document.getElementById('appointmentsGrid');
+      const emptyMsg     = document.getElementById('noAppointmentsMsg');
+      const pastGrid     = document.getElementById('pastAppointmentsGrid');
+
+      try {
+        const appointments = await AppointmentsAPI.getByPatient(session.roleSpecificId);
+        const upcoming = appointments.filter(a => a.status === 'Scheduled');
+        const past     = appointments.filter(a => a.status !== 'Scheduled');
+
+        // ── Upcoming appointments ──────────────────────────────────
+        grid.innerHTML = '';
+        if (upcoming.length === 0) {
+          grid.innerHTML = `<div style="color:rgba(255,255,255,0.5);font-size:0.95rem;width:100%;padding:12px 0;">You have no upcoming appointments yet. Head to "Book Appointment" to schedule one.</div>`;
+        } else {
+          upcoming.slice().reverse().forEach(appt => {
+            const d = new Date(appt.appointmentDate);
+            const month = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+            const day   = d.getDate();
+            const time  = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const div = document.createElement('div');
+            div.className = 'appt-minimal';
+            div.innerHTML = `
+              <div class="date-badge" style="background-color:var(--color-primary);color:white;">
+                <div class="month">${month}</div>
+                <div class="day">${day}</div>
+              </div>
+              <div class="details">
+                <h4>${appt.doctorSpecialization || 'Consultation'}</h4>
+                <p>${time} • ${appt.doctorName || 'Doctor'}</p>
+                <p><i class="ph-fill ph-calendar-check"></i> Scheduled</p>
+              </div>
+            `;
+            grid.appendChild(div);
+          });
+        }
+
+        // ── Past appointments ──────────────────────────────────────
+        pastGrid.innerHTML = '';
+        if (past.length === 0) {
+          pastGrid.innerHTML = `<div style="padding:20px;color:var(--color-text-muted);">No past appointments found.</div>`;
+        } else {
+          past.forEach(appt => {
+            const isCompleted = appt.status === 'Completed';
+            const isCancelled = appt.status === 'Cancelled';
+            const iconClass   = isCompleted ? 'green' : isCancelled ? 'red' : '';
+            const iconHtml    = isCompleted ? '<i class="ph-fill ph-calendar-check"></i>'
+                              : isCancelled ? '<i class="ph-fill ph-calendar-x"></i>'
+                              : '<i class="ph-fill ph-user-minus"></i>';
+            const badgeHtml   = `<div class="status-badge status-${appt.status.toLowerCase()}">${appt.status}</div>`;
+            const dateStr     = formatDateTime(appt.appointmentDate);
+
+            const div = document.createElement('div');
+            div.className = 'list-card';
+            div.innerHTML = `
+              <div class="list-card-left">
+                <div class="icon-box ${iconClass}">${iconHtml}</div>
+                <div class="card-info">
+                  <h4>Consultation</h4>
+                  <p>${appt.doctorName || 'Doctor'} • ${appt.doctorSpecialization || ''}</p>
+                  <div class="time">${dateStr}</div>
+                </div>
+              </div>
+              <div class="list-card-right">
+                ${badgeHtml}
+                <div class="card-actions">
+                  ${isCompleted
+                    ? `<a href="#" onclick="viewReport(${appt.appointmentID}, event)">View Report</a>`
+                    : `<a href="#" onclick="openDetailsModal('${appt.doctorName}','${dateStr}','${appt.status}')">View Details</a>`
+                  }
+                </div>
+              </div>
+            `;
+            pastGrid.appendChild(div);
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load appointments:', err);
+        showToast('Could not load appointments. Is the backend running?', 'error');
+      }
     });
+
+    async function cancelAppointment(id) {
+      if (!confirm('Cancel this appointment?')) return;
+      try {
+        await AppointmentsAPI.cancel(id);
+        showToast('Appointment cancelled.', 'success');
+        setTimeout(() => location.reload(), 800);
+      } catch (err) {
+        showToast(err.message || 'Could not cancel appointment.', 'error');
+      }
+    }
+
+    function rateDoctor(doctorId) {
+      // Store doctorId for rating page (future feature)
+      localStorage.setItem('rateDoctor', doctorId);
+      showToast('Rating feature coming soon!', 'info');
+    }
 
     function openDetailsModal(docName, dateVal, statusVal) {
       document.getElementById('dmName').textContent = docName;
-      document.getElementById('detailsMeta').textContent = "Logged: " + dateVal;
+      document.getElementById('detailsMeta').textContent = 'Logged: ' + dateVal;
       document.getElementById('dmStatus').innerHTML = `<strong>${statusVal.toUpperCase()}</strong>`;
       document.getElementById('detailsModal').style.display = 'flex';
     }
@@ -277,12 +298,106 @@
       document.getElementById('detailsModal').style.display = 'none';
     }
 
-    function rebookAppointment(doctorName, doctorDept) {
-      localStorage.setItem("rescheduleRequest", JSON.stringify({ name: doctorName, dept: doctorDept }));
-      window.location.href = "book-appointment.html";
+    async function viewReport(appointmentId, e) {
+      e.preventDefault();
+      const modal = document.getElementById('reportModal');
+      const body  = document.getElementById('reportModalBody');
+      const title = document.getElementById('reportModalTitle');
+      const date  = document.getElementById('reportModalDate');
+      body.innerHTML = `<div style="text-align:center;padding:32px;color:var(--color-text-muted);"><i class="ph ph-spinner" style="animation:spin 1s linear infinite;font-size:2rem;"></i><br>Loading…</div>`;
+      modal.style.display = 'flex';
+
+      try {
+        const report = await apiFetch(`/api/appointments/${appointmentId}/report`);
+        title.textContent = (report.doctorName ? `Dr. ${report.doctorName}` : 'Doctor') + ' — Medical Report';
+        date.textContent  = new Date(report.date).toLocaleDateString('en-US', { weekday:'short', year:'numeric', month:'long', day:'numeric' });
+        body.innerHTML = `
+          <div style="background:var(--color-bg-light);border-radius:10px;padding:20px 24px;display:flex;flex-direction:column;gap:18px;">
+            <div>
+              <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin-bottom:6px;">CLINICAL NOTES</div>
+              <div style="font-size:0.92rem;color:var(--color-text-dark);">${report.diagnosis || '—'}</div>
+            </div>
+            <div>
+              <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin-bottom:6px;">PRESCRIPTION</div>
+              <div style="font-size:0.92rem;color:var(--color-text-dark);">${report.treatment || 'None indicated'}</div>
+            </div>
+            <div>
+              <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--color-text-muted);margin-bottom:6px;">NEXT STEPS</div>
+              <div style="font-size:0.92rem;color:var(--color-text-dark);">${report.notes || '—'}</div>
+            </div>
+          </div>`;
+      } catch (err) {
+        body.innerHTML = `<div style="text-align:center;padding:32px;color:#dc2626;"><i class="ph ph-warning-circle" style="font-size:2rem;"></i><br>${err.message === 'HTTP 404' ? 'No report has been submitted for this appointment yet.' : err.message}</div>`;
+      }
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').style.display = 'none';
+    }
+
+    // ── Rating modal ────────────────────────────────────────────────────────
+    let _ratingDoctorId = null;
+    let _ratingApptId   = null;
+    let _ratingValue    = 0;
+    const ratingLabels  = ['','Poor','Fair','Good','Very Good','Excellent'];
+
+    function openRatingModal(apptId, doctorId, doctorName, e) {
+      e.preventDefault();
+      _ratingApptId  = apptId;
+      _ratingDoctorId = doctorId;
+      _ratingValue   = 0;
+      document.getElementById('ratingComments').value = '';
+      document.getElementById('ratingLabel').textContent = 'Tap a star to rate';
+      document.getElementById('ratingModalSubtitle').textContent = `Dr. ${doctorName}`;
+      renderStars(0);
+      document.getElementById('ratingModal').style.display = 'flex';
+    }
+
+    function closeRatingModal() {
+      document.getElementById('ratingModal').style.display = 'none';
+    }
+
+    function renderStars(val) {
+      document.querySelectorAll('.star').forEach(s => {
+        const v = parseInt(s.dataset.val);
+        s.style.color = v <= val ? '#f59e0b' : 'rgba(255,255,255,0.2)';
+      });
+    }
+
+    document.querySelectorAll('.star').forEach(s => {
+      s.addEventListener('mouseover', () => renderStars(parseInt(s.dataset.val)));
+      s.addEventListener('mouseout',  () => renderStars(_ratingValue));
+      s.addEventListener('click', () => {
+        _ratingValue = parseInt(s.dataset.val);
+        renderStars(_ratingValue);
+        document.getElementById('ratingLabel').textContent = ratingLabels[_ratingValue];
+      });
+    });
+
+    async function submitRating() {
+      if (_ratingValue === 0) { showToast('Please select a star rating.', 'error'); return; }
+      const btn = document.getElementById('submitRatingBtn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+      try {
+        await RatingsAPI.create({
+          doctorID:    _ratingDoctorId,
+          ratingValue: _ratingValue,
+          comments:    document.getElementById('ratingComments').value.trim() || null
+        });
+        showToast('Thank you for your feedback!', 'success');
+        closeRatingModal();
+      } catch (err) {
+        showToast(err.message || 'Could not submit rating.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Submit Rating';
+      }
     }
   </script>
+
   <!-- Global Support Modal -->
+
   <div class="modal-overlay" id="globalSupportModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
     <div class="modal-container" style="max-width: 400px; text-align: center;">
       <button class="modal-close" onclick="document.getElementById('globalSupportModal').style.display='none'"><i class="ph ph-x"></i></button>

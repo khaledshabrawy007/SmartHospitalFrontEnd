@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="api.js"></script>
   <style>
     /* ── Toast Notification ─────────────────────────────── */
     .toast-container {
@@ -161,88 +162,9 @@
               <i class="ph ph-magnifying-glass" style="font-size:2rem; margin-bottom:8px;"></i>
               <p>No specialists match your criteria.</p>
             </div>
-            <!-- Doc 1 -->
-            <div class="doc-card">
-              <div class="doc-card-top">
-                <img src="https://ui-avatars.com/api/?name=Marie+John&background=37d6a5&color=fff" alt="Dr. Marie John" class="doc-avatar">
-                <div class="doc-info">
-                  <h4>Dr. Marie John</h4>
-                  <p>Senior Cardiologist</p>
-                  <div class="rating">
-                    <i class="ph-fill ph-star"></i> 4.9 <span>(120+ reviews)</span>
-                  </div>
-                </div>
-              </div>
-              <div class="doc-slot">
-                <div>
-                  <div class="label">Next Slot</div>
-                  <div class="time">Today, 2:30 PM</div>
-                </div>
-                <div class="tag tag-available">Available</div>
-              </div>
-            </div>
-
-            <!-- Doc 2 -->
-            <div class="doc-card">
-              <div class="doc-card-top">
-                <img src="https://ui-avatars.com/api/?name=Marcus+Thorne&background=0f172a&color=fff" alt="Dr. Marcus Thorne" class="doc-avatar">
-                <div class="doc-info">
-                  <h4>Dr. Marcus Thorne</h4>
-                  <p>Neurologist</p>
-                  <div class="rating">
-                    <i class="ph-fill ph-star"></i> 4.8 <span>(98 reviews)</span>
-                  </div>
-                </div>
-              </div>
-              <div class="doc-slot">
-                <div>
-                  <div class="label">Next Slot</div>
-                  <div class="time">Tomorrow, 9:15 AM</div>
-                </div>
-                <div class="tag tag-available">Available</div>
-              </div>
-            </div>
-
-            <!-- Doc 3 -->
-            <div class="doc-card">
-              <div class="doc-card-top">
-                <img src="https://ui-avatars.com/api/?name=Elena+Rodriguez&background=8b5cf6&color=fff" alt="Dr. Elena Rodriguez" class="doc-avatar">
-                <div class="doc-info">
-                  <h4>Dr. Elena Rodriguez</h4>
-                  <p>Pediatric Specialist</p>
-                  <div class="rating">
-                    <i class="ph-fill ph-star"></i> 5.0 <span>(210+ reviews)</span>
-                  </div>
-                </div>
-              </div>
-              <div class="doc-slot">
-                <div>
-                  <div class="label">Next Slot</div>
-                  <div class="time">Monday, 11:00 AM</div>
-                </div>
-                <div class="tag tag-waitlist">Waitlist</div>
-              </div>
-            </div>
-
-            <!-- Doc 4 -->
-            <div class="doc-card">
-              <div class="doc-card-top">
-                <img src="https://ui-avatars.com/api/?name=David+Chen&background=0284c7&color=fff" alt="Dr. David Chen" class="doc-avatar">
-                <div class="doc-info">
-                  <h4>Dr. David Chen</h4>
-                  <p>Dermatology Lead</p>
-                  <div class="rating">
-                    <i class="ph-fill ph-star"></i> 4.7 <span>(85 reviews)</span>
-                  </div>
-                </div>
-              </div>
-              <div class="doc-slot">
-                <div>
-                  <div class="label">Next Slot</div>
-                  <div class="time">Wednesday, 4:00 PM</div>
-                </div>
-                <div class="tag tag-available">Available</div>
-              </div>
+            <div id="docsLoadingMsg" style="padding:40px; text-align:center; color:var(--color-text-muted); grid-column: 1/-1;">
+              <i class="ph ph-circle-notch" style="font-size:2rem; margin-bottom:8px; animation:spin 1s linear infinite;"></i>
+              <p>Loading available specialists...</p>
             </div>
           </div>
 
@@ -321,8 +243,12 @@
             </div>
 
             <div class="summary-footer">
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-size:0.82rem;font-weight:600;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px;">Reason for Visit</label>
+                <textarea id="appointmentReason" rows="2" style="width:100%;padding:10px 12px;border:1px solid var(--color-border);border-radius:8px;font-size:0.9rem;font-family:inherit;resize:none;background:var(--color-bg-light);" placeholder="e.g. Routine checkup, follow-up..."></textarea>
+              </div>
               <div id="bookingErrorMsg" style="color: #ef4444; font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; display: none; text-align: center;">
-                <i class="ph-fill ph-warning-circle"></i> Please select both a doctor and a time slot.
+                <i class="ph-fill ph-warning-circle"></i> Please select a doctor, date, and time slot.
               </div>
               <button id="confirmBtn" class="btn btn-primary btn-full" style="padding:16px; opacity: 0.5; cursor: not-allowed;" title="Please complete your selections to confirm">
                 Confirm Booking
@@ -338,418 +264,295 @@
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      let selectedDoctor = null;
-      let selectedTime = null;
+    // Spin keyframe
+    const _ss = document.createElement('style');
+    _ss.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+    document.head.appendChild(_ss);
 
-      const docCards = document.querySelectorAll(".doc-card");
-      
-      const sumDocImg = document.getElementById("sumDocImg");
-      const sumDocName = document.getElementById("sumDocName");
-      const sumDocDept = document.getElementById("sumDocDept");
-      const sumDate = document.getElementById("sumDate");
-      const sumTime = document.getElementById("sumTime");
-      const summaryPractitioner = document.getElementById("summaryPractitioner");
-      
-      const confirmBtn = document.getElementById("confirmBtn");
-      const bookingErrorMsg = document.getElementById("bookingErrorMsg");
+    document.addEventListener("DOMContentLoaded", async () => {
+      const session = getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+
+      let selectedDoctor = null; // { id, name, dept }
+      let selectedTime   = null;
+      let selectedDate   = null;
+      let allDoctors     = [];
+
+      const specialistsGrid = document.getElementById('specialistsGrid');
+      const loadingMsg      = document.getElementById('docsLoadingMsg');
+      const noDocsMsg       = document.getElementById('noDocsMsg');
+      const sumDocImg       = document.getElementById('sumDocImg');
+      const sumDocName      = document.getElementById('sumDocName');
+      const sumDocDept      = document.getElementById('sumDocDept');
+      const sumDate         = document.getElementById('sumDate');
+      const sumTime         = document.getElementById('sumTime');
+      const summaryPractitioner = document.getElementById('summaryPractitioner');
+      const confirmBtn      = document.getElementById('confirmBtn');
+      const bookingErrorMsg = document.getElementById('bookingErrorMsg');
+      const monthNames      = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+      const bgColors = ['37d6a5','0f172a','8b5cf6','0284c7','f59e0b','0ea5e9','10b981','6366f1'];
 
       function updateValidationState() {
         if (selectedDoctor && selectedDate && selectedTime) {
-          bookingErrorMsg.style.display = "none";
-          confirmBtn.style.opacity = "1";
-          confirmBtn.style.cursor = "pointer";
-          confirmBtn.title = "";
-          confirmBtn.style.transition = "all 0.2s";
+          bookingErrorMsg.style.display = 'none';
+          confirmBtn.style.opacity = '1';
+          confirmBtn.style.cursor = 'pointer';
+          confirmBtn.title = '';
         } else {
-          confirmBtn.style.opacity = "0.5";
-          confirmBtn.style.cursor = "not-allowed";
-          confirmBtn.title = "Please complete your selections to confirm";
+          confirmBtn.style.opacity = '0.5';
+          confirmBtn.style.cursor = 'not-allowed';
+          confirmBtn.title = 'Please complete your selections to confirm';
         }
       }
-
-      // Initial validation state on load
       updateValidationState();
 
-      // Handle Doctor Selection
-      docCards.forEach(card => {
-        const isWaitlist = card.querySelector(".tag-waitlist") !== null;
-        if(isWaitlist) {
-          card.style.opacity = "0.6";
-          card.style.cursor = "not-allowed";
-          card.title = "Currently on Waitlist. Online booking unavailable.";
+      // ── Load & render doctors ────────────────────────────────
+      function renderDoctors(doctors) {
+        loadingMsg.remove();
+        specialistsGrid.innerHTML = `<div id="noDocsMsg" style="display:none; padding:40px; text-align:center; color:var(--color-text-muted); grid-column: 1/-1;"><i class="ph ph-magnifying-glass" style="font-size:2rem; margin-bottom:8px;"></i><p>No specialists match your criteria.</p></div>`;
+
+        if (doctors.length === 0) {
+          document.getElementById('noDocsMsg').style.display = 'block';
+          return;
         }
 
-        card.addEventListener("click", () => {
-          if (isWaitlist) return;
+        doctors.forEach((doc, idx) => {
+          const bg   = bgColors[idx % bgColors.length];
+          const name = doc.fullName || 'Doctor';
+          const spec = doc.specialization || 'General';
+          const div  = document.createElement('div');
+          div.className = 'doc-card';
+          div.dataset.docid = doc.doctorID;
+          div.innerHTML = `
+            <div class="doc-card-top">
+              <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${bg}&color=fff" alt="${name}" class="doc-avatar">
+              <div class="doc-info">
+                <h4>${name}</h4>
+                <p>${spec}</p>
+                <div class="rating"><i class="ph-fill ph-star"></i> ${(4.6 + (idx % 4) * 0.1).toFixed(1)} <span>(${80 + idx * 12} reviews)</span></div>
+              </div>
+            </div>
+            <div class="doc-slot">
+              <div><div class="label">Next Slot</div><div class="time">Available</div></div>
+              <div class="tag tag-available">Available</div>
+            </div>`;
 
-          // Reset previous
-          docCards.forEach(c => {
-            c.classList.remove("selected");
-            const badge = c.querySelector(".tag-selected");
-            if(badge) badge.remove();
+          div.addEventListener('click', () => {
+            document.querySelectorAll('.doc-card').forEach(c => {
+              c.classList.remove('selected');
+              const b = c.querySelector('.tag-selected');
+              if (b) b.remove();
+            });
+            div.classList.add('selected');
+            const badge = document.createElement('div');
+            badge.className = 'tag tag-selected';
+            badge.style.cssText = 'position:absolute;right:20px;top:20px;';
+            badge.textContent = 'SELECTED';
+            div.querySelector('.doc-card-top').appendChild(badge);
+
+            sumDocImg.src  = div.querySelector('img').src;
+            sumDocName.textContent = name;
+            sumDocDept.textContent = spec;
+            summaryPractitioner.style.opacity = '1';
+            selectedDoctor = { id: doc.doctorID, name, dept: spec };
+            generateTimeSlots();
+            updateValidationState();
           });
-          
-          card.classList.add("selected");
-          
-          // Add badge
-          const topSection = card.querySelector(".doc-card-top");
-          const badge = document.createElement("div");
-          badge.className = "tag tag-selected";
-          badge.style.cssText = "position:absolute; right:20px; top:20px;";
-          badge.textContent = "SELECTED";
-          topSection.appendChild(badge);
 
-          // Update Summary
-          const img = card.querySelector("img").src;
-          const name = card.querySelector("h4").textContent;
-          const dept = card.querySelector(".doc-info p").textContent;
-
-          sumDocImg.src = img;
-          sumDocName.textContent = name;
-          sumDocDept.textContent = dept;
-          summaryPractitioner.style.opacity = "1";
-
-          selectedDoctor = { name, dept };
-          generateTimeSlots(); // Update slots dynamically
-          updateValidationState();
+          specialistsGrid.appendChild(div);
         });
-      });
-
-      // Search and Filter Logic
-      const docSearchText = document.getElementById("docSearchText");
-      const docSearchBtn = document.getElementById("docSearchBtn");
-      const fAll = document.getElementById("fAll");
-      const fToday = document.getElementById("fToday");
-      const noDocsMsg = document.getElementById("noDocsMsg");
-
-      function filterDoctors(searchTerm, showOnlyToday) {
-        let visibleCount = 0;
-        const normalizedSearch = searchTerm.trim().toLowerCase();
-
-        docCards.forEach(card => {
-          const name = card.querySelector("h4").textContent.toLowerCase();
-          const dept = card.querySelector(".doc-info p").textContent.toLowerCase();
-          const timeText = card.querySelector(".time").textContent.toLowerCase();
-          const isWaitlist = card.querySelector(".tag-waitlist") !== null;
-
-          const matchesSearch = normalizedSearch === "" || name.includes(normalizedSearch) || dept.includes(normalizedSearch);
-          const matchesToday = !showOnlyToday || (!isWaitlist && timeText.includes("today"));
-
-          if (matchesSearch && matchesToday) {
-            card.style.display = "";
-            visibleCount++;
-          } else {
-            card.style.display = "none";
-          }
-        });
-
-        noDocsMsg.style.display = visibleCount === 0 ? "block" : "none";
       }
 
-      docSearchBtn.addEventListener("click", () => {
-        const showOnlyToday = fToday.classList.contains("active");
-        filterDoctors(docSearchText.value, showOnlyToday);
-      });
-      
-      docSearchText.addEventListener("keyup", (e) => {
-        if(e.key === "Enter") docSearchBtn.click();
-      });
+      try {
+        allDoctors = await DoctorsAPI.getAll();
+        renderDoctors(allDoctors);
+      } catch (err) {
+        loadingMsg.innerHTML = '<p style="color:#ef4444;">Could not load doctors. Is the backend running?</p>';
+        console.error(err);
+      }
 
-      fAll.addEventListener("click", () => {
-        fAll.classList.add("active");
-        fToday.classList.remove("active");
-        docSearchText.value = "";
-        filterDoctors("", false);
-      });
+      // ── Search / filter ──────────────────────────────────────
+      const docSearchText = document.getElementById('docSearchText');
+      const docSearchBtn  = document.getElementById('docSearchBtn');
+      const fAll   = document.getElementById('fAll');
+      const fToday = document.getElementById('fToday');
 
-      fToday.addEventListener("click", () => {
-        fToday.classList.add("active");
-        fAll.classList.remove("active");
-        filterDoctors(docSearchText.value, true);
-      });
+      function filterDoctors(term) {
+        const q = term.trim().toLowerCase();
+        const filtered = q ? allDoctors.filter(d =>
+          (d.fullName || '').toLowerCase().includes(q) ||
+          (d.specialization || '').toLowerCase().includes(q)
+        ) : allDoctors;
+        renderDoctors(filtered);
+      }
 
-      // JS Dynamic Calendar Logic
+      docSearchBtn.addEventListener('click', () => filterDoctors(docSearchText.value));
+      docSearchText.addEventListener('keyup', e => { if (e.key === 'Enter') docSearchBtn.click(); });
+      fAll.addEventListener('click', () => { fAll.classList.add('active'); fToday.classList.remove('active'); filterDoctors(''); });
+      fToday.addEventListener('click', () => { fToday.classList.add('active'); fAll.classList.remove('active'); filterDoctors(docSearchText.value); });
+
+      // ── Calendar ─────────────────────────────────────────────
       let currentDateRenderTracker = new Date();
-      const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-      
+
       function renderCalendar() {
-        const calDaysGrid = document.getElementById("calDaysGrid");
-        const calMonthStr = document.getElementById("calMonthStr");
-        calDaysGrid.innerHTML = "";
-        
+        const calDaysGrid = document.getElementById('calDaysGrid');
+        const calMonthStr = document.getElementById('calMonthStr');
+        calDaysGrid.innerHTML = '';
         const year = currentDateRenderTracker.getFullYear();
         const month = currentDateRenderTracker.getMonth();
         calMonthStr.textContent = `${monthNames[month]} ${year}`;
-        
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const daysInPrevMonth = new Date(year, month, 0).getDate();
-        
         const today = new Date();
         const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
         const currentDay = today.getDate();
-        
-        // Prev month padding
-        for(let i=0; i<firstDay; i++) {
-          const div = document.createElement("div");
-          div.className = "cal-day disabled";
+        for (let i = 0; i < firstDay; i++) {
+          const div = document.createElement('div');
+          div.className = 'cal-day disabled';
           div.textContent = daysInPrevMonth - firstDay + i + 1;
           calDaysGrid.appendChild(div);
         }
-        
-        // Current month days
-        for(let i=1; i<=daysInMonth; i++) {
-          const div = document.createElement("div");
-          div.className = "cal-day";
-          
-          if(isCurrentMonth && i < currentDay) {
-            div.classList.add("disabled");
-            div.style.color = "var(--color-text-muted)";
-            div.style.backgroundColor = "transparent";
+        for (let i = 1; i <= daysInMonth; i++) {
+          const div = document.createElement('div');
+          div.className = 'cal-day';
+          if (isCurrentMonth && i < currentDay) {
+            div.classList.add('disabled');
+            div.style.color = 'var(--color-text-muted)';
+            div.style.backgroundColor = 'transparent';
           }
-          
           div.textContent = i;
-          
-          if(!div.classList.contains("disabled")) {
-            div.addEventListener("click", () => {
-              calDaysGrid.querySelectorAll(".cal-day:not(.disabled)").forEach(d => d.classList.remove("active"));
-              div.classList.add("active");
-              
-              selectedDate = `${monthNames[month].substring(0,3)} ${i}, ${year}`;
-              sumDate.textContent = selectedDate;
-              sumDate.style.color = "var(--color-text-dark)";
-              
-              generateTimeSlots(); // Re-render slots when date changes
+          if (!div.classList.contains('disabled')) {
+            div.addEventListener('click', () => {
+              calDaysGrid.querySelectorAll('.cal-day:not(.disabled)').forEach(d => d.classList.remove('active'));
+              div.classList.add('active');
+              selectedDate = { year, month, day: i };
+              sumDate.textContent = `${monthNames[month].substring(0,3)} ${i}, ${year}`;
+              sumDate.style.color = 'var(--color-text-dark)';
+              generateTimeSlots();
               updateValidationState();
             });
           }
           calDaysGrid.appendChild(div);
         }
       }
-      
-      document.getElementById("prevMonthBtn").addEventListener("click", () => {
+      document.getElementById('prevMonthBtn').addEventListener('click', () => {
         const today = new Date();
-        const btn = document.getElementById("prevMonthBtn");
-        if(currentDateRenderTracker.getFullYear() === today.getFullYear() && currentDateRenderTracker.getMonth() <= today.getMonth()) {
-          return;
-        }
+        if (currentDateRenderTracker.getFullYear() === today.getFullYear() && currentDateRenderTracker.getMonth() <= today.getMonth()) return;
         currentDateRenderTracker.setMonth(currentDateRenderTracker.getMonth() - 1);
-        if(currentDateRenderTracker.getFullYear() === today.getFullYear() && currentDateRenderTracker.getMonth() <= today.getMonth()) {
-          btn.style.color = "var(--color-text-muted)";
-        }
         renderCalendar();
       });
-      
-      document.getElementById("nextMonthBtn").addEventListener("click", () => {
-        document.getElementById("prevMonthBtn").style.color = "var(--color-text-dark)";
+      document.getElementById('nextMonthBtn').addEventListener('click', () => {
         currentDateRenderTracker.setMonth(currentDateRenderTracker.getMonth() + 1);
         renderCalendar();
       });
 
-      function parseTime12h(time12h) {
-        const [time, modifier] = time12h.split(' ');
-        let [hours, minutes] = time.split(':');
-        if (hours === '12') { hours = '00'; }
-        if (modifier === 'PM') { hours = parseInt(hours, 10) + 12; }
-        return {h: parseInt(hours), m: parseInt(minutes)};
-      }
-
-      function validateTimeSlots(slotsNodes, y, m, d) {
-        const today = new Date();
-        const isToday = today.getFullYear() === y && today.getMonth() === m && today.getDate() === d;
-        
-        slotsNodes.forEach(slot => {
-          if (slot.classList.contains("booked")) return; // do not re-enable locally booked
-          
-          slot.classList.remove("disabled");
-          slot.style.opacity = "1";
-          slot.style.pointerEvents = "auto";
-          
-          if(isToday) {
-             const timeObj = parseTime12h(slot.textContent.trim());
-             const totalSlotMins = (timeObj.h * 60) + timeObj.m;
-             const totalCurrentMins = (today.getHours() * 60) + today.getMinutes();
-             
-             if(totalSlotMins <= totalCurrentMins) {
-                slot.classList.add("disabled");
-                slot.style.opacity = "0.5";
-                slot.style.pointerEvents = "none";
-                if(slot.classList.contains("active")) {
-                   slot.classList.remove("active");
-                   selectedTime = null;
-                   sumTime.textContent = 'Please select a time';
-                   sumTime.style.color = 'var(--color-text-muted)';
-                   updateValidationState();
-                }
-             }
-          }
-        });
-      }
-
-      // Dynamic Time Slots Logic
-      const mockSchedules = {
-        "Dr. Marie John": ["09:00 AM", "10:30 AM", "01:00 PM", "02:30 PM", "04:15 PM"],
-        "Dr. Marcus Thorne": ["08:00 AM", "09:15 AM", "11:45 AM", "03:30 PM"],
-        "Dr. David Chen": ["10:00 AM", "11:00 AM", "01:30 PM", "04:00 PM", "05:00 PM"],
-        "default": ["09:00 AM", "10:00 AM", "11:00 AM", "01:00 PM", "02:00 PM", "03:00 PM"]
-      };
+      // ── Time slots ────────────────────────────────────────────
+      const fixedSlots = ['08:00 AM','09:00 AM','10:00 AM','11:00 AM','01:00 PM','02:00 PM','03:00 PM','04:00 PM'];
 
       function generateTimeSlots() {
-        const slotsGrid = document.getElementById("slotsGrid");
-        slotsGrid.innerHTML = "";
-        
+        const slotsGrid = document.getElementById('slotsGrid');
+        slotsGrid.innerHTML = '';
         selectedTime = null;
         sumTime.textContent = 'Please select a time';
         sumTime.style.color = 'var(--color-text-muted)';
-        
         if (!selectedDoctor || !selectedDate) {
-          const msg = document.createElement("div");
-          msg.style.cssText = "grid-column: 1/-1; color: var(--color-text-muted); font-size: 0.9rem;";
-          msg.textContent = "Please select a specialist and date to view availability.";
-          slotsGrid.appendChild(msg);
+          slotsGrid.innerHTML = '<div style="grid-column:1/-1;color:var(--color-text-muted);font-size:0.9rem;">Please select a specialist and date to view availability.</div>';
           updateValidationState();
           return;
         }
-
-        const activeDocName = selectedDoctor.name;
-        let baseSlots = mockSchedules[activeDocName] || mockSchedules["default"];
-        
-        const dateSeed = selectedDate.length % 3; 
-        let currentSlots = [...baseSlots];
-        if (dateSeed === 1) currentSlots.shift();
-        if (dateSeed === 2) currentSlots.pop();
-
-        const bookings = JSON.parse(localStorage.getItem("upcomingBookings") || "[]");
-        const bookedTimes = bookings
-          .filter(b => b.doctorName === activeDocName && b.date === selectedDate)
-          .map(b => b.time);
-
-        if (currentSlots.length === 0) {
-           const msg = document.createElement("div");
-           msg.style.cssText = "grid-column: 1/-1; color: var(--color-text-muted); font-size: 0.9rem;";
-           msg.textContent = "No slots available for this date.";
-           slotsGrid.appendChild(msg);
-           updateValidationState();
-           return;
-        }
-
-        currentSlots.forEach(timeStr => {
-          const div = document.createElement("div");
-          div.className = "time-slot";
+        const now = new Date();
+        const isToday = selectedDate.year === now.getFullYear() && selectedDate.month === now.getMonth() && selectedDate.day === now.getDate();
+        fixedSlots.forEach(timeStr => {
+          const div = document.createElement('div');
+          div.className = 'time-slot';
           div.textContent = timeStr;
-
-          if (bookedTimes.includes(timeStr)) {
-            div.classList.add("disabled", "booked");
-            div.style.opacity = "0.4";
-            div.style.pointerEvents = "none";
-            div.title = "Currently Booked";
+          if (isToday) {
+            const [t, mod] = timeStr.split(' ');
+            let [h, m] = t.split(':').map(Number);
+            if (mod === 'PM' && h !== 12) h += 12;
+            if (mod === 'AM' && h === 12) h = 0;
+            if (h * 60 + m <= now.getHours() * 60 + now.getMinutes()) {
+              div.classList.add('disabled');
+              div.style.opacity = '0.4';
+              div.style.pointerEvents = 'none';
+            }
           }
-          
+          if (!div.classList.contains('disabled')) {
+            div.addEventListener('click', () => {
+              slotsGrid.querySelectorAll('.time-slot').forEach(s => s.classList.remove('active'));
+              div.classList.add('active');
+              selectedTime = timeStr;
+              sumTime.textContent = `${timeStr} (45 min duration)`;
+              sumTime.style.color = 'var(--color-text-dark)';
+              updateValidationState();
+            });
+          }
           slotsGrid.appendChild(div);
         });
-
-        const [monthA, dStr, yStr] = selectedDate.split(" ");
-        const d = parseInt(dStr.replace(',', ''));
-        const m = monthNames.findIndex(mn => mn.startsWith(monthA.substring(0,3)));
-        const y = parseInt(yStr);
-
-        const newTimeSlots = slotsGrid.querySelectorAll(".time-slot");
-        validateTimeSlots(newTimeSlots, y, m, d);
-
-        newTimeSlots.forEach(slot => {
-          slot.addEventListener("click", () => {
-            if (slot.classList.contains("disabled")) return;
-
-            newTimeSlots.forEach(s => s.classList.remove("active"));
-            slot.classList.add("active");
-
-            selectedTime = slot.textContent.trim();
-            sumTime.textContent = `${selectedTime} (45 min duration)`;
-            sumTime.style.color = "var(--color-text-dark)";
-            
-            updateValidationState();
-          });
-        });
-        
         updateValidationState();
       }
-      
+
       renderCalendar();
       generateTimeSlots();
 
-      // Handle Confirm
-      confirmBtn.addEventListener("click", () => {
+      // ── Confirm Booking → POST /api/appointments ─────────────
+      confirmBtn.addEventListener('click', async () => {
         if (!selectedDoctor || !selectedDate || !selectedTime) {
-          bookingErrorMsg.style.display = "block";
-          
-          // Error visual shake
-          confirmBtn.style.transition = "none";
-          confirmBtn.style.transform = "translateX(-5px)";
-          setTimeout(() => confirmBtn.style.transform = "translateX(5px)", 100);
-          setTimeout(() => confirmBtn.style.transform = "translateX(-3px)", 200);
-          setTimeout(() => confirmBtn.style.transform = "translateX(3px)", 300);
-          setTimeout(() => confirmBtn.style.transform = "translateX(0)", 400);
-          setTimeout(() => confirmBtn.style.transition = "all 0.2s", 450);
+          bookingErrorMsg.style.display = 'block';
           return;
         }
 
-        // Simulate backend success by creating a mock booking
-        const bookings = JSON.parse(localStorage.getItem("upcomingBookings") || "[]");
-        bookings.push({
-          id: 'APT-' + Math.floor(1000 + Math.random() * 9000),
-          doctorName: selectedDoctor.name,
-          doctorDept: selectedDoctor.dept,
-          date: selectedDate,
-          time: selectedTime,
-          status: "Scheduled"
-        });
-        localStorage.setItem("upcomingBookings", JSON.stringify(bookings));
+        const reason = document.getElementById('appointmentReason').value.trim() || 'General Consultation';
 
-        bookingErrorMsg.style.display = "none";
+        // Build ISO datetime string
+        const [timePart, mod] = selectedTime.split(' ');
+        let [h, m] = timePart.split(':').map(Number);
+        if (mod === 'PM' && h !== 12) h += 12;
+        if (mod === 'AM' && h === 12) h = 0;
+        const pad = n => String(n).padStart(2, '0');
+        const isoDate = `${selectedDate.year}-${pad(selectedDate.month + 1)}-${pad(selectedDate.day)}T${pad(h)}:${pad(m)}:00`;
 
-        // Show toast then redirect
-        showToast(
-          `Your appointment with ${selectedDoctor.name} on ${selectedDate} at ${selectedTime} has been booked.`,
-          'success',
-          'Booking Confirmed!'
-        );
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Booking...';
 
-        confirmBtn.innerHTML = '<i class="ph-fill ph-check-circle" style="font-size:1.1em; position:relative; top:1px;"></i> Booking Confirmed!';
-        confirmBtn.style.pointerEvents = "none";
-        confirmBtn.style.opacity = "0.8";
-
-        // Redirect after toast is visible
-        setTimeout(() => {
-          window.location.href = "dashboard.html";
-        }, 3000);
+        try {
+          await AppointmentsAPI.create({
+            doctorID: selectedDoctor.id,
+            appointmentDate: isoDate,
+            reason
+          });
+          confirmBtn.innerHTML = '<i class="ph-fill ph-check-circle"></i> Booking Confirmed!';
+          confirmBtn.style.pointerEvents = 'none';
+          showToast(`Appointment with ${selectedDoctor.name} confirmed!`, 'success', 'Booking Confirmed!');
+          setTimeout(() => { window.location.href = 'dashboard.html'; }, 2500);
+        } catch (err) {
+          showToast(err.message || 'Booking failed. Please try again.', 'error');
+          confirmBtn.disabled = false;
+          confirmBtn.textContent = 'Confirm Booking';
+        }
       });
     });
 
-    // ── Toast System ──────────────────────────────────────
+    // ── Toast ─────────────────────────────────────────────────
     function showToast(message, type = 'success', title) {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
       toast.className = `toast toast-${type}`;
-      const icons = { success: 'ph-fill ph-check-circle', error: 'ph-fill ph-x-circle', warning: 'ph-fill ph-warning' };
+      const icons  = { success: 'ph-fill ph-check-circle', error: 'ph-fill ph-x-circle', warning: 'ph-fill ph-warning' };
       const titles = { success: title || 'Success', error: title || 'Error', warning: title || 'Warning' };
-      toast.innerHTML = `
-        <div class="toast-icon"><i class="${icons[type]}"></i></div>
-        <div class="toast-body">
-          <div class="toast-title">${titles[type]}</div>
-          <div class="toast-msg">${message}</div>
-        </div>
-        <button class="toast-close" onclick="dismissToast(this)"><i class="ph ph-x"></i></button>
-        <div class="toast-progress"><div class="toast-progress-bar"></div></div>
-      `;
+      toast.innerHTML = `<div class="toast-icon"><i class="${icons[type]}"></i></div><div class="toast-body"><div class="toast-title">${titles[type]}</div><div class="toast-msg">${message}</div></div><button class="toast-close" onclick="dismissToast(this)"><i class="ph ph-x"></i></button><div class="toast-progress"><div class="toast-progress-bar"></div></div>`;
       container.appendChild(toast);
       setTimeout(() => { if (toast.parentNode) { toast.classList.add('toast-hide'); setTimeout(() => toast.remove(), 400); } }, 4000);
     }
     function dismissToast(btn) {
-      const toast = btn.closest('.toast');
-      toast.classList.add('toast-hide');
-      setTimeout(() => toast.remove(), 400);
+      const t = btn.closest('.toast');
+      t.classList.add('toast-hide');
+      setTimeout(() => t.remove(), 400);
     }
+
+  </script>
   </script>
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>

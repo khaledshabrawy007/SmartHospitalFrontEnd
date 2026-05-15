@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="api.js"></script>
   <style>
     .input-simple {
       background-color: #f8fafc;
@@ -150,6 +151,30 @@
       from { width: 100%; }
       to   { width: 0%; }
     }
+    /* Eye toggle for password fields */
+    .pwd-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .pwd-wrapper .input-simple {
+      padding-right: 46px;
+      width: 100%;
+    }
+    .pwd-eye {
+      position: absolute;
+      right: 12px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #94a3b8;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      padding: 4px;
+      transition: color 0.15s;
+    }
+    .pwd-eye:hover { color: var(--color-primary); }
   </style>
 </head>
 <body>
@@ -284,18 +309,33 @@
               <div class="settings-form-row">
                 <div class="form-group">
                   <label class="form-label">Current Password</label>
-                  <input type="password" id="currentPwd" class="input-simple" value="" style="width: 50%;" placeholder="Enter current password">
+                  <div class="pwd-wrapper">
+                    <input type="password" id="currentPwd" class="input-simple" placeholder="Enter current password">
+                    <button type="button" class="pwd-eye" onclick="togglePwd('currentPwd', this)" title="Show/Hide">
+                      <i class="ph ph-eye"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
-              
+
               <div class="settings-form-grid">
                 <div class="form-group">
                   <label class="form-label">New Password</label>
-                  <input type="password" id="newPwd" class="input-simple" placeholder="Enter new password">
+                  <div class="pwd-wrapper">
+                    <input type="password" id="newPwd" class="input-simple" placeholder="Enter new password">
+                    <button type="button" class="pwd-eye" onclick="togglePwd('newPwd', this)" title="Show/Hide">
+                      <i class="ph ph-eye"></i>
+                    </button>
+                  </div>
                 </div>
                 <div class="form-group">
                   <label class="form-label">Confirm Password</label>
-                  <input type="password" id="confirmPwd" class="input-simple" placeholder="Verify new password">
+                  <div class="pwd-wrapper">
+                    <input type="password" id="confirmPwd" class="input-simple" placeholder="Verify new password">
+                    <button type="button" class="pwd-eye" onclick="togglePwd('confirmPwd', this)" title="Show/Hide">
+                      <i class="ph ph-eye"></i>
+                    </button>
+                  </div>
                 </div>
               </div>
               
@@ -335,142 +375,109 @@
     </div>
   </div>
 
-  <script src="auth-session.js"></script>
   <script>
-    // --- Toast notification system ---
-    function showToast(message, type = 'success', title) {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast toast-${type}`;
-
-      const icons = {
-        success: 'ph-fill ph-check-circle',
-        error:   'ph-fill ph-x-circle',
-        warning: 'ph-fill ph-warning'
-      };
-      const titles = {
-        success: title || 'Success',
-        error:   title || 'Error',
-        warning: title || 'Warning'
-      };
-
-      toast.innerHTML = `
-        <div class="toast-icon"><i class="${icons[type]}"></i></div>
-        <div class="toast-body">
-          <div class="toast-title">${titles[type]}</div>
-          <div class="toast-msg">${message}</div>
-        </div>
-        <button class="toast-close" onclick="dismissToast(this)"><i class="ph ph-x"></i></button>
-        <div class="toast-progress"><div class="toast-progress-bar"></div></div>
-      `;
-
-      container.appendChild(toast);
-
-      // Auto-dismiss after 4s
-      setTimeout(() => {
-        if (toast.parentNode) {
-          toast.classList.add('toast-hide');
-          setTimeout(() => toast.remove(), 400);
-        }
-      }, 4000);
+    // Eye-toggle helper (global so onclick attribute can reach it)
+    function togglePwd(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      btn.querySelector('i').className = isHidden ? 'ph ph-eye-slash' : 'ph ph-eye';
     }
 
-    function dismissToast(btn) {
-      const toast = btn.closest('.toast');
-      toast.classList.add('toast-hide');
-      setTimeout(() => toast.remove(), 400);
-    }
+    document.addEventListener('DOMContentLoaded', async () => {
+      const session = getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const currentUserData = localStorage.getItem("currentUser");
-      let user = {};
-      if (currentUserData) {
-        user = JSON.parse(currentUserData);
-        document.getElementById('sFullName').value = user.fullName || '';
-        document.getElementById('sEmail').value = user.email || '';
-        document.getElementById('sPhone').value = user.phone || '';
-      }
+      // Populate fields from session
+      const fullName    = session.fullName    || '';
+      const email       = session.email       || '';
+      const phoneNumber = session.phoneNumber || '';
+      document.getElementById('sFullName').value = fullName;
+      document.getElementById('sEmail').value    = email;
+      document.getElementById('sPhone').value    = phoneNumber;
 
-      // Track changes to enable/disable button
+      const profileAvatarImg = document.getElementById('profileAvatarImg');
+      if (fullName) profileAvatarImg.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=0f172a&color=fff`;
+
+      // Save Profile → API
       const saveProfileBtn = document.getElementById('saveProfileBtn');
-      const profileInputs = [
-        document.getElementById('sFullName'),
-        document.getElementById('sEmail'),
-        document.getElementById('sPhone')
-      ];
-
-      function checkProfileChanges() {
-        if (!user) return;
-        const currentName = document.getElementById('sFullName').value;
-        const currentEmail = document.getElementById('sEmail').value;
-        const currentPhone = document.getElementById('sPhone').value;
-        
-        if (currentName !== (user.fullName || '') || 
-            currentEmail !== (user.email || '') || 
-            currentPhone !== (user.phone || '')) {
-          saveProfileBtn.removeAttribute('disabled');
-        } else {
-          saveProfileBtn.setAttribute('disabled', 'true');
-        }
-      }
+      const profileInputs  = ['sFullName','sEmail','sPhone'].map(id => document.getElementById(id));
+      const origValues     = profileInputs.map(i => i.value);
 
       profileInputs.forEach(input => {
-        input.addEventListener('input', checkProfileChanges);
-      });
-
-      saveProfileBtn.addEventListener('click', () => {
-        user.fullName = document.getElementById('sFullName').value;
-        user.email = document.getElementById('sEmail').value;
-        user.phone = document.getElementById('sPhone').value;
-        
-        localStorage.setItem("currentUser", JSON.stringify(user));
-        saveProfileBtn.setAttribute('disabled', 'true');
-        showToast('Your profile information has been saved.', 'success', 'Profile Updated');
-
-        // Update sidebar and avatar to reflect new name
-        const nameEls = document.querySelectorAll('.user-profile-sm .name');
-        nameEls.forEach(el => el.textContent = user.fullName);
-        const avatarImgs = document.querySelectorAll('.user-profile-sm img, #profileAvatarImg');
-        avatarImgs.forEach(img => {
-          img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(user.fullName)}&background=0f172a&color=fff`;
+        input.addEventListener('input', () => {
+          const changed = profileInputs.some((inp, i) => inp.value !== origValues[i]);
+          saveProfileBtn.toggleAttribute('disabled', !changed);
         });
       });
 
-      // Password Logic securely client-side simulated
-      const saveSecurityBtn = document.getElementById('saveSecurityBtn');
-      saveSecurityBtn.addEventListener('click', () => {
-         const newPwd = document.getElementById('newPwd').value;
-         const confPwd = document.getElementById('confirmPwd').value;
-         const currPwd = document.getElementById('currentPwd').value;
-         
-         if (!currPwd) {
-             showToast('Current password is required to make security changes.', 'warning', 'Missing Field');
-             return;
-         }
-         if (newPwd !== confPwd) {
-            showToast('New passwords do not match. Please verify.', 'error', 'Mismatch');
-            return;
-         }
-         if (newPwd.length > 0 && newPwd.length < 8) {
-            showToast('Password must be at least 8 characters.', 'error', 'Too Short');
-            return;
-         }
-         showToast('Security settings updated successfully!', 'success', 'Security Updated');
-         document.getElementById('currentPwd').value = '';
-         document.getElementById('newPwd').value = '';
-         document.getElementById('confirmPwd').value = '';
+      saveProfileBtn.addEventListener('click', async () => {
+        const newName  = document.getElementById('sFullName').value.trim();
+        const newEmail = document.getElementById('sEmail').value.trim();
+        const newPhone = document.getElementById('sPhone').value.trim();
+
+        saveProfileBtn.textContent = 'Saving...';
+        saveProfileBtn.disabled = true;
+
+        try {
+          const dto = { fullName: newName, email: newEmail, phoneNumber: newPhone };
+          if (session.userType === 'Patient') {
+            await PatientsAPI.update(session.roleSpecificId, dto);
+          } else if (session.userType === 'Doctor') {
+            await DoctorsAPI.updateProfile(session.roleSpecificId, dto);
+          }
+
+          // Update session cache
+          session.fullName = newName;
+          session.email    = newEmail;
+          saveSession(session);
+
+          showToast('Your profile has been saved.', 'success', 'Profile Updated');
+          document.querySelectorAll('.user-profile-sm .name').forEach(el => el.textContent = newName);
+          document.querySelectorAll('.user-profile-sm img, #profileAvatarImg').forEach(img =>
+            img.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(newName)}&background=0f172a&color=fff`
+          );
+        } catch (err) {
+          showToast(err.message || 'Could not save profile.', 'error');
+        } finally {
+          saveProfileBtn.textContent = 'Save Changes';
+          saveProfileBtn.setAttribute('disabled', 'true');
+        }
       });
 
-      // Notification Logic
-      const notifToggle = document.getElementById('emailNotifToggle');
-      const savedNotifPref = localStorage.getItem('emailNotifications');
-      if (savedNotifPref === 'false') {
-         notifToggle.checked = false;
-      }
-      notifToggle.addEventListener('change', (e) => {
-         localStorage.setItem('emailNotifications', e.target.checked);
+      // Security — real API call via UserManager.ChangePasswordAsync
+      const saveSecurityBtn = document.getElementById('saveSecurityBtn');
+      saveSecurityBtn.addEventListener('click', async () => {
+        const currPwd = document.getElementById('currentPwd').value.trim();
+        const newPwd  = document.getElementById('newPwd').value.trim();
+        const confPwd = document.getElementById('confirmPwd').value.trim();
+        if (!currPwd)              { showToast('Current password is required.', 'warning', 'Missing Field'); return; }
+        if (!newPwd)               { showToast('New password is required.', 'warning', 'Missing Field'); return; }
+        if (newPwd !== confPwd)    { showToast('New passwords do not match.', 'error', 'Mismatch'); return; }
+        if (newPwd.length < 8)     { showToast('Password must be at least 8 characters.', 'error', 'Too Short'); return; }
+        if (currPwd === newPwd)    { showToast('New password must differ from current.', 'warning', 'Same Password'); return; }
+        saveSecurityBtn.textContent = 'Updating...';
+        saveSecurityBtn.disabled = true;
+        try {
+          await AuthAPI.changePassword({ currentPassword: currPwd, newPassword: newPwd });
+          showToast('Password updated successfully!', 'success', 'Security Updated');
+          document.getElementById('currentPwd').value = '';
+          document.getElementById('newPwd').value     = '';
+          document.getElementById('confirmPwd').value = '';
+        } catch (err) {
+          showToast(err.message || 'Could not update password. Check your current password.', 'error', 'Update Failed');
+        } finally {
+          saveSecurityBtn.textContent = 'Update Security';
+          saveSecurityBtn.disabled = false;
+        }
       });
+
+      // Notification preference
+      const notifToggle = document.getElementById('emailNotifToggle');
+      if (localStorage.getItem('emailNotifications') === 'false') notifToggle.checked = false;
+      notifToggle.addEventListener('change', e => localStorage.setItem('emailNotifications', e.target.checked));
     });
   </script>
+  <script src="auth-session.js"></script>
 </body>
 </html>

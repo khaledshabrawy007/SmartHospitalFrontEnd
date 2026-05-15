@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="api.js"></script>
   <style>
     .approval-grid {
       display: grid;
@@ -297,6 +298,48 @@
     </div>
   </div>
 
+  <!-- Reject Modal -->
+  <div class="modal-overlay" id="rejectModal" style="display:none;justify-content:center;align-items:center;z-index:9999;">
+    <div class="modal-container" style="max-width:420px;">
+      <button class="modal-close" onclick="document.getElementById('rejectModal').style.display='none'"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <h2>Reject Application</h2>
+        <p>Rejecting <strong id="rejectModalName"></strong>. Please provide a reason.</p>
+      </div>
+      <textarea id="rejectReason" rows="3" placeholder="Rejection reason (required)..."
+        style="width:100%;padding:10px 14px;background:var(--color-bg-light);border:1px solid rgba(0,0,0,0.1);border-radius:8px;font-size:0.92rem;resize:none;box-sizing:border-box;margin-bottom:24px;"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="document.getElementById('rejectModal').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" id="confirmRejectBtn" onclick="confirmReject()" style="background:#dc2626;border-color:#dc2626;">Confirm Rejection</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Edit Modal -->
+  <div class="modal-overlay" id="kpiModal" style="display:none;justify-content:center;align-items:center;z-index:9999;">
+    <div class="modal-container" style="max-width:420px;">
+      <button class="modal-close" onclick="document.getElementById('kpiModal').style.display='none'"><i class="ph ph-x"></i></button>
+      <div class="modal-header">
+        <h2>Edit KPIs & Salary</h2>
+        <p id="kpiModalName" style="color:var(--color-primary);font-weight:700;"></p>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">Monthly Salary ($)</label>
+        <input id="kpiSalary" type="number" min="0" step="100" placeholder="e.g. 8000"
+          style="width:100%;padding:10px 14px;background:var(--color-bg-light);border:1px solid rgba(0,0,0,0.1);border-radius:8px;font-size:0.92rem;box-sizing:border-box;">
+      </div>
+      <div style="margin-bottom:24px;">
+        <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:6px;">KPI Notes (optional)</label>
+        <textarea id="kpiNotes" rows="3" placeholder="Performance notes..."
+          style="width:100%;padding:10px 14px;background:var(--color-bg-light);border:1px solid rgba(0,0,0,0.1);border-radius:8px;font-size:0.92rem;resize:none;box-sizing:border-box;"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" onclick="document.getElementById('kpiModal').style.display='none'">Cancel</button>
+        <button class="btn btn-primary" id="saveKpiBtn" onclick="saveKpis()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Global Support Modal -->
   <div class="modal-overlay" id="globalSupportModal" style="display: none; justify-content: center; align-items: center; z-index: 9999;">
     <div class="modal-container" style="max-width: 400px; text-align: center;">
@@ -348,252 +391,180 @@
 
   <script src="auth-session.js"></script>
   <script>
-    // Mock Data State
-    const mockData = {
-      approvals: [
-        { id: 'app1', name: 'Dr. Aris Thorne', role: 'Senior Neurosurgeon', statusIcon: 'ph-shield-check', statusTitle: 'Credentials Verification', statusDesc: 'License: MD-9928-TX. Background check cleared via VeriMed Systems.', img: 'https://ui-avatars.com/api/?name=Aris+Thorne&background=0284c7&color=fff' },
-        { id: 'app2', name: 'Dr. Sarah Chen', role: 'Cardiology Fellow', statusIcon: 'ph-file-text', statusTitle: 'Onboarding Progress', statusDesc: 'Medical Board documentation under final review. Ready for ward sync.', img: 'https://ui-avatars.com/api/?name=Sarah+Chen&background=ca8a04&color=fff' }
-      ],
-      staff: [
-        { id: 'ST-001242', name: 'James Hiddleston', initials: 'JH', role: 'Doctor', spec: 'Emergency Medicine', ward: 'ER South Wing', wardClass: 'w-green', bg: '#d1fae5', color: '#059669' },
-        { id: 'ST-001258', name: 'Maya Rodriguez', initials: 'MR', role: 'Nurse', spec: 'Critical Care', ward: 'ICU Block C', wardClass: 'w-green', bg: '#f1f5f9', color: '#64748b' },
-        { id: 'ST-001290', name: 'Benjamin Kim', initials: 'BK', role: 'Doctor', spec: 'Radiology', ward: 'Unassigned', wardClass: 'w-gray', bg: '#fee2e2', color: '#b91c1c' },
-        { id: 'ST-001302', name: 'Lucia Ferrari', initials: 'LF', role: 'Nurse', spec: 'Neonatal Nursing', ward: 'Maternity Unit', wardClass: 'w-green', bg: '#f3e8ff', color: '#7e22ce' },
-        { id: 'ST-001315', name: 'Omar Al-Fayed', initials: 'OA', role: 'Doctor', spec: 'Pediatrics', ward: 'Pediatrics Ward', wardClass: 'w-green', bg: '#e0f2fe', color: '#0284c7' },
-        { id: 'ST-001321', name: 'Elena Rostova', initials: 'ER', role: 'Nurse', spec: 'General Practice', ward: 'Unassigned', wardClass: 'w-gray', bg: '#ffedd5', color: '#c2410c' }
-      ]
-    };
+    let allDoctors = [], allNurses = [], pendingDoctors = [], combinedStaff = [], filteredStaff = [];
+    let currentPage = 1, currentSearch = '', currentRole = 'All';
+    const rowsPerPage = 6;
+    let activeRejectId = null, activeKpiId = null;
 
-    // Pagination & Filter State
-    let currentPage = 1;
-    const rowsPerPage = 4;
-    let currentSearch = '';
-    let currentRole = 'All';
-    let filteredStaff = [...mockData.staff];
-
-    // ---- DOM Elements ----
-    const searchInput = document.getElementById('searchInput');
-    const roleFilter = document.getElementById('roleFilter');
-    const btnPrev = document.getElementById('btnPrev');
-    const btnNext = document.getElementById('btnNext');
-
-    // ---- Event Listeners ----
-    searchInput.addEventListener('input', (e) => {
-      currentSearch = e.target.value.toLowerCase();
-      currentPage = 1;
-      applyFilters();
+    document.addEventListener('DOMContentLoaded', async () => {
+      const session = requireAuth(['HRManager']);
+      if (!session) return;
+      const nameEl = document.querySelector('.user-profile-sm .name');
+      if (nameEl && session.fullName) nameEl.textContent = session.fullName;
+      await loadData();
+      document.getElementById('searchInput').addEventListener('input', e => { currentSearch = e.target.value.toLowerCase(); currentPage = 1; applyFilters(); });
+      document.getElementById('roleFilter').addEventListener('change', e => { currentRole = e.target.value; currentPage = 1; applyFilters(); });
+      document.getElementById('btnPrev').addEventListener('click', () => { if (currentPage > 1) { currentPage--; renderStaffTable(); } });
+      document.getElementById('btnNext').addEventListener('click', () => { if (currentPage < Math.ceil(filteredStaff.length / rowsPerPage)) { currentPage++; renderStaffTable(); } });
     });
 
-    roleFilter.addEventListener('change', (e) => {
-      currentRole = e.target.value;
-      currentPage = 1;
-      applyFilters();
-    });
-
-    btnPrev.addEventListener('click', () => {
-      if (currentPage > 1) { currentPage--; renderStaffTable(); }
-    });
-
-    btnNext.addEventListener('click', () => {
-      const maxPage = Math.ceil(filteredStaff.length / rowsPerPage);
-      if (currentPage < maxPage) { currentPage++; renderStaffTable(); }
-    });
-
-    // ---- Initialization ----
-    document.addEventListener('DOMContentLoaded', () => {
-      renderApprovals();
-      applyFilters(); // Renders staff table initially
-    });
-
-    // ---- Toast Logic ----
-    function showToast(message, type = 'success', title) {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast toast-${type}`;
-      const icons  = { success: 'ph-fill ph-check-circle', error: 'ph-fill ph-x-circle', warning: 'ph-fill ph-warning' };
-      const titles = { success: title || 'Success', error: title || 'Error', warning: title || 'Warning' };
-      toast.innerHTML = `
-        <div class="toast-icon"><i class="${icons[type]}"></i></div>
-        <div class="toast-body">
-          <div class="toast-title">${titles[type]}</div>
-          <div class="toast-msg">${message}</div>
-        </div>
-        <button class="toast-close" onclick="dismissToast(this)"><i class="ph ph-x"></i></button>
-        <div class="toast-progress"><div class="toast-progress-bar"></div></div>
-      `;
-      container.appendChild(toast);
-      setTimeout(() => {
-        if (toast.parentNode) { toast.classList.add('toast-hide'); setTimeout(() => toast.remove(), 400); }
-      }, 4000);
-    }
-    function dismissToast(btn) {
-      const toast = btn.closest('.toast');
-      toast.classList.add('toast-hide');
-      setTimeout(() => toast.remove(), 400);
+    async function loadData() {
+      try {
+        const [docs, nurses, pending] = await Promise.all([StaffAPI.getAll(), NursesAPI.getAll(), StaffAPI.getPending()]);
+        allDoctors = docs; allNurses = nurses; pendingDoctors = pending;
+        rebuildCombined();
+        renderApprovals();
+        applyFilters();
+      } catch(err) { showToast('Could not load staff data.', 'error'); console.error(err); }
     }
 
-    // ---- Approvals Logic ----
+    function rebuildCombined() {
+      combinedStaff = [
+        ...allDoctors.map(d => ({...d, role:'Doctor', displayId:`DR-${String(d.doctorID).padStart(5,'0')}`})),
+        ...allNurses.map(n => ({...n, role:'Nurse',  displayId:`NR-${String(n.nurseID).padStart(5,'0')}`}))
+      ];
+    }
+
     function renderApprovals() {
       const grid = document.getElementById('approvalsGrid');
       const countEl = document.getElementById('approvalsCount');
-      
-      countEl.textContent = `${mockData.approvals.length} ACTION REQUIRED`;
-      
-      if (mockData.approvals.length === 0) {
+      if (pendingDoctors.length === 0) {
         countEl.style.display = 'none';
-        grid.style.display = 'block'; // switch off grid mapping
-        grid.innerHTML = `<div class="empty-state"><i class="ph ph-check-circle" style="font-size:3rem; color:#10b981; margin-bottom:12px; display:block;"></i>No pending approvals. All caught up!</div>`;
+        grid.style.display = 'block';
+        grid.innerHTML = `<div class="empty-state"><i class="ph ph-check-circle" style="font-size:3rem;color:#10b981;margin-bottom:12px;display:block;"></i>No pending approvals. All caught up!</div>`;
         return;
       }
-      
+      countEl.style.display = '';
+      countEl.textContent = `${pendingDoctors.length} ACTION REQUIRED`;
       grid.style.display = 'grid';
-      grid.innerHTML = mockData.approvals.map(app => `
-        <div class="approval-card" id="card-${app.id}">
+      grid.innerHTML = pendingDoctors.map(doc => `
+        <div class="approval-card" id="pcard-${doc.doctorID}">
           <div class="ac-top">
-            <img src="${app.img}" alt="${app.name}">
-            <div class="ac-info">
-              <h3>${app.name}</h3>
-              <p>${app.role}</p>
-            </div>
+            <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(doc.fullName)}&background=0284c7&color=fff" alt="${doc.fullName}">
+            <div class="ac-info"><h3>${doc.fullName}</h3><p>${doc.specialization || 'General Practice'}</p></div>
           </div>
-          
           <div class="ac-status-box">
-            <h4><i class="ph-fill ${app.statusIcon}"></i> ${app.statusTitle}</h4>
-            <p>${app.statusDesc}</p>
+            <h4><i class="ph-fill ph-envelope"></i> Contact & Credentials</h4>
+            <p>${doc.email}<br>Phone: ${doc.phoneNumber || 'Not provided'}</p>
           </div>
-          
           <div class="ac-actions">
-            <button class="btn btn-primary" onclick="approveProfile('${app.id}')">APPROVE</button>
-            <button class="btn btn-reject" onclick="rejectProfile('${app.id}')">REJECT</button>
+            <button class="btn btn-primary" onclick="approveDoctor(${doc.doctorID})">APPROVE</button>
+            <button class="btn btn-reject" onclick="openRejectModal(${doc.doctorID},'${doc.fullName}')">REJECT</button>
           </div>
-        </div>
-      `).join('');
+        </div>`).join('');
     }
 
-    function approveProfile(id) {
-      const app = mockData.approvals.find(a => a.id === id);
-      const name = app ? app.name : 'Profile';
-      mockData.approvals = mockData.approvals.filter(a => a.id !== id);
-      const card = document.getElementById(`card-${id}`);
-      card.style.opacity = '0';
-      setTimeout(() => {
+    async function approveDoctor(id) {
+      const doc = pendingDoctors.find(d => d.doctorID === id);
+      try {
+        await StaffAPI.approve(id);
+        pendingDoctors = pendingDoctors.filter(d => d.doctorID !== id);
         renderApprovals();
-        showToast(`${name} has been approved and added to the directory.`, 'success', 'Profile Approved');
-      }, 200);
+        showToast(`${doc?.fullName || 'Doctor'} approved successfully.`, 'success', 'Profile Approved');
+        allDoctors = await StaffAPI.getAll(); rebuildCombined(); applyFilters();
+      } catch(err) { showToast(err.message || 'Could not approve.', 'error'); }
     }
 
-    function rejectProfile(id) {
-      const app = mockData.approvals.find(a => a.id === id);
-      const name = app ? app.name : 'Profile';
-      mockData.approvals = mockData.approvals.filter(a => a.id !== id);
-      const card = document.getElementById(`card-${id}`);
-      card.style.opacity = '0';
-      setTimeout(() => {
+    function openRejectModal(id, name) {
+      activeRejectId = id;
+      document.getElementById('rejectModalName').textContent = name;
+      document.getElementById('rejectReason').value = '';
+      document.getElementById('rejectModal').style.display = 'flex';
+    }
+
+    async function confirmReject() {
+      const reason = document.getElementById('rejectReason').value.trim();
+      if (!reason) { showToast('Please enter a rejection reason.', 'warning'); return; }
+      const btn = document.getElementById('confirmRejectBtn');
+      btn.disabled = true;
+      try {
+        const doc = pendingDoctors.find(d => d.doctorID === activeRejectId);
+        await StaffAPI.reject(activeRejectId, { reason });
+        pendingDoctors = pendingDoctors.filter(d => d.doctorID !== activeRejectId);
+        document.getElementById('rejectModal').style.display = 'none';
         renderApprovals();
-        showToast(`${name}'s application has been rejected and removed.`, 'error', 'Profile Rejected');
-      }, 200);
+        showToast(`${doc?.fullName || 'Doctor'} rejected.`, 'error', 'Profile Rejected');
+      } catch(err) { showToast(err.message || 'Could not reject.', 'error'); }
+      finally { btn.disabled = false; }
     }
 
-    // ---- Staff Directory Logic ----
     function applyFilters() {
-      filteredStaff = mockData.staff.filter(s => {
-        const matchesSearch = s.name.toLowerCase().includes(currentSearch) || s.id.toLowerCase().includes(currentSearch);
-        const matchesRole = currentRole === 'All' || s.role === currentRole;
-        return matchesSearch && matchesRole;
+      filteredStaff = combinedStaff.filter(s => {
+        const matchSearch = (s.fullName||'').toLowerCase().includes(currentSearch) || (s.displayId||'').toLowerCase().includes(currentSearch);
+        const matchRole = currentRole === 'All' || s.role === currentRole;
+        return matchSearch && matchRole;
       });
       renderStaffTable();
     }
 
     function renderStaffTable() {
       const tbody = document.getElementById('staffTableBody');
-      const paginationInfo = document.getElementById('paginationInfo');
+      const pagInfo = document.getElementById('paginationInfo');
       const countEl = document.getElementById('staffCount');
-      
-      countEl.textContent = `${filteredStaff.length} Total Staff`;
-      
+      countEl.textContent = `${combinedStaff.length} Total Staff`;
+      const btnP = document.getElementById('btnPrev'), btnN = document.getElementById('btnNext');
       if (filteredStaff.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="ph ph-users" style="font-size:3rem; margin-bottom:12px; display:block;"></i>No staff found matching criteria.</div></td></tr>`;
-        paginationInfo.textContent = `Showing 0 records`;
-        btnPrev.disabled = true;
-        btnNext.disabled = true;
-        return;
+        tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><i class="ph ph-users" style="font-size:3rem;margin-bottom:12px;display:block;"></i>No staff found.</div></td></tr>`;
+        pagInfo.textContent = 'Showing 0 records'; btnP.disabled = btnN.disabled = true; return;
       }
-      
-      // Pagination Math
-      const totalRows = filteredStaff.length;
-      const totalPages = Math.ceil(totalRows / rowsPerPage);
+      const totalPages = Math.ceil(filteredStaff.length / rowsPerPage);
       if (currentPage > totalPages) currentPage = totalPages;
-      if (currentPage < 1) currentPage = 1;
-      
-      const startIdx = (currentPage - 1) * rowsPerPage;
-      const endIdx = startIdx + rowsPerPage;
-      const visibleData = filteredStaff.slice(startIdx, endIdx);
-      
-      paginationInfo.textContent = `Showing ${startIdx + 1} to ${Math.min(endIdx, totalRows)} of ${totalRows} records`;
-      
-      btnPrev.disabled = currentPage === 1;
-      btnNext.disabled = currentPage === totalPages;
-      btnPrev.style.opacity = btnPrev.disabled ? '0.5' : '1';
-      btnNext.style.opacity = btnNext.disabled ? '0.5' : '1';
-      
-      tbody.innerHTML = visibleData.map(s => {
-        const roleBadge = s.role === 'Doctor' ? 'role-dr' : 'role-nurse';
-        const wardIconColor = s.wardClass === 'w-gray' ? '' : 'w-green';
-        
-        return `
-        <tr>
-          <td>
-            <div class="td-profile">
-              <div class="td-avatar" style="background:${s.bg}; color:${s.color};">${s.initials}</div>
-              <div>
-                <div class="td-name">${s.name}</div>
-                <div class="td-id">ID: ${s.id}</div>
-              </div>
-            </div>
-          </td>
-          <td><span class="role-badge ${roleBadge}">${s.role.toUpperCase()}</span></td>
-          <td style="color:var(--color-text-dark); font-weight:500;">${s.spec}</td>
-          <td><span class="ward-assign ${s.wardClass}"><i class="ph-fill ph-circle ${wardIconColor}"></i> ${s.ward}</span></td>
-          <td style="text-align:right;">
-            <button class="btn-filter" style="border:none; background:var(--color-bg-light); color:var(--color-primary); float:right;" onclick="openWardModal('${s.id}')">
-              <i class="ph ph-arrows-left-right"></i> ASSIGN TO WARD
-            </button>
-          </td>
-        </tr>
-      `}).join('');
+      const start = (currentPage-1)*rowsPerPage, end = start+rowsPerPage;
+      const visible = filteredStaff.slice(start, end);
+      pagInfo.textContent = `Showing ${start+1}–${Math.min(end,filteredStaff.length)} of ${filteredStaff.length}`;
+      btnP.disabled = currentPage===1; btnN.disabled = currentPage===totalPages;
+      btnP.style.opacity = btnP.disabled?'0.5':'1'; btnN.style.opacity = btnN.disabled?'0.5':'1';
+      const palettes = ['#d1fae5|#059669','#dbeafe|#1d4ed8','#fce7f3|#be185d','#e0f2fe|#0284c7','#ffedd5|#c2410c','#f3e8ff|#7e22ce'];
+      const ini = n => n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      tbody.innerHTML = visible.map((s,i) => {
+        const [bg,clr] = palettes[i%palettes.length].split('|');
+        const isDoc = s.role === 'Doctor';
+        const ward = isDoc ? '—' : (!s.isActive ? '<span style="color:#ef4444;">⊘ Inactive</span>' : `<span class="ward-assign w-green"><i class="ph-fill ph-circle w-green"></i> ${s.wardName||'—'}</span>`);
+        const kpiEncoded = encodeURIComponent(s.kPIs||'');
+        const actions = isDoc
+          ? `<button class="btn-filter" style="border:none;background:var(--color-bg-light);color:var(--color-primary);" onclick="openKpiModal(${s.doctorID},'${s.fullName}',${s.salary||0},'${kpiEncoded}')"><i class="ph ph-chart-line"></i> EDIT KPIs</button>`
+          : `<button class="btn-filter" style="border:none;background:#fee2e2;color:#b91c1c;" onclick="deactivateNurse(${s.nurseID},'${s.fullName}')" ${!s.isActive?'disabled':''} title="${!s.isActive?'Already inactive':''}"><i class="ph ph-prohibit"></i> DEACTIVATE</button>`;
+        return `<tr>
+          <td><div class="td-profile"><div class="td-avatar" style="background:${bg};color:${clr};">${ini(s.fullName)}</div><div><div class="td-name">${s.fullName}</div><div class="td-id">${s.displayId}</div></div></div></td>
+          <td><span class="role-badge ${isDoc?'role-dr':'role-nurse'}">${s.role.toUpperCase()}</span></td>
+          <td style="color:var(--color-text-dark);font-weight:500;">${s.specialization||'—'}</td>
+          <td>${ward}</td>
+          <td style="text-align:right;">${actions}</td>
+        </tr>`;
+      }).join('');
     }
 
-    // ---- Ward Assignment Logic ----
-    function openWardModal(id) {
-      const staff = mockData.staff.find(s => s.id === id);
-      if (!staff) return;
-      
-      document.getElementById('wardModalStaffId').value = id;
-      document.getElementById('wardModalStaffName').textContent = staff.name;
-      document.getElementById('wardSelect').value = staff.ward;
-      
-      document.getElementById('wardModal').style.display = 'flex';
+    function openKpiModal(doctorId, name, salary, kpisEnc) {
+      activeKpiId = doctorId;
+      document.getElementById('kpiModalName').textContent = name;
+      document.getElementById('kpiSalary').value = salary||'';
+      document.getElementById('kpiNotes').value = decodeURIComponent(kpisEnc||'');
+      document.getElementById('kpiModal').style.display = 'flex';
     }
 
-    function closeWardModal() {
-      document.getElementById('wardModal').style.display = 'none';
+    async function saveKpis() {
+      const salary = parseFloat(document.getElementById('kpiSalary').value);
+      const kPIs = document.getElementById('kpiNotes').value.trim() || null;
+      if (isNaN(salary)||salary<0) { showToast('Enter a valid salary.','warning'); return; }
+      const btn = document.getElementById('saveKpiBtn'); btn.disabled = true;
+      try {
+        await StaffAPI.updateKpis(activeKpiId, { salary, kPIs });
+        allDoctors = allDoctors.map(d => d.doctorID===activeKpiId ? {...d,salary,kPIs} : d);
+        rebuildCombined(); applyFilters();
+        document.getElementById('kpiModal').style.display = 'none';
+        showToast('KPIs and salary updated.', 'success', 'KPIs Updated');
+      } catch(err) { showToast(err.message||'Could not update KPIs.','error'); }
+      finally { btn.disabled = false; }
     }
 
-    function assignWard() {
-      const id = document.getElementById('wardModalStaffId').value;
-      const selectedWard = document.getElementById('wardSelect').value;
-      
-      const staff = mockData.staff.find(s => s.id === id);
-      if (staff) {
-        staff.ward = selectedWard;
-        staff.wardClass = selectedWard === 'Unassigned' ? 'w-gray' : 'w-green';
-      }
-      
-      closeWardModal();
-      applyFilters();
-      const staffName = staff ? staff.name : 'Staff member';
-      showToast(`${staffName} has been assigned to ${selectedWard}.`, 'success', 'Ward Assigned');
+    async function deactivateNurse(nurseId, name) {
+      if (!confirm(`Deactivate ${name}?`)) return;
+      try {
+        await NursesAPI.deactivate(nurseId);
+        allNurses = allNurses.map(n => n.nurseID===nurseId ? {...n,isActive:false} : n);
+        rebuildCombined(); applyFilters();
+        showToast(`${name} deactivated.`, 'error', 'Nurse Deactivated');
+      } catch(err) { showToast(err.message||'Could not deactivate.','error'); }
     }
   </script>
 </body>
-</html>

@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="api.js"></script>
   <style>
     /* Search & Toolbar Enhancements */
     .patients-toolbar {
@@ -190,11 +191,11 @@
       </a>
       
       <div class="nav-menu">
-        <a href="doctor-patients.html" class="nav-item active">
-          <i class="ph-fill ph-user"></i> Patients
-        </a>
         <a href="doctor-appointments.html" class="nav-item">
           <i class="ph ph-calendar-blank"></i> Appointments
+        </a>
+        <a href="doctor-patients.html" class="nav-item active">
+          <i class="ph-fill ph-user"></i> Patients
         </a>
         <a href="doctor-risk-assessment.html" class="nav-item">
           <i class="ph ph-chart-line-up"></i> Risk Assessment
@@ -224,12 +225,6 @@
 
     <!-- Main Content -->
     <div class="main-content">
-      <div class="dr-toolbar">
-        <div class="header-title">
-          <h1 id="drWelcomeHeader">Welcome back, Doctor.</h1>
-          <p>Review and manage active patient files across departments.</p>
-        </div>
-      </div>
 
       <!-- Dynamic Toolbar -->
       <div class="patients-toolbar">
@@ -249,9 +244,9 @@
         <div class="patients-toolbar-bottom">
           <div class="filter-pills" id="filterPills">
             <button class="filter-pill active" data-filter="all">All <span class="count" id="countAll">0</span></button>
-            <button class="filter-pill" data-filter="Critical">Critical <span class="count" id="countCritical">0</span></button>
-            <button class="filter-pill" data-filter="Stable">Stable <span class="count" id="countStable">0</span></button>
-            <button class="filter-pill" data-filter="Chronic">Chronic <span class="count" id="countChronic">0</span></button>
+            <button class="filter-pill" data-filter="Scheduled">Scheduled <span class="count" id="countScheduled">0</span></button>
+            <button class="filter-pill" data-filter="Completed">Completed <span class="count" id="countCompleted">0</span></button>
+            <button class="filter-pill" data-filter="Cancelled">Cancelled <span class="count" id="countCancelled">0</span></button>
           </div>
           <span class="results-count" id="resultsCount"></span>
         </div>
@@ -535,40 +530,64 @@
     }
 
     // ── Event Listeners ────────────────────────────────────────
-    searchInput.addEventListener("input", (e) => {
-      searchQuery = e.target.value.trim();
-      renderPatients();
-    });
-
-    sortSelect.addEventListener("change", (e) => {
-      sortMode = e.target.value;
-      renderPatients();
-    });
-
+    searchInput.addEventListener('input', e => { searchQuery = e.target.value.trim(); renderPatients(); });
+    sortSelect.addEventListener('change', () => renderPatients());
     filterPills.forEach(pill => {
-      pill.addEventListener("click", () => {
-        filterPills.forEach(p => p.classList.remove("active"));
-        pill.classList.add("active");
+      pill.addEventListener('click', () => {
+        filterPills.forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
         activeFilter = pill.dataset.filter;
         renderPatients();
       });
     });
 
-    // ── Init ───────────────────────────────────────────────────
-    updateCounts();
-    renderPatients();
+    // ── Load from backend ──────────────────────────────
+    document.addEventListener('DOMContentLoaded', async () => {
+      const session = getSession();
+      if (!session || session.userType !== 'Doctor') { window.location.href = 'index.html'; return; }
 
-    // ── Dynamic Doctor Welcome ──────────────────────────────────
-    const currentUserData = localStorage.getItem('currentUser');
-    if (currentUserData) {
+      // Update welcome header
+      const fullName = session.fullName || 'Doctor';
+      const displayName = fullName.toLowerCase().startsWith('dr') ? fullName : 'Dr. ' + fullName;
+      document.getElementById('drWelcomeHeader').textContent = `Welcome back, ${displayName}.`;
+
+      grid.innerHTML = `<div class="empty-state"><i class="ph ph-spinner" style="animation:spin 1s linear infinite;"></i><h3>Loading patients…</h3></div>`;
+
       try {
-        const user = JSON.parse(currentUserData);
-        const fullName = user.fullName || user.firstName || 'Doctor';
-        // Ensure it starts with Dr.
+        const appointments = await AppointmentsAPI.getByDoctor(session.roleSpecificId);
+
+        // Group by patient
+        const patientMap = new Map();
+        appointments.forEach(a => {
+          if (!patientMap.has(a.patientID)) {
+            patientMap.set(a.patientID, { patientId: a.patientID, patientName: a.patientName, appointments: [] });
+          }
+          patientMap.get(a.patientID).appointments.push(a);
+        });
+
+        // Sort each patient's appointments newest first
+        patientMap.forEach(p => {
+          p.appointments.sort((a, b) => new Date(b.appointmentDate) - new Date(a.appointmentDate));
+        });
+
+        allPatients = [...patientMap.values()];
+        updateCounts();
+        renderPatients();
+      } catch (err) {
+        console.error('Failed to load patients:', err);
+        grid.innerHTML = `<div class="empty-state"><i class="ph ph-warning-circle"></i><h3>Could not load patients</h3><p>${err.message || 'Check that the backend is running.'}</p></div>`;
+      }
+    });
+
+    // ── Welcome (sync fallback before DOMContentLoaded) ────
+    (() => {
+      const session = (typeof getSession === 'function') ? getSession() : JSON.parse(localStorage.getItem('session'));
+      if (session?.fullName) {
+        const fullName = session.fullName;
         const displayName = fullName.toLowerCase().startsWith('dr') ? fullName : 'Dr. ' + fullName;
         document.getElementById('drWelcomeHeader').textContent = `Welcome back, ${displayName}.`;
-      } catch(e) {}
-    }
+      }
+    })();
   </script>
 </body>
 </html>

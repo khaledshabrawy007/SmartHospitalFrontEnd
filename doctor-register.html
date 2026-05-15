@@ -6,6 +6,7 @@
   <title>SmartHospital - Doctor Registration</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="api.js"></script>
   <style>
     .split-layout {
       display: flex;
@@ -373,7 +374,7 @@
           <p>Register your credentials for HR verification. Approval typically takes <span class="highlight-text">24-48 hours.</span></p>
         </div>
         
-        <form action="doctor-patients.html" id="doctorRegForm">
+        <form id="doctorRegForm">
 
           <!-- Full Name -->
           <div class="form-group">
@@ -389,7 +390,7 @@
             <label class="form-label" style="text-transform:none; letter-spacing:0; color:#374151;">Medical Email</label>
             <div class="input-icon-left">
               <i class="ph-fill ph-envelope-simple"></i>
-              <input type="email" placeholder="j.smith@hospital.org" required>
+              <input type="email" id="drEmail" placeholder="j.smith@hospital.org" required>
             </div>
           </div>
 
@@ -597,20 +598,47 @@
     // Save session on submit
     const doctorRegForm = document.getElementById('doctorRegForm');
     if (doctorRegForm) {
-      doctorRegForm.addEventListener('submit', function(e) {
-        const fullName = document.getElementById('drFullName').value;
-        const phone = document.getElementById('drPhone').value;
-        const email = doctorRegForm.querySelector('input[type="email"]').value;
-        const specialization = document.getElementById('drSpecialization').value;
+      doctorRegForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const submitBtn = doctorRegForm.querySelector('button[type="submit"]');
+        const originalText = submitBtn ? submitBtn.innerHTML : '';
 
-        localStorage.setItem('currentUser', JSON.stringify({
-          fullName: fullName,
-          firstName: fullName.replace(/^Dr\.?\s*/i, '').split(' ')[0],
-          email: email,
-          phone: phone,
-          specialization: specialization,
-          role: 'Doctor'
-        }));
+        const fullName       = document.getElementById('drFullName').value.trim();
+        const regionCode     = document.getElementById('drRegionSelect').value;
+        const phoneRaw       = document.getElementById('drPhone').value.trim();
+        const email          = document.getElementById('drEmail').value.trim();
+        const specialization = document.getElementById('drSpecialization').value;
+        const password       = document.getElementById('drPassword').value;
+        const phone          = regionCode + phoneRaw;
+
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting…'; }
+
+        try {
+          const result = await AuthAPI.registerDoctor({
+            fullName, email, password, phoneNumber: phone, specialization
+          });
+
+          // Doctor cannot log in until HR approves — show pending screen
+          doctorRegForm.closest('.form-container').innerHTML = `
+            <div style="text-align:center; padding: 40px 0;">
+              <div style="width:72px;height:72px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
+                <i class="ph-fill ph-clock" style="font-size:2rem;color:#059669;"></i>
+              </div>
+              <h2 style="font-size:1.75rem;font-weight:700;margin-bottom:12px;">Application Submitted!</h2>
+              <p style="color:#6b7280;line-height:1.6;margin-bottom:8px;">
+                Welcome, <strong>${result.fullName}</strong>. Your credentials are under HR review.
+              </p>
+              <p style="color:#6b7280;line-height:1.6;margin-bottom:32px;">
+                Status: <span style="background:#d1fae5;color:#059669;padding:2px 10px;border-radius:20px;font-weight:600;">Pending Approval</span>
+              </p>
+              <p style="font-size:0.875rem;color:#9ca3af;">You will receive confirmation once HR approves your account. Approval typically takes 24–48 hours.</p>
+              <a href="index.html" style="display:inline-block;margin-top:28px;padding:12px 32px;background:var(--color-primary);color:white;border-radius:8px;text-decoration:none;font-weight:600;">Back to Login</a>
+            </div>
+          `;
+        } catch (err) {
+          showToast(err.message || 'Registration failed. Please try again.', 'error');
+          if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = originalText; }
+        }
       });
     }
   </script>

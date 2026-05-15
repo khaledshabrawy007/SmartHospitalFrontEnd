@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="api.js"></script>
   <style>
     /* ── Toast Notification ─────────────────────────────── */
     .toast-container {
@@ -195,13 +196,16 @@
         <h2>Rate Practitioner</h2>
         <p>Your feedback improves our clinical standards.</p>
       </div>
-      <div id="starContainer" style="display:flex; gap:12px; font-size:2rem; color:#e2e8f0; margin-bottom: 24px; cursor:pointer; justify-content:center;">
+      <div id="starContainer" style="display:flex; gap:12px; font-size:2rem; color:#e2e8f0; margin-bottom:12px; cursor:pointer; justify-content:center;">
         <i class="ph-fill ph-star" data-val="1"></i>
         <i class="ph-fill ph-star" data-val="2"></i>
         <i class="ph-fill ph-star" data-val="3"></i>
         <i class="ph-fill ph-star" data-val="4"></i>
         <i class="ph-fill ph-star" data-val="5"></i>
       </div>
+      <div id="ratingStarLabel" style="text-align:center;font-size:0.85rem;color:var(--color-text-muted);margin-bottom:20px;">Tap a star to rate</div>
+      <textarea id="ratingCommentField" placeholder="Leave a comment (optional)" rows="3"
+        style="width:100%;padding:10px 14px;background:var(--color-bg-light);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--color-text-dark);font-size:0.92rem;resize:none;box-sizing:border-box;margin-bottom:24px;"></textarea>
       <div class="modal-actions">
         <button class="btn btn-outline" onclick="closeModal('ratingModal')">Cancel</button>
         <button class="btn btn-primary" id="submitRatingBtn">Submit Feedback</button>
@@ -215,13 +219,10 @@
       <button class="modal-close" onclick="closeModal('reportModal')"><i class="ph ph-x"></i></button>
       <div class="modal-header">
         <h2 id="reportTitle">Medical Report</h2>
-        <p id="reportMeta">Loading details...</p>
+        <p id="reportMeta" style="color:var(--color-primary);font-size:0.88rem;"></p>
       </div>
-      <div style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6;">
-        <strong>Clinical Notes:</strong><br>
-        Patient exhibits standard recovery velocity. Vitals are strictly nominal. Recommended continuation of current therapeutic roadmap with follow-up as scheduled.<br><br>
-        <strong>Prescription:</strong> None indicated.<br>
-        <strong>Next Steps:</strong> Monitor and report any anomalous symptoms.
+      <div id="reportBody" style="background:var(--color-bg-light); padding:20px; border-radius:8px; font-size:0.95rem; margin-bottom:24px; color:var(--color-text-dark); line-height:1.6;">
+        <div style="text-align:center;color:var(--color-text-muted);">Loading report…</div>
       </div>
       <div class="modal-actions">
         <button class="btn btn-primary" onclick="closeModal('reportModal')">Close Report</button>
@@ -246,47 +247,38 @@
   </div>
 
   <script>
-    let internalAppointments = [];
+    let allAppointments = [];
+    let ratedMap        = {}; // appointmentID → ratingValue (already submitted)
     let currentActiveTab = 'Scheduled';
+    let activeCancelId  = null;
+    let activeRatingId  = null;
+    let activeDoctorId  = null;
+    let selectedStarVal = 0;
 
-    const mockPastBookings = [
-      { id: 'APT-112', doctorName: 'Dr. Eleanor Vance', doctorDept: 'Radiology', date: 'Apr 03, 2026', time: '09:30 AM', status: 'Completed', rating: 5, actionDate: 'Apr 05' },
-      { id: 'APT-098', doctorName: 'Dr. Julian Thorne', doctorDept: 'Internal Medicine', date: 'Apr 07, 2026', time: '11:15 AM', status: 'Completed', rating: null },
-      { id: 'APT-070', doctorName: 'Dr. Sarah Chen', doctorDept: 'Ophthalmology', date: 'Apr 05, 2026', time: '', status: 'Cancelled', actionDate: 'Apr 05' }
-    ];
+    document.addEventListener('DOMContentLoaded', async () => {
+      const session = getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
 
-    document.addEventListener("DOMContentLoaded", () => {
-      // Init missing DB state
-      let upcomingBookings = JSON.parse(localStorage.getItem("upcomingBookings") || "[]");
-      let storedPastBookings = JSON.parse(localStorage.getItem("pastBookings"));
-      
-      // Force update mock data if old 2023 records are detected in cache
-      if (!storedPastBookings || JSON.stringify(storedPastBookings).includes("2023")) {
-        localStorage.setItem("pastBookings", JSON.stringify(mockPastBookings));
-        storedPastBookings = mockPastBookings;
+      // Load appointments + existing ratings in parallel
+      try {
+        const [appts, ratings] = await Promise.all([
+          AppointmentsAPI.getByPatient(session.roleSpecificId),
+          RatingsAPI.getByPatient(session.roleSpecificId)
+        ]);
+        allAppointments = appts;
+        ratings.forEach(r => { ratedMap[r.appointmentID] = r.ratingValue; });
+      } catch (err) {
+        showToast('Could not load appointment history.', 'error');
+        console.error(err);
       }
-      
-      // Migrate explicitly 'Cancelled' upcomingBookings into pastBookings to maintain state safely
-      const validUpcoming = [];
-      upcomingBookings.forEach(apt => {
-        if (apt.status === "Cancelled") {
-          storedPastBookings.push({...apt, actionDate: 'Today'});
-        } else {
-          validUpcoming.push(apt);
-        }
-      });
-      localStorage.setItem("upcomingBookings", JSON.stringify(validUpcoming));
-      localStorage.setItem("pastBookings", JSON.stringify(storedPastBookings));
-      
-      internalAppointments = [...validUpcoming, ...storedPastBookings];
 
-      // Bind Tabs
-      const tabs = document.querySelectorAll(".history-tab");
+      // Bind tabs
+      const tabs = document.querySelectorAll('.history-tab');
       tabs.forEach(tab => {
-        tab.addEventListener("click", () => {
-          tabs.forEach(t => t.classList.remove("active"));
-          tab.classList.add("active");
-          currentActiveTab = tab.textContent;
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          currentActiveTab = tab.textContent.trim();
           renderList();
         });
       });
@@ -296,117 +288,87 @@
     });
 
     function renderList() {
-      const list = document.getElementById("historyList");
-      list.innerHTML = "";
+      const list = document.getElementById('historyList');
+      list.innerHTML = '';
 
-      const filtered = internalAppointments.filter(apt => 
-        apt.status === currentActiveTab || (currentActiveTab === 'Scheduled' && apt.status === 'Confirmed')
-      );
+      // Map tab label to backend status value
+      const statusMap = { 'Scheduled': 'Scheduled', 'Completed': 'Completed', 'Cancelled': 'Cancelled' };
+      const targetStatus = statusMap[currentActiveTab] || currentActiveTab;
+      const filtered = allAppointments.filter(a => a.status === targetStatus);
 
       if (filtered.length === 0) {
-        list.innerHTML = `
-          <div style="padding:40px; text-align:center; color:var(--color-text-muted);">
-            <i class="ph ph-folder-open" style="font-size:3rem; margin-bottom:12px; opacity:0.5;"></i>
-            <p>No ${currentActiveTab.toLowerCase()} appointments found.</p>
-          </div>
-        `;
+        list.innerHTML = `<div style="padding:40px;text-align:center;color:var(--color-text-muted);"><i class="ph ph-folder-open" style="font-size:3rem;margin-bottom:12px;opacity:0.5;"></i><p>No ${currentActiveTab.toLowerCase()} appointments found.</p></div>`;
         return;
       }
 
-      filtered.forEach(apt => {
-        const card = document.createElement("div");
-        card.className = "history-card";
-        
-        // Define UI configurations based on status
-        let iconClass = "blue";
-        let iconHtml = '<i class="ph-fill ph-calendar-check"></i>';
-        let badgeHtml = '<div class="status-badge scheduled">SCHEDULED</div>';
-        
-        if(apt.status === 'Completed') {
-          iconClass = "green";
-          iconHtml = '<i class="ph-fill ph-bandaids"></i>';
-          badgeHtml = '<div class="status-badge" style="background-color: var(--color-primary-light); color: white;">COMPLETED</div>';
-        } else if(apt.status === 'Cancelled') {
-          iconClass = "red";
-          iconHtml = '<i class="ph-fill ph-calendar-x"></i>';
-          badgeHtml = '<div class="status-badge" style="background-color: #fee2e2; color: #dc2626;">CANCELLED</div>';
-        }
+      filtered.forEach(appt => {
+        const card = document.createElement('div');
+        card.className = 'history-card';
+        const dateStr = formatDateTime(appt.appointmentDate);
+        const isScheduled = appt.status === 'Scheduled';
+        const isCompleted = appt.status === 'Completed';
+        const isCancelled = appt.status === 'Cancelled';
+        const isRated     = ratedMap[appt.appointmentID] !== undefined;
 
-        // Top Section
+        let iconClass = isScheduled ? 'blue' : isCompleted ? 'green' : 'red';
+        let iconHtml  = isScheduled ? '<i class="ph-fill ph-calendar-check"></i>'
+                      : isCompleted ? '<i class="ph-fill ph-bandaids"></i>'
+                      : '<i class="ph-fill ph-calendar-x"></i>';
+        let badgeHtml = isScheduled ? '<div class="status-badge scheduled">SCHEDULED</div>'
+                      : isCompleted ? '<div class="status-badge" style="background:var(--color-primary-light);color:white;">COMPLETED</div>'
+                      : '<div class="status-badge" style="background:#fee2e2;color:#dc2626;">CANCELLED</div>';
+
         let topHtml = `
-          <div class="history-card-top" ${apt.status === 'Completed' && !apt.rating ? 'style="margin-bottom:0;"' : ''}>
+          <div class="history-card-top">
             <div class="history-card-left">
-              <div class="history-icon ${iconClass}">
-                ${iconHtml}
-              </div>
+              <div class="history-icon ${iconClass}">${iconHtml}</div>
               <div class="history-details">
                 <h4>Consultation</h4>
-                <p>${apt.doctorName} • ${apt.doctorDept}</p>
-                <div class="history-time">
-                  <span><i class="ph ph-calendar-blank"></i> ${apt.date}</span>
-                  ${apt.time ? `<span><i class="ph ph-clock"></i> ${apt.time}</span>` : ''}
-                </div>
+                <p>${appt.doctorName || 'Doctor'} &bull; ${appt.doctorSpecialization || ''}</p>
+                <div class="history-time"><span><i class="ph ph-calendar-blank"></i> ${dateStr}</span></div>
               </div>
             </div>
             <div class="history-card-right">
               ${badgeHtml}
-              ${apt.status === 'Completed' ? `<a href="#" class="link-action" style="margin-top:8px;" onclick="openReport('${apt.doctorName}', '${apt.date}')">View Report <i class="ph ph-arrow-square-out"></i></a>` : ''}
+              ${isCompleted ? `<a href="#" class="link-action" style="margin-top:8px;" onclick="viewReport(${appt.appointmentID}, event)">View Report <i class="ph ph-arrow-square-out"></i></a>` : ''}
             </div>
-          </div>
-        `;
+          </div>`;
 
-        // Bottom Section
-        let bottomHtml = "";
-        if (apt.status === 'Scheduled' || apt.status === 'Confirmed') {
+        let bottomHtml = '';
+        if (isScheduled) {
           bottomHtml = `
             <div class="history-card-bottom">
               <div></div>
               <div class="button-group">
-                <button class="btn btn-outline" style="color: #dc2626; border-color: #fca5a5; padding: 10px 24px;" onclick="cancelAppointment('${apt.id}')">Cancel Appointment</button>
-                <button class="btn btn-outline" style="color: var(--color-primary); border-color: var(--color-primary); padding: 10px 24px;" onclick="rescheduleAppointment('${apt.doctorName}', '${apt.doctorDept}')">Reschedule</button>
+                <button class="btn btn-outline" style="color:#dc2626;border-color:#fca5a5;padding:10px 24px;" onclick="cancelAppointment(${appt.appointmentID})">Cancel Appointment</button>
               </div>
-            </div>
-          `;
-        } else if (apt.status === 'Completed') {
-          if (apt.rating) {
-            let stars = '';
-            for(let i=0; i<5; i++){
-              stars += `<i class="ph-fill ph-star" style="color:${i < apt.rating ? '#fbbf24' : '#e2e8f0'}"></i>`;
-            }
+            </div>`;
+        } else if (isCompleted) {
+          if (isRated) {
+            const stars = '&#9733;'.repeat(ratedMap[appt.appointmentID]) + '&#9734;'.repeat(5 - ratedMap[appt.appointmentID]);
             bottomHtml = `
-              <div class="history-card-bottom">
-                <div style="font-size:0.75rem; font-weight:700; color:var(--color-text-muted); display:flex; gap:12px; align-items:center;">
-                  FEEDBACK: 
-                  <div class="rating-stars">${stars}</div>
+              <div class="history-card-bottom rating-box">
+                <div style="display:flex;gap:16px;align-items:center;">
+                  <i class="ph-fill ph-star" style="color:#fbbf24;font-size:1.5rem;"></i>
+                  <div><h5 style="font-size:0.9rem;font-weight:700;">Rated!</h5><p style="color:#fbbf24;font-size:1.1rem;letter-spacing:2px;">${stars}</p></div>
                 </div>
-                <div style="font-size:0.75rem; color:var(--color-text-muted); font-style:italic;">
-                  Submitted ${apt.actionDate || 'recently'}
-                </div>
-              </div>
-            `;
+                <span style="color:var(--color-text-muted);font-size:0.8rem;">Thank you for your feedback</span>
+              </div>`;
           } else {
             bottomHtml = `
               <div class="history-card-bottom rating-box">
-                <div style="display:flex; gap:16px; align-items:center;">
-                  <i class="ph-fill ph-chat-circle-text" style="color:#fbbf24; font-size:1.5rem;"></i>
-                  <div>
-                    <h5 style="font-size:0.9rem; font-weight:700;">How was your visit?</h5>
-                    <p style="font-size:0.8rem; color:var(--color-text-muted);">Rate your experience</p>
-                  </div>
+                <div style="display:flex;gap:16px;align-items:center;">
+                  <i class="ph-fill ph-chat-circle-text" style="color:#fbbf24;font-size:1.5rem;"></i>
+                  <div><h5 style="font-size:0.9rem;font-weight:700;">How was your visit?</h5><p style="font-size:0.8rem;color:var(--color-text-muted);">Rate your experience</p></div>
                 </div>
-                <button class="btn btn-dark" onclick="openRatingModal('${apt.id}')">Rate Appointment</button>
-              </div>
-            `;
+                <button class="btn btn-dark" onclick="openRatingModal(${appt.appointmentID}, ${appt.doctorID})">Rate Appointment</button>
+              </div>`;
           }
-        } else if (apt.status === 'Cancelled') {
+        } else {
           bottomHtml = `
             <div class="history-card-bottom">
-              <div style="font-size:0.75rem; color:var(--color-text-muted); font-style:italic;">
-                Cancelled on ${apt.actionDate || 'Today'}
-              </div>
-              <button class="btn btn-outline" style="padding: 10px 24px;" onclick="rescheduleAppointment('${apt.doctorName}', '${apt.doctorDept}')">Rebook</button>
-            </div>
-          `;
+              <div style="font-size:0.75rem;color:var(--color-text-muted);font-style:italic;">Cancelled</div>
+            </div>`;
         }
 
         card.innerHTML = topHtml + bottomHtml;
@@ -414,137 +376,100 @@
       });
     }
 
-    let activeCancelId = null;
-
+    // Cancel via API
     function cancelAppointment(id) {
-       activeCancelId = id;
-       document.getElementById('cancelModal').style.display = 'flex';
+      activeCancelId = id;
+      document.getElementById('cancelModal').style.display = 'flex';
     }
 
-    function executeCancellation() {
-      if(!activeCancelId) return;
-
-      // Update global DB in memory
-      let target = internalAppointments.find(a => a.id === activeCancelId);
-      if(target) {
-        target.status = "Cancelled";
-        target.actionDate = "Today";
+    async function executeCancellation() {
+      if (!activeCancelId) return;
+      try {
+        await AppointmentsAPI.cancel(activeCancelId);
+        allAppointments = allAppointments.map(a =>
+          a.appointmentID === activeCancelId ? {...a, status: 'Cancelled'} : a
+        );
+        closeModal('cancelModal');
+        showToast('Your appointment has been cancelled successfully.', 'error', 'Appointment Cancelled');
+        renderList();
+      } catch (err) {
+        showToast(err.message || 'Could not cancel appointment.', 'error');
+        closeModal('cancelModal');
       }
-
-      // Sync local storage
-      let upcoming = JSON.parse(localStorage.getItem("upcomingBookings") || "[]");
-      const idx = upcoming.findIndex(u => u.id === activeCancelId);
-      if (idx > -1) {
-        upcoming[idx].status = "Cancelled";
-        localStorage.setItem("upcomingBookings", JSON.stringify(upcoming));
-      }
-
-      closeModal('cancelModal');
-      showToast('Your appointment has been cancelled successfully.', 'error', 'Appointment Cancelled');
-      renderList();
     }
 
-    function rescheduleAppointment(doctorName, doctorDept) {
-      // Usually passing query params or simple redirect.
-      // But we can store a pending request
-      localStorage.setItem("rescheduleRequest", JSON.stringify({ name: doctorName, dept: doctorDept }));
-      window.location.href = "book-appointment.html";
-    }
-
-    // Modal Operations
-    let activeRatingId = null;
-    let selectedStarVal = 0;
-
-    function openRatingModal(id) {
-      activeRatingId = id;
+    // Rating modal
+    function openRatingModal(apptId, doctorId) {
+      activeRatingId  = apptId;
+      activeDoctorId  = doctorId;
       selectedStarVal = 0;
       updateStarsUI(0);
+      document.getElementById('ratingCommentField').value = '';
+      document.getElementById('ratingStarLabel').textContent = 'Tap a star to rate';
       document.getElementById('ratingModal').style.display = 'flex';
     }
 
-    function openReport(docName, dateVal) {
-      document.getElementById('reportTitle').textContent = docName + " - Assessment";
-      document.getElementById('reportMeta').textContent = "Conducted on " + dateVal;
+    // View Report — fetches from API
+    async function viewReport(appointmentId, e) {
+      e.preventDefault();
       document.getElementById('reportModal').style.display = 'flex';
+      document.getElementById('reportTitle').textContent = 'Medical Report';
+      document.getElementById('reportMeta').textContent  = 'Loading…';
+      document.getElementById('reportBody').innerHTML    = '<div style="padding:20px;text-align:center;color:var(--color-text-muted);">Loading report…</div>';
+      try {
+        const r = await apiFetch(`/api/appointments/${appointmentId}/report`);
+        document.getElementById('reportTitle').textContent = (r.doctorName ? `Dr. ${r.doctorName}` : 'Doctor') + ' — Report';
+        document.getElementById('reportMeta').textContent  = r.date ? formatDate(r.date) : '';
+        document.getElementById('reportBody').innerHTML = `
+          <div style="margin-bottom:14px;"><strong>Clinical Notes</strong><p style="margin:4px 0 0;">${r.diagnosis || '—'}</p></div>
+          <div style="margin-bottom:14px;"><strong>Prescription</strong><p style="margin:4px 0 0;">${r.treatment || 'None indicated'}</p></div>
+          <div><strong>Next Steps / Follow-up</strong><p style="margin:4px 0 0;">${r.notes || '—'}</p></div>`;
+      } catch(err) {
+        document.getElementById('reportBody').innerHTML = `<div style="color:#dc2626;">${err.message === 'HTTP 404' ? 'No report has been submitted for this appointment yet.' : err.message}</div>`;
+      }
     }
 
     function closeModal(id) {
       document.getElementById(id).style.display = 'none';
-      if(id === 'ratingModal') { activeRatingId = null; }
+      if (id === 'ratingModal') { activeRatingId = null; activeDoctorId = null; }
     }
 
     function bindRatingModal() {
-      const stars = document.querySelectorAll("#starContainer .ph-star");
+      const stars = document.querySelectorAll('#starContainer [data-val]');
       stars.forEach(star => {
-        star.addEventListener("click", () => {
-          selectedStarVal = parseInt(star.getAttribute("data-val"));
+        star.addEventListener('mouseover', () => updateStarsUI(parseInt(star.getAttribute('data-val'))));
+        star.addEventListener('mouseout',  () => updateStarsUI(selectedStarVal));
+        star.addEventListener('click', () => {
+          selectedStarVal = parseInt(star.getAttribute('data-val'));
           updateStarsUI(selectedStarVal);
+          const labels = ['','Poor','Fair','Good','Very Good','Excellent'];
+          document.getElementById('ratingStarLabel').textContent = labels[selectedStarVal];
         });
       });
-
-      document.getElementById("submitRatingBtn").addEventListener("click", () => {
-        if(selectedStarVal === 0) {
-          showToast('Please select a star rating before submitting.', 'warning', 'No Rating Selected');
-          return;
+      document.getElementById('submitRatingBtn').addEventListener('click', async () => {
+        if (selectedStarVal === 0) { showToast('Please select a star rating.', 'warning'); return; }
+        const btn = document.getElementById('submitRatingBtn');
+        btn.disabled = true; btn.textContent = 'Submitting…';
+        try {
+          const comment = document.getElementById('ratingCommentField').value.trim();
+          await RatingsAPI.create({ doctorID: activeDoctorId, ratingValue: selectedStarVal, comments: comment || null });
+          ratedMap[activeRatingId] = selectedStarVal;
+          closeModal('ratingModal');
+          showToast(`Thank you! Your ${selectedStarVal}-star feedback has been submitted.`, 'success');
+          renderList();
+        } catch(err) {
+          showToast(err.message || 'Could not submit rating.', 'error');
+        } finally {
+          btn.disabled = false; btn.textContent = 'Submit Feedback';
         }
-        
-        let target = internalAppointments.find(a => a.id === activeRatingId);
-        if(target) {
-          target.rating = selectedStarVal;
-          target.actionDate = "Today";
-        }
-
-        // Sync local storage pastBookings
-        let past = JSON.parse(localStorage.getItem("pastBookings") || "[]");
-        const idx = past.findIndex(p => p.id === activeRatingId);
-        if(idx > -1) {
-          past[idx].rating = selectedStarVal;
-          past[idx].actionDate = "Today";
-          localStorage.setItem("pastBookings", JSON.stringify(past));
-        }
-
-        closeModal('ratingModal');
-        showToast(`Thank you! Your ${selectedStarVal}-star feedback has been submitted.`, 'success', 'Feedback Submitted');
-        renderList();
       });
     }
 
     function updateStarsUI(val) {
-      const stars = document.querySelectorAll("#starContainer .ph-star");
-      stars.forEach(s => {
-        if (parseInt(s.getAttribute("data-val")) <= val) {
-          s.style.color = "#fbbf24";
-        } else {
-          s.style.color = "#e2e8f0";
-        }
+      document.querySelectorAll('#starContainer [data-val]').forEach(s => {
+        s.style.color = parseInt(s.getAttribute('data-val')) <= val ? '#fbbf24' : '#e2e8f0';
       });
     }
-
-    // ── Toast System ──────────────────────────────────────
-    function showToast(message, type = 'success', title) {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast toast-${type}`;
-      const icons = { success: 'ph-fill ph-check-circle', error: 'ph-fill ph-x-circle', warning: 'ph-fill ph-warning' };
-      const titles = { success: title || 'Success', error: title || 'Error', warning: title || 'Warning' };
-      toast.innerHTML = `
-        <div class="toast-icon"><i class="${icons[type]}"></i></div>
-        <div class="toast-body">
-          <div class="toast-title">${titles[type]}</div>
-          <div class="toast-msg">${message}</div>
-        </div>
-        <button class="toast-close" onclick="dismissToast(this)"><i class="ph ph-x"></i></button>
-        <div class="toast-progress"><div class="toast-progress-bar"></div></div>
-      `;
-      container.appendChild(toast);
-      setTimeout(() => { if (toast.parentNode) { toast.classList.add('toast-hide'); setTimeout(() => toast.remove(), 400); } }, 4000);
-    }
-    function dismissToast(btn) {
-      const toast = btn.closest('.toast');
-      toast.classList.add('toast-hide');
-      setTimeout(() => toast.remove(), 400);
-    }
-
   </script>
   <!-- Toast Container -->
   <div class="toast-container" id="toastContainer"></div>

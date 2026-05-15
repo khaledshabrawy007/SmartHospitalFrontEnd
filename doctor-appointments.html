@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="api.js"></script>
   <style>
     /* Card enhancements */
     .dr-appt-card {
@@ -441,11 +442,11 @@
       </a>
       
       <div class="nav-menu">
-        <a href="doctor-patients.html" class="nav-item">
-          <i class="ph ph-user"></i> Patients
-        </a>
         <a href="doctor-appointments.html" class="nav-item active">
           <i class="ph-fill ph-calendar-blank"></i> Appointments
+        </a>
+        <a href="doctor-patients.html" class="nav-item">
+          <i class="ph ph-user"></i> Patients
         </a>
         <a href="doctor-risk-assessment.html" class="nav-item">
           <i class="ph ph-chart-line-up"></i> Risk Assessment
@@ -477,7 +478,7 @@
     <div class="main-content">
       <div class="dr-toolbar" style="margin-bottom: 24px;">
         <div class="header-title">
-          <h1>My Appointments</h1>
+          <h1 id="drWelcomeHeader">Welcome back, Doctor.</h1>
           <p>Manage your clinical schedule and patient records.</p>
         </div>
       </div>
@@ -612,197 +613,97 @@
   </div>
   <script src="auth-session.js"></script>
   <script>
-    // ── Mock Appointment Data ──────────────────────────────────
-    const appointments = [
-      {
-        id: 1,
-        name: "Johnathan Doe",
-        initials: "JD",
-        patientId: "ID-29481",
-        date: "2026-04-14",
-        time: "10:30 AM",
-        notes: "Routine follow-up for chronic hypertension. Patient reports mild dizziness over the past week.",
-        status: "Upcoming",
-        initialsBg: "in-blue"
-      },
-      {
-        id: 2,
-        name: "Sarah Richardson",
-        initials: "SR",
-        patientId: "ID-30112",
-        date: "2026-04-14",
-        time: "11:45 AM",
-        notes: "Initial consultation for persistent back pain. Needs mobility assessment and imaging referral.",
-        status: "Upcoming",
-        initialsBg: "in-teal"
-      },
-      {
-        id: 3,
-        name: "Marcus Kane",
-        initials: "MK",
-        patientId: "ID-22894",
-        date: "2026-04-14",
-        time: "02:15 PM",
-        notes: "Review lab results for Vitamin D deficiency and prescribe treatment plan accordingly.",
-        status: "Upcoming",
-        initialsBg: "in-gray"
-      },
-      {
-        id: 4,
-        name: "Emily Watson",
-        initials: "EW",
-        patientId: "ID-31087",
-        date: "2026-04-15",
-        time: "09:00 AM",
-        notes: "Post-operative wound check following appendectomy. Assess healing and remove stitches if ready.",
-        status: "Upcoming",
-        initialsBg: "in-teal"
-      },
-      {
-        id: 5,
-        name: "David Nguyen",
-        initials: "DN",
-        patientId: "ID-28456",
-        date: "2026-04-15",
-        time: "01:30 PM",
-        notes: "6-month diabetic management review. Evaluate HbA1c levels and adjust medication if needed.",
-        status: "Upcoming",
-        initialsBg: "in-blue"
-      },
-      {
-        id: 6,
-        name: "Olivia Chen",
-        initials: "OC",
-        patientId: "ID-27103",
-        date: "2026-04-11",
-        time: "10:00 AM",
-        notes: "Annual physical examination completed. All vitals within normal range. Flu vaccine administered.",
-        status: "Completed",
-        initialsBg: "in-teal"
-      },
-      {
-        id: 7,
-        name: "Robert Park",
-        initials: "RP",
-        patientId: "ID-25890",
-        date: "2026-04-11",
-        time: "11:30 AM",
-        notes: "Asthma management session. Inhaler technique reviewed and new prescription issued.",
-        status: "Completed",
-        initialsBg: "in-gray"
-      },
-      {
-        id: 8,
-        name: "Lisa Martinez",
-        initials: "LM",
-        patientId: "ID-29034",
-        date: "2026-04-10",
-        time: "03:00 PM",
-        notes: "Dermatology referral consultation for eczema flare-up. Topical steroid prescribed.",
-        status: "Completed",
-        initialsBg: "in-blue"
-      },
-      {
-        id: 9,
-        name: "Ahmad Hassan",
-        initials: "AH",
-        patientId: "ID-26721",
-        date: "2026-04-12",
-        time: "09:30 AM",
-        notes: "Patient requested cancellation due to travel conflict. Rescheduled for next week.",
-        status: "Cancelled",
-        initialsBg: "in-gray"
-      },
-      {
-        id: 10,
-        name: "Karen Thompson",
-        initials: "KT",
-        patientId: "ID-30455",
-        date: "2026-04-13",
-        time: "04:00 PM",
-        notes: "No-show appointment. Third missed visit – follow-up call required.",
-        status: "Cancelled",
-        initialsBg: "in-blue"
-      },
-      {
-        id: 11,
-        name: "James Wright",
-        initials: "JW",
-        patientId: "ID-31200",
-        date: "2026-04-16",
-        time: "10:00 AM",
-        notes: "Cardiology follow-up after stress test results. Evaluate exercise tolerance and medication adherence.",
-        status: "Upcoming",
-        initialsBg: "in-blue"
-      },
-      {
-        id: 12,
-        name: "Fatima Al-Rashid",
-        initials: "FA",
-        patientId: "ID-28999",
-        date: "2026-04-16",
-        time: "02:00 PM",
-        notes: "Prenatal check-up at 28 weeks. Blood glucose screening and fundal height measurement.",
-        status: "Upcoming",
-        initialsBg: "in-teal"
-      }
-    ];
-
     // ── State ──────────────────────────────────────────────────
-    let activeTab = "Upcoming";
-    let searchQuery = "";
-    let dateFilter = "all";
+    let appointments = [];
+    let activeTab    = 'Upcoming';
+    let searchQuery  = '';
+    let activeDateFilter = 'all';
+    let activeReportApptId = null;
+
+    const bgCols = ['in-blue','in-teal','in-gray'];
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const session = getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+
+      // Personalize welcome header
+      const fullName = session.fullName || 'Doctor';
+      const displayName = fullName.toLowerCase().startsWith('dr') ? fullName : 'Dr. ' + fullName;
+      const welcomeEl = document.getElementById('drWelcomeHeader');
+      if (welcomeEl) welcomeEl.textContent = `Welcome back, ${displayName}.`;
+
+      try {
+        const raw = await AppointmentsAPI.getByDoctor(session.roleSpecificId);
+        // Normalize status: backend uses 'Scheduled' but UI uses 'Upcoming'
+        appointments = raw.map(a => ({
+          ...a,
+          id: a.appointmentID,
+          name: a.patientName || 'Patient',
+          patientId: 'P-' + a.patientID,
+          date: a.appointmentDate ? a.appointmentDate.split('T')[0] : '',
+          time: a.appointmentDate ? new Date(a.appointmentDate).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'}) : '',
+          status: a.status === 'Scheduled' ? 'Upcoming' : a.status,
+          notes: a.reason || '',
+          initialsBg: bgCols[a.appointmentID % 3]
+        }));
+        populateDateFilter();
+        updateTabCounts();
+        updateWeeklySummary();
+        render();
+      } catch (err) {
+        console.error(err);
+        showToast('Could not load appointments. Is the backend running?', 'error');
+      }
+    });
 
     // ── DOM References ─────────────────────────────────────────
-    const grid = document.getElementById("apptGrid");
-    const searchInput = document.getElementById("searchInput");
-    const dateSelect = document.getElementById("dateFilter");
-    const tabs = document.querySelectorAll(".history-tab");
-    const resultsInfo = document.getElementById("resultsInfo");
+    const grid        = document.getElementById('apptGrid');
+    const searchInput = document.getElementById('searchInput');
+    const dateSelect  = document.getElementById('dateFilter');
+    const tabs        = document.querySelectorAll('.history-tab');
+    const resultsInfo = document.getElementById('resultsInfo');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        activeTab = tab.dataset.tab;
+        render();
+      });
+    });
+    searchInput.addEventListener('input', () => { searchQuery = searchInput.value; render(); });
+    dateSelect.addEventListener('change', () => { activeDateFilter = dateSelect.value; render(); });
 
     // ── Helpers ────────────────────────────────────────────────
     function formatDate(dateStr) {
-      const d = new Date(dateStr + "T00:00:00");
-      const options = { weekday: 'short', month: 'short', day: 'numeric' };
-      return d.toLocaleDateString('en-US', options);
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     }
 
     function formatDateLabel(dateStr) {
-      const d = new Date(dateStr + "T00:00:00");
-      const options = { month: 'short', day: 'numeric', year: 'numeric' };
-      return d.toLocaleDateString('en-US', options);
+      if (!dateStr) return '';
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    function getInitials(name) {
+      const parts = name.split(' ').filter(p => p.length > 0);
+      return (parts[0]?.[0] || '') + (parts[1]?.[0] || '');
     }
 
     function getStatusTagHTML(status) {
-      const cls = {
-        Upcoming: "status-scheduled",
-        Completed: "status-completed",
-        Cancelled: "status-cancelled"
-      };
-      const label = {
-        Upcoming: "SCHEDULED",
-        Completed: "COMPLETED",
-        Cancelled: "CANCELLED"
-      };
-      return `<span class="status-tag ${cls[status]}">${label[status]}</span>`;
+      const cls = { Upcoming:'status-scheduled', Completed:'status-completed', Cancelled:'status-cancelled' };
+      const label = { Upcoming:'SCHEDULED', Completed:'COMPLETED', Cancelled:'CANCELLED' };
+      return `<span class="status-tag ${cls[status] || ''}">${label[status] || status.toUpperCase()}</span>`;
     }
 
     function getButtonHTML(appt) {
-      const viewReportBtn = appt.report
-        ? `<button class="btn btn-view-report btn-full" onclick="viewReport(${appt.id})">
-            <i class="ph ph-file-text"></i> View Report
-          </button>`
-        : '';
-
-      if (appt.status === "Completed") {
-        return `<button class="btn btn-completed btn-full">
-          <i class="ph-fill ph-check-circle"></i> Completed
-        </button>${viewReportBtn}`;
+      if (appt.status === 'Completed') {
+        return `<button class="btn btn-completed btn-full"><i class="ph-fill ph-check-circle"></i> Completed</button>`;
       }
-      if (appt.status === "Cancelled") {
-        return `<button class="btn btn-cancelled btn-full">
-          <i class="ph-fill ph-x-circle"></i> Cancelled
-        </button>${viewReportBtn}`;
+      if (appt.status === 'Cancelled') {
+        return `<button class="btn btn-cancelled btn-full"><i class="ph-fill ph-x-circle"></i> Cancelled</button>`;
       }
       return `<div class="card-btn-row">
         <button class="btn btn-neon btn-full" onclick="markCompleted(${appt.id})">
@@ -811,96 +712,55 @@
         <button class="btn btn-report btn-full" onclick="openReportModal(${appt.id})">
           <i class="ph ph-file-text"></i> Submit Report
         </button>
-      </div>${viewReportBtn}`;
+      </div>`;
     }
 
     function getCardClass(status) {
-      if (status === "Completed") return "dr-appt-card is-completed";
-      if (status === "Cancelled") return "dr-appt-card is-cancelled";
-      return "dr-appt-card";
+      if (status === 'Completed') return 'dr-appt-card is-completed';
+      if (status === 'Cancelled') return 'dr-appt-card is-cancelled';
+      return 'dr-appt-card';
     }
 
-    // ── Toast ──────────────────────────────────────────────────
-    function showToast(message, type = 'success', title) {
-      const container = document.getElementById("toastContainer");
-      const toast = document.createElement("div");
-      toast.className = `toast toast-${type}`;
-      const icons  = { success: 'ph-fill ph-check-circle', error: 'ph-fill ph-x-circle', warning: 'ph-fill ph-warning' };
-      const titles = { success: title || 'Success', error: title || 'Error', warning: title || 'Warning' };
-      toast.innerHTML = `
-        <div class="toast-icon"><i class="${icons[type]}"></i></div>
-        <div class="toast-body">
-          <div class="toast-title">${titles[type]}</div>
-          <div class="toast-msg">${message}</div>
-        </div>
-        <button class="toast-close" onclick="dismissToast(this)"><i class="ph ph-x"></i></button>
-        <div class="toast-progress"><div class="toast-progress-bar"></div></div>
-      `;
-      container.appendChild(toast);
-      setTimeout(() => {
-        if (toast.parentNode) { toast.classList.add("toast-hide"); setTimeout(() => toast.remove(), 400); }
-      }, 4000);
-    }
-    function dismissToast(btn) {
-      const toast = btn.closest('.toast');
-      toast.classList.add('toast-hide');
-      setTimeout(() => toast.remove(), 400);
-    }
-
-    // ── Populate Date Filter ───────────────────────────────────
     function populateDateFilter() {
-      const uniqueDates = [...new Set(appointments.map(a => a.date))].sort();
+      const uniqueDates = [...new Set(appointments.map(a => a.date).filter(Boolean))].sort();
       dateSelect.innerHTML = '<option value="all">All Dates</option>';
       uniqueDates.forEach(d => {
-        const opt = document.createElement("option");
+        const opt = document.createElement('option');
         opt.value = d;
         opt.textContent = formatDateLabel(d);
         dateSelect.appendChild(opt);
       });
     }
 
-    // ── Filter + Render ────────────────────────────────────────
     function getFiltered() {
       let result = appointments.filter(a => a.status === activeTab);
-
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
-        result = result.filter(a =>
-          a.name.toLowerCase().includes(q) ||
-          a.patientId.toLowerCase().includes(q)
-        );
+        result = result.filter(a => a.name.toLowerCase().includes(q) || a.patientId.toLowerCase().includes(q));
       }
-
-      if (dateFilter !== "all") {
-        result = result.filter(a => a.date === dateFilter);
+      if (activeDateFilter !== 'all') {
+        result = result.filter(a => a.date === activeDateFilter);
       }
-
-      // Sort by date then time
-      result.sort((a, b) => {
-        if (a.date !== b.date) return a.date.localeCompare(b.date);
-        return a.time.localeCompare(b.time);
-      });
-
+      result.sort((a, b) => a.date !== b.date ? a.date.localeCompare(b.date) : a.time.localeCompare(b.time));
       return result;
     }
 
     function updateTabCounts() {
-      document.getElementById("countUpcoming").textContent = appointments.filter(a => a.status === "Upcoming").length;
-      document.getElementById("countCompleted").textContent = appointments.filter(a => a.status === "Completed").length;
-      document.getElementById("countCancelled").textContent = appointments.filter(a => a.status === "Cancelled").length;
+      document.getElementById('countUpcoming').textContent  = appointments.filter(a => a.status === 'Upcoming').length;
+      document.getElementById('countCompleted').textContent = appointments.filter(a => a.status === 'Completed').length;
+      document.getElementById('countCancelled').textContent = appointments.filter(a => a.status === 'Cancelled').length;
     }
 
     function updateWeeklySummary() {
-      const total = appointments.length;
-      const completed = appointments.filter(a => a.status === "Completed").length;
-      const uniquePatients = new Set(appointments.map(a => a.name)).size;
-      const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
-      const upcoming = appointments.filter(a => a.status === "Upcoming").length;
-
-      document.getElementById("completionRate").textContent = rate + "%";
-      document.getElementById("totalPatients").textContent = uniquePatients;
-      document.getElementById("summaryText").innerHTML = 
-        `You have <b>${upcoming}</b> upcoming appointment${upcoming !== 1 ? 's' : ''} remaining this week. <b>${completed}</b> of <b>${total}</b> appointments completed so far.`;
+      const total    = appointments.length;
+      const completed = appointments.filter(a => a.status === 'Completed').length;
+      const upcoming  = appointments.filter(a => a.status === 'Upcoming').length;
+      const unique    = new Set(appointments.map(a => a.name)).size;
+      const rate      = total > 0 ? Math.round((completed / total) * 100) : 0;
+      document.getElementById('completionRate').textContent = rate + '%';
+      document.getElementById('totalPatients').textContent  = unique;
+      document.getElementById('summaryText').innerHTML =
+        `You have <b>${upcoming}</b> upcoming appointment${upcoming !== 1 ? 's' : ''} remaining. <b>${completed}</b> of <b>${total}</b> completed so far.`;
     }
 
     function render() {
@@ -908,192 +768,106 @@
       resultsInfo.textContent = `Showing ${filtered.length} ${activeTab.toLowerCase()} appointment${filtered.length !== 1 ? 's' : ''}`;
 
       if (filtered.length === 0) {
-        const emptyIcons = {
-          Upcoming: "ph-calendar-blank",
-          Completed: "ph-check-circle",
-          Cancelled: "ph-x-circle"
-        };
-        const emptyMsgs = {
-          Upcoming: "No upcoming appointments found.",
-          Completed: "No completed appointments yet.",
-          Cancelled: "No cancelled appointments."
-        };
-        grid.innerHTML = `
-          <div class="empty-state">
-            <div class="empty-state-icon"><i class="ph ${emptyIcons[activeTab]}"></i></div>
-            <h3>${emptyMsgs[activeTab]}</h3>
-            <p>Try adjusting your search or date filter.</p>
-          </div>`;
+        const icons = { Upcoming:'ph-calendar-blank', Completed:'ph-check-circle', Cancelled:'ph-x-circle' };
+        grid.innerHTML = `<div class="empty-state"><div class="empty-state-icon"><i class="ph ${icons[activeTab] || 'ph-calendar-blank'}"></i></div><h3>No ${activeTab} appointments</h3><p>Adjust your filters or check back later.</p></div>`;
         return;
       }
 
-      grid.innerHTML = filtered.map((appt, i) => `
-        <div class="${getCardClass(appt.status)}" style="animation-delay: ${i * 0.06}s" id="card-${appt.id}">
+      grid.innerHTML = '';
+      filtered.forEach(appt => {
+        const card = document.createElement('div');
+        card.className = getCardClass(appt.status);
+        const initials = getInitials(appt.name);
+        card.innerHTML = `
           <div class="appt-top">
-            <div class="initials ${appt.initialsBg}">${appt.initials}</div>
+            <div class="initials ${appt.initialsBg}">${initials}</div>
             <div class="appt-name">
-              <h4 style="display:flex; justify-content:space-between; width:100%;">
-                ${appt.name} ${getStatusTagHTML(appt.status)}
-              </h4>
-              <p><i class="ph-fill ph-identification-card"></i> ${appt.patientId}</p>
+              <h4>${appt.name} ${getStatusTagHTML(appt.status)}</h4>
+              <p><i class="ph ph-identification-badge"></i> ${appt.patientId}</p>
             </div>
           </div>
-          
           <div class="appt-time">
-            <i class="ph-fill ph-clock" style="color:var(--color-primary);"></i> ${formatDate(appt.date)} • ${appt.time}
+            <i class="ph-fill ph-clock"></i>
+            ${formatDate(appt.date)} &bull; ${appt.time}
           </div>
-          
-          <div class="appt-summary">
-            ${appt.notes}
-          </div>
-          
+          <div class="appt-summary">${appt.notes || 'No notes provided.'}</div>
           ${getButtonHTML(appt)}
-        </div>
-      `).join("");
+        `;
+        grid.appendChild(card);
+      });
     }
 
-    // ── Mark as Completed ──────────────────────────────────────
-    function markCompleted(id) {
-      const appt = appointments.find(a => a.id === id);
-      if (!appt) return;
-
-      // Animate card out
-      const card = document.getElementById(`card-${id}`);
-      if (card) {
-        card.style.transition = "all 0.4s ease";
-        card.style.transform = "scale(0.95)";
-        card.style.opacity = "0";
-      }
-
-      setTimeout(() => {
-        appt.status = "Completed";
+    // ── Actions ────────────────────────────────────────────────
+    async function markCompleted(id) {
+      try {
+        await AppointmentsAPI.updateStatus(id, 'Completed');
+        const appt = appointments.find(a => a.id === id);
+        if (appt) appt.status = 'Completed';
         updateTabCounts();
         updateWeeklySummary();
         render();
-        showToast(`${appt.name}'s appointment has been marked as completed.`, 'success', 'Appointment Completed');
-      }, 400);
+        showToast('Appointment marked as completed.', 'success', 'Status Updated');
+      } catch (err) {
+        showToast(err.message || 'Could not update status.', 'error');
+      }
     }
 
-    // ── Report Modal Logic ─────────────────────────────────────
-    let currentReportApptId = null;
-
     function openReportModal(id) {
+      activeReportApptId = id;
       const appt = appointments.find(a => a.id === id);
-      if (!appt) return;
-      currentReportApptId = id;
-
-      // Set header
-      document.getElementById('reportModalTitle').textContent = `Dr. Alexander West - Assessment`;
-      const today = new Date();
-      const dateStr = today.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' });
-      document.getElementById('reportModalDate').textContent = `Conducted on ${dateStr} • Patient: ${appt.name}`;
-
-      // Pre-fill if report already exists
-      if (appt.report) {
-        document.getElementById('reportClinicalNotes').value = appt.report.clinicalNotes;
-        document.getElementById('reportPrescription').value = appt.report.prescription;
-        document.getElementById('reportNextSteps').value = appt.report.nextSteps;
-      } else {
-        document.getElementById('reportClinicalNotes').value = '';
-        document.getElementById('reportPrescription').value = '';
-        document.getElementById('reportNextSteps').value = '';
-      }
-
+      document.getElementById('reportModalTitle').textContent = (appt?.name || 'Patient') + ' - Medical Report';
+      document.getElementById('reportModalDate').textContent  = formatDate(appt?.date || '');
+      document.getElementById('reportClinicalNotes').value    = '';
+      document.getElementById('reportPrescription').value     = '';
+      document.getElementById('reportNextSteps').value        = '';
       document.getElementById('reportOverlay').classList.add('is-open');
     }
 
     function closeReportModal() {
       document.getElementById('reportOverlay').classList.remove('is-open');
-      currentReportApptId = null;
+      activeReportApptId = null;
     }
 
-    function submitReport() {
-      const clinicalNotes = document.getElementById('reportClinicalNotes').value.trim();
-      const prescription = document.getElementById('reportPrescription').value.trim();
-      const nextSteps = document.getElementById('reportNextSteps').value.trim();
+    async function submitReport() {
+      if (!activeReportApptId) return;
+      const notes = document.getElementById('reportClinicalNotes').value.trim();
+      const rx    = document.getElementById('reportPrescription').value.trim();
+      const next  = document.getElementById('reportNextSteps').value.trim();
 
-      if (!clinicalNotes) {
-      showToast('Please enter clinical notes before submitting.', 'warning', 'Missing Clinical Notes');
-        return;
-      }
+      if (!notes) { showToast('Clinical notes are required.', 'warning', 'Validation'); return; }
 
-      const appt = appointments.find(a => a.id === currentReportApptId);
-      if (!appt) return;
+      const appt = appointments.find(a => a.id === activeReportApptId);
+      const btn  = document.getElementById('submitReportBtn');
+      btn.disabled = true; btn.textContent = 'Saving...';
 
-      appt.report = {
-        clinicalNotes,
-        prescription: prescription || 'None indicated.',
-        nextSteps: nextSteps || 'No further action required.',
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
-      };
+      try {
+        // PUT /api/appointments/{id}/report  →  DoctorReportDto
+        await apiFetch(`/api/appointments/${activeReportApptId}/report`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            doctorNotes:  notes,
+            prescription: rx   || null,
+            followUpPlan: next || null,
+            approveDischarge: false
+          })
+        });
 
-      closeReportModal();
-      render();
-      showToast(`Report for ${appt.name} has been submitted successfully.`, 'success', 'Report Submitted');
-    }
-
-    function viewReport(id) {
-      const appt = appointments.find(a => a.id === id);
-      if (!appt || !appt.report) return;
-
-      document.getElementById('viewReportTitle').textContent = `Dr. Alexander West - Assessment`;
-      document.getElementById('viewReportDate').textContent = `Conducted on ${appt.report.date} • Patient: ${appt.name}`;
-
-      document.getElementById('viewReportContent').innerHTML = `
-        <div class="view-field">
-          <div class="view-label">Clinical Notes:</div>
-          <div class="view-value">${appt.report.clinicalNotes}</div>
-        </div>
-        <div class="view-field">
-          <div class="view-label">Prescription:</div>
-          <div class="view-value">${appt.report.prescription}</div>
-        </div>
-        <div class="view-field">
-          <div class="view-label">Next Steps:</div>
-          <div class="view-value">${appt.report.nextSteps}</div>
-        </div>
-      `;
-
-      document.getElementById('viewReportOverlay').classList.add('is-open');
-    }
-
-    function closeViewReport() {
-      document.getElementById('viewReportOverlay').classList.remove('is-open');
-    }
-
-    // Close modals on overlay click
-    document.getElementById('reportOverlay').addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) closeReportModal();
-    });
-    document.getElementById('viewReportOverlay').addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) closeViewReport();
-    });
-
-    // ── Event Listeners ────────────────────────────────────────
-    tabs.forEach(tab => {
-      tab.addEventListener("click", () => {
-        tabs.forEach(t => t.classList.remove("active"));
-        tab.classList.add("active");
-        activeTab = tab.dataset.tab;
+        if (appt) appt.status = 'Completed';
+        closeReportModal();
+        updateTabCounts();
+        updateWeeklySummary();
         render();
-      });
-    });
+        showToast('Medical report submitted successfully.', 'success', 'Report Saved');
+      } catch (err) {
+        showToast(err.message || 'Could not save report.', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Submit Report';
+      }
+    }
 
-    searchInput.addEventListener("input", (e) => {
-      searchQuery = e.target.value.trim();
-      render();
-    });
+    function closeViewReport() { document.getElementById('viewReportOverlay').classList.remove('is-open'); }
 
-    dateSelect.addEventListener("change", (e) => {
-      dateFilter = e.target.value;
-      render();
-    });
-
-    // ── Init ───────────────────────────────────────────────────
-    populateDateFilter();
-    updateTabCounts();
-    updateWeeklySummary();
-    render();
+    // Toast uses global showToast from api.js
   </script>
 </body>
 </html>

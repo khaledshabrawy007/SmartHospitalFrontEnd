@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="app.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="api.js"></script>
   <style>
     /* ── Toast Notification ────────────────────────── */
     .toast-container {
@@ -469,477 +470,254 @@
 
 <script src="auth-session.js"></script>
 <script>
-// ═══════════════════════════════════════════════════════
-// DATA — Ward definitions + beds
-// ═══════════════════════════════════════════════════════
-const WARDS = [
-  {
-    id: 'pediatrics',
-    name: 'Pediatrics',
-    location: 'North Pavilion, Level 1',
-    prefix: 'PED',
-    totalBeds: 20
-  },
-  {
-    id: 'icu',
-    name: 'ICU Block A',
-    location: 'West Wing, Level 3',
-    prefix: 'ICU-A',
-    totalBeds: 16
-  },
-  {
-    id: 'cardiology',
-    name: 'Cardiology Ward',
-    location: 'East Wing, Level 2',
-    prefix: 'CAR',
-    totalBeds: 18
-  },
-  {
-    id: 'emergency',
-    name: 'Emergency Room',
-    location: 'Ground Floor, South Entry',
-    prefix: 'ER',
-    totalBeds: 14
-  },
-  {
-    id: 'maternity',
-    name: 'Maternity & Obstetrics',
-    location: 'North Pavilion, Level 2',
-    prefix: 'MAT',
-    totalBeds: 16
-  },
-  {
-    id: 'surgery',
-    name: 'General Surgery',
-    location: 'Central Block, Level 4',
-    prefix: 'SUR',
-    totalBeds: 12
-  }
-];
+// ═══ STATE ═══════════════════════════════════════════════
+let allWards = [], currentBeds = [], currentWardObj = null;
+const state = { currentWardId: null, currentFilter: 'all' };
 
-// Generate beds for each ward with realistic seed data
-function generateBeds(ward) {
-  const beds = [];
-  const seedOccupied = {
-    pediatrics: [1,2,4,5,7,8,10,11,13,14,16,17,19],
-    icu:        [1,2,3,4,5,6,7,8,9,10,11,12,14],
-    cardiology: [1,2,3,5,6,8,9,11,12,14,15,17],
-    emergency:  [1,2,3,4,6,7,9,10],
-    maternity:  [1,2,3,4,5,6,8,9,11,12],
-    surgery:    [1,2,4,5,7,8,10]
-  }[ward.id] || [];
-
-  const seedMaintenance = {
-    pediatrics: [3,15],
-    icu:        [13],
-    cardiology: [7,16],
-    emergency:  [5],
-    maternity:  [7,13],
-    surgery:    [3,9]
-  }[ward.id] || [];
-
-  const samplePatients = [
-    { name: 'Lena Morrison',    id: 'PH-2024-1102', reason: 'Post-op recovery' },
-    { name: 'James Al-Farsi',   id: 'PH-2024-1187', reason: 'Cardiac monitoring' },
-    { name: 'Sofia Delgado',    id: 'PH-2024-1254', reason: 'Respiratory distress' },
-    { name: 'Omar Benhara',     id: 'PH-2024-1301', reason: 'Scheduled procedure' },
-    { name: 'Nadia Chen',       id: 'PH-2024-1389', reason: 'Fever & observation' },
-    { name: 'Thomas Eriksen',   id: 'PH-2024-1422', reason: 'Pediatric case' },
-    { name: 'Amina Yusuf',      id: 'PH-2024-1477', reason: 'Labour & delivery' },
-    { name: 'Rafael Costa',     id: 'PH-2024-1533', reason: 'Trauma assessment' },
-    { name: 'Priya Menon',      id: 'PH-2024-1608', reason: 'ICU monitoring' },
-    { name: 'David Okonkwo',    id: 'PH-2024-1654', reason: 'General surgery' },
-    { name: 'Fatima Al-Zahra',  id: 'PH-2024-1701', reason: 'Neonatal care' },
-    { name: 'Lucas Petrov',     id: 'PH-2024-1749', reason: 'Neurological eval' },
-    { name: 'Hannah Müller',    id: 'PH-2024-1803', reason: 'Cardiology follow-up' }
-  ];
-
-  let pIdx = 0;
-  for (let i = 1; i <= ward.totalBeds; i++) {
-    const bedId = `${ward.prefix}-${String(i).padStart(2,'0')}`;
-    let status = 'available';
-    let patient = null;
-    if (seedMaintenance.includes(i)) {
-      status = 'maintenance';
-    } else if (seedOccupied.includes(i)) {
-      status = 'occupied';
-      patient = { ...samplePatients[pIdx % samplePatients.length], admDate: '2026-04-10' };
-      pIdx++;
-    }
-    beds.push({ id: bedId, num: i, status, patient });
-  }
-  return beds;
-}
-
-// Build the state object
-const state = {
-  currentWardId: 'pediatrics',
-  currentFilter: 'all',
-  wards: {}
-};
-
-WARDS.forEach(w => {
-  state.wards[w.id] = { ...w, beds: generateBeds(w) };
-});
-
-// ═══════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════
-function currentWard() { return state.wards[state.currentWardId]; }
-
+// ═══ HELPERS ════════════════════════════════════════════
 function toDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
-
-function showToast(msg, type='success', title) {
-  const c = document.getElementById('toastContainer');
-  const t = document.createElement('div');
-  t.className = `toast toast-${type}`;
-  const icons  = { success: 'ph-fill ph-check-circle', error: 'ph-fill ph-x-circle', warning: 'ph-fill ph-warning' };
-  const titles = { success: title || 'Success', error: title || 'Error', warning: title || 'Warning' };
-  // map legacy 'warn' type to 'warning'
-  const resolvedType = type === 'warn' ? 'warning' : type;
-  t.className = `toast toast-${resolvedType}`;
-  t.innerHTML = `
-    <div class="toast-icon"><i class="${icons[resolvedType] || icons.success}"></i></div>
-    <div class="toast-body">
-      <div class="toast-title">${titles[resolvedType] || title || 'Notice'}</div>
-      <div class="toast-msg">${msg}</div>
-    </div>
-    <button class="toast-close" onclick="dismissToast(this)"><i class="ph ph-x"></i></button>
-    <div class="toast-progress"><div class="toast-progress-bar"></div></div>
-  `;
-  c.appendChild(t);
-  setTimeout(() => {
-    if (t.parentNode) { t.classList.add('toast-hide'); setTimeout(() => t.remove(), 400); }
-  }, 4000);
+function bedIcon(sc) {
+  if (sc==='available')   return '<i class="ph-fill ph-bed bed-icon"></i>';
+  if (sc==='occupied')    return '<i class="ph-fill ph-user-circle-gear bed-icon"></i>';
+  if (sc==='maintenance') return '<i class="ph-fill ph-wrench bed-icon"></i>';
+  return '<i class="ph-fill ph-question bed-icon"></i>';
 }
-function dismissToast(btn) {
-  const toast = btn.closest('.toast');
-  toast.classList.add('toast-hide');
-  setTimeout(() => toast.remove(), 400);
+function cap(s) { return s ? s.charAt(0).toUpperCase()+s.slice(1) : ''; }
+function normBeds(raw) {
+  return raw.map(b => ({ ...b, statusClass: (b.status||'available').toLowerCase() }));
 }
 
-function bedIcon(status) {
-  if (status==='available')   return '<i class="ph-fill ph-bed bed-icon"></i>';
-  if (status==='occupied')    return '<i class="ph-fill ph-user-circle-gear bed-icon"></i>';
-  if (status==='maintenance') return '<i class="ph-fill ph-wrench bed-icon"></i>';
+// ═══ LOAD DATA ══════════════════════════════════════════
+async function loadWards() {
+  try {
+    allWards = await WardsAPI.getAll();
+    renderTabs();
+    if (allWards.length > 0) await loadBeds(allWards[0].wardID);
+  } catch(e) { showToast('Could not load wards.','error','Load Error'); }
 }
-
-// ═══════════════════════════════════════════════════════
-// RENDER WARD TABS
-// ═══════════════════════════════════════════════════════
-function renderTabs() {
-  const container = document.getElementById('wardTabs');
-  container.innerHTML = WARDS.map(w => `
-    <button class="ward-tab ${w.id === state.currentWardId ? 'active' : ''}"
-            onclick="switchWard('${w.id}')">
-      ${w.name}
-    </button>`).join('');
-}
-
-function switchWard(wardId) {
+async function loadBeds(wardId) {
   state.currentWardId = wardId;
+  currentWardObj = allWards.find(w => w.wardID === wardId) || null;
   state.currentFilter = 'all';
   document.getElementById('patientSearch').value = '';
-  renderTabs();
+  try {
+    currentBeds = normBeds(await WardsAPI.getBeds(wardId));
+  } catch(e) { currentBeds = []; }
   renderAll();
 }
+async function switchWard(wardId) { await loadBeds(wardId); renderTabs(); }
+async function reloadBeds() { if (state.currentWardId) currentBeds = normBeds(await WardsAPI.getBeds(state.currentWardId)); }
 
-// ═══════════════════════════════════════════════════════
-// RENDER STATS
-// ═══════════════════════════════════════════════════════
+// ═══ RENDER TABS ════════════════════════════════════════
+function renderTabs() {
+  document.getElementById('wardTabs').innerHTML = allWards.map(w =>
+    `<button class="ward-tab ${w.wardID===state.currentWardId?'active':''}" onclick="switchWard(${w.wardID})">${w.name}</button>`
+  ).join('');
+}
+
+// ═══ RENDER STATS ═══════════════════════════════════════
 function renderStats() {
-  const ward = currentWard();
-  const beds = ward.beds;
-  const avail = beds.filter(b=>b.status==='available').length;
-  const occup = beds.filter(b=>b.status==='occupied').length;
-  const maint = beds.filter(b=>b.status==='maintenance').length;
-  const total = beds.length;
-  const pct   = Math.round(occup/total*100);
-
+  if (!currentWardObj) return;
+  const avail = currentBeds.filter(b=>b.statusClass==='available').length;
+  const occup = currentBeds.filter(b=>b.statusClass==='occupied').length;
+  const maint = currentBeds.filter(b=>b.statusClass==='maintenance').length;
+  const total = currentBeds.length;
+  const pct   = total>0 ? Math.round(occup/total*100) : 0;
   document.getElementById('statAvailable').textContent   = avail;
   document.getElementById('statOccupied').textContent    = `${occup}/${total}`;
   document.getElementById('statMaintenance').textContent = maint;
-
   const bar = document.getElementById('occBar');
   bar.style.width = pct+'%';
-  bar.className = 'occ-bar' + (pct>=90?' danger':pct>=70?' warn':'');
-
-  document.getElementById('wardPanelTitle').textContent = ward.name;
-  document.getElementById('wardPanelMeta').textContent  = ward.location;
+  bar.className = 'occ-bar'+(pct>=90?' danger':pct>=70?' warn':'');
+  document.getElementById('wardPanelTitle').textContent = currentWardObj.name;
+  document.getElementById('wardPanelMeta').textContent  = `${total} beds · Capacity: ${currentWardObj.capacity}`;
   document.getElementById('wardOccLabel').textContent   = `${occup} / ${total} Beds`;
 }
 
-// ═══════════════════════════════════════════════════════
-// RENDER BED GRID
-// ═══════════════════════════════════════════════════════
+// ═══ RENDER BED GRID ════════════════════════════════════
 function renderBedGrid() {
-  const ward   = currentWard();
+  if (!currentWardObj) return;
   const search = document.getElementById('patientSearch').value.toLowerCase().trim();
-  const grid   = document.getElementById('bedGrid');
-
-  grid.innerHTML = ward.beds.map(bed => {
-    // Tooltip content
-    let tipLines = `<strong>${bed.id}</strong>Status: ${capitalize(bed.status)}`;
-    if (bed.status==='occupied' && bed.patient) {
-      tipLines += `<br>Patient: ${bed.patient.name}<br>Admitted: ${bed.patient.admDate}`;
+  document.getElementById('bedGrid').innerHTML = currentBeds.map(bed => {
+    const sc = bed.statusClass;
+    const admDate = bed.admissionDate ? bed.admissionDate.split('T')[0] : '';
+    let tip = `<strong>BED-${bed.bedID}</strong>Status: ${cap(sc)}`;
+    if (sc==='occupied' && bed.patientName) tip += `<br>Patient: ${bed.patientName}<br>Admitted: ${admDate}`;
+    if (sc==='maintenance') tip += `<br>Under maintenance`;
+    let hide = (state.currentFilter!=='all' && sc!==state.currentFilter);
+    if (!hide && search) {
+      const mB = `bed-${bed.bedID}`.includes(search);
+      const mP = bed.patientName && bed.patientName.toLowerCase().includes(search);
+      if (!mB && !mP) hide = true;
     }
-    if (bed.status==='maintenance') tipLines += `<br>Under maintenance`;
-
-    // Visibility: filter + search
-    let hide = false;
-    if (state.currentFilter !== 'all' && bed.status !== state.currentFilter) hide = true;
-    if (search) {
-      const matchBed = bed.id.toLowerCase().includes(search);
-      const matchPat = bed.patient && bed.patient.name.toLowerCase().includes(search);
-      if (!matchBed && !matchPat) hide = true;
-    }
-
-    return `
-      <div class="bed-cell ${bed.status} ${hide?'hidden':''}"
-           id="bedcell-${bed.id}"
-           onclick="handleBedClick('${bed.id}')"
-           data-id="${bed.id}" data-status="${bed.status}">
-        ${bedIcon(bed.status)}
-        <span class="bed-id">${bed.id}</span>
-        ${bed.patient ? `<span class="bed-name">${bed.patient.name.split(' ')[0]}</span>` : ''}
-        <div class="bed-tooltip">${tipLines}</div>
-      </div>`;
+    return `<div class="bed-cell ${sc} ${hide?'hidden':''}" id="bedcell-${bed.bedID}"
+         onclick="handleBedClick(${bed.bedID})" data-id="${bed.bedID}" data-status="${sc}">
+      ${bedIcon(sc)}
+      <span class="bed-id">BED-${bed.bedID}</span>
+      ${bed.patientName ? `<span class="bed-name">${bed.patientName.split(' ')[0]}</span>` : ''}
+      <div class="bed-tooltip">${tip}</div>
+    </div>`;
   }).join('');
 }
 
-function capitalize(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
-
-// ═══════════════════════════════════════════════════════
-// FILTER
-// ═══════════════════════════════════════════════════════
 function setFilter(f) {
   state.currentFilter = f;
-  ['fAll','fAvailable','fOccupied','fMaintenance'].forEach(id=>{
-    document.getElementById(id).className='filter-pill';
-  });
-  const map = {all:'fAll',available:'fAvailable',occupied:'fOccupied',maintenance:'fMaintenance'};
-  const cls = {all:'active-all',available:'active-available',occupied:'active-occupied',maintenance:'active-maintenance'};
+  ['fAll','fAvailable','fOccupied','fMaintenance'].forEach(id => document.getElementById(id).className='filter-pill');
+  const map={all:'fAll',available:'fAvailable',occupied:'fOccupied',maintenance:'fMaintenance'};
+  const cls={all:'active-all',available:'active-available',occupied:'active-occupied',maintenance:'active-maintenance'};
   document.getElementById(map[f]).classList.add(cls[f]);
   renderBedGrid();
 }
-
 function applyFilter() { renderBedGrid(); }
+function renderAll()   { renderStats(); renderBedGrid(); }
 
-// ═══════════════════════════════════════════════════════
-// BED CLICK HANDLER
-// ═══════════════════════════════════════════════════════
+// ═══ BED CLICK ══════════════════════════════════════════
 function handleBedClick(bedId) {
-  const ward = currentWard();
-  const bed  = ward.beds.find(b=>b.id===bedId);
+  const bed = currentBeds.find(b => b.bedID === bedId);
   if (!bed) return;
+  const sc = bed.statusClass;
+  const wn = currentWardObj?.name || '';
+  const admDate = bed.admissionDate ? bed.admissionDate.split('T')[0] : '';
+  document.getElementById('bedModalTitle').textContent = `BED-${bed.bedID}`;
 
-  if (bed.status === 'available') {
-    // Show options: Admit or set Maintenance
-    document.getElementById('bedModalTitle').textContent = bed.id;
-    document.getElementById('bedModalSub').textContent   = '🟢 Available — Choose an Action';
-    document.getElementById('bedModalInfo').innerHTML = `
-      <div class="row"><span class="lbl">Bed ID</span><span>${bed.id}</span></div>
-      <div class="row"><span class="lbl">Status</span><span style="color:#059669; font-weight:700;">Available</span></div>
-      <div class="row"><span class="lbl">Ward</span><span>${ward.name}</span></div>`;
-    document.getElementById('bedModalBtns').style.flexDirection = 'column';
-    document.getElementById('bedModalBtns').style.gap = '0';
-    document.getElementById('bedModalBtns').innerHTML = `
-      <div style="display:flex; gap:12px; margin-bottom:0;">
-        <button class="btn btn-primary" onclick="closeBedModal(); openAdmissionModal('${bedId}')" style="flex:1;">
-          <i class="ph ph-user-plus"></i> Admit Patient
-        </button>
-        <button class="btn-warn" onclick="markMaintenance('${bedId}')" style="flex:1;">
-          <i class="ph ph-wrench"></i> Maintenance
-        </button>
-      </div>
-      <div style="display:flex; justify-content:flex-end; padding-top:16px; margin-top:16px; border-top:1px solid var(--color-border);">
-        <button class="btn-ghost" onclick="closeBedModal()" style="background:#e2e8f0; border-radius:var(--radius-md); color:#374151;">Cancel</button>
-      </div>`;
-    document.getElementById('bedModal').style.display = 'flex';
-    return;
-  }
-
-  // Open bed detail modal for occupied / maintenance
-  const modal = document.getElementById('bedModal');
-  document.getElementById('bedModalTitle').textContent = bed.id;
-
-  if (bed.status === 'occupied') {
+  if (sc === 'available') {
+    document.getElementById('bedModalSub').textContent = '🟢 Available — Choose an Action';
+    document.getElementById('bedModalInfo').innerHTML =
+      `<div class="row"><span class="lbl">Bed ID</span><span>BED-${bed.bedID}</span></div>
+       <div class="row"><span class="lbl">Status</span><span style="color:#059669;font-weight:700;">Available</span></div>
+       <div class="row"><span class="lbl">Ward</span><span>${wn}</span></div>`;
+    document.getElementById('bedModalBtns').style.cssText = 'flex-direction:column;gap:0;';
+    document.getElementById('bedModalBtns').innerHTML =
+      `<div style="display:flex;gap:12px;">
+         <button class="btn btn-primary" onclick="closeBedModal();openAdmissionModal(${bed.bedID})" style="flex:1;"><i class="ph ph-user-plus"></i> Admit Patient</button>
+         <button class="btn-warn" onclick="markMaintenance(${bed.bedID})" style="flex:1;"><i class="ph ph-wrench"></i> Maintenance</button>
+       </div>
+       <div style="display:flex;justify-content:flex-end;padding-top:16px;margin-top:16px;border-top:1px solid var(--color-border);">
+         <button class="btn-ghost" onclick="closeBedModal()" style="background:#e2e8f0;border-radius:var(--radius-md);color:#374151;">Cancel</button>
+       </div>`;
+  } else if (sc === 'occupied') {
     document.getElementById('bedModalSub').textContent = '🔴 Occupied — Patient Information';
-    document.getElementById('bedModalInfo').innerHTML = `
-      <div class="row"><span class="lbl">Bed ID</span><span>${bed.id}</span></div>
-      <div class="row"><span class="lbl">Status</span><span style="color:#dc2626; font-weight:700;">Occupied</span></div>
-      <div class="row"><span class="lbl">Patient</span><span><strong>${bed.patient.name}</strong></span></div>
-      <div class="row"><span class="lbl">Patient ID</span><span>${bed.patient.id}</span></div>
-      <div class="row"><span class="lbl">Admitted</span><span>${bed.patient.admDate}</span></div>
-      <div class="row"><span class="lbl">Reason</span><span>${bed.patient.reason}</span></div>`;
-    document.getElementById('bedModalBtns').innerHTML = `
-      <button class="btn-danger" onclick="dischargePatient('${bedId}')">
-        <i class="ph ph-sign-out"></i> Discharge Patient
-      </button>
-      <button class="btn-ghost" onclick="closeBedModal()">Close</button>`;
+    document.getElementById('bedModalInfo').innerHTML =
+      `<div class="row"><span class="lbl">Bed ID</span><span>BED-${bed.bedID}</span></div>
+       <div class="row"><span class="lbl">Status</span><span style="color:#dc2626;font-weight:700;">Occupied</span></div>
+       <div class="row"><span class="lbl">Patient</span><span><strong>${bed.patientName||'—'}</strong></span></div>
+       <div class="row"><span class="lbl">Admitted</span><span>${admDate||'—'}</span></div>
+       <div class="row"><span class="lbl">Admission</span><span>#${bed.admissionID||'—'}</span></div>
+       ${bed.pendingDischarge?'<div style="margin-top:10px;padding:8px 12px;background:#d1fae5;border-radius:8px;font-size:0.82rem;color:#065f46;font-weight:600;">✓ Discharge approved by doctor</div>':''}`;
+    document.getElementById('bedModalBtns').innerHTML =
+      `<button class="btn-danger" onclick="dischargePatient(${bed.admissionID},${bed.bedID})"><i class="ph ph-sign-out"></i> Execute Discharge</button>
+       <button class="btn-ghost" onclick="closeBedModal()">Close</button>`;
+  } else {
+    document.getElementById('bedModalSub').innerHTML = '🟡 <span style="color:#d97706;font-weight:700;">Under Maintenance</span>';
+    document.getElementById('bedModalInfo').innerHTML =
+      `<div class="row"><span class="lbl">Bed ID</span><span>BED-${bed.bedID}</span></div>
+       <div class="row"><span class="lbl">Status</span><span style="color:#d97706;font-weight:700;">Under Maintenance</span></div>
+       <div class="row"><span class="lbl">Ward</span><span>${wn}</span></div>
+       <div style="margin-top:12px;font-size:0.85rem;color:var(--color-text-muted);">Mark as available once servicing is complete.</div>`;
+    document.getElementById('bedModalBtns').innerHTML =
+      `<button class="btn-success" onclick="markAvailable(${bed.bedID})"><i class="ph ph-check-circle"></i> Mark as Available</button>
+       <button class="btn-ghost" onclick="closeBedModal()">Close</button>`;
   }
-
-  if (bed.status === 'maintenance') {
-    document.getElementById('bedModalSub').innerHTML = '🟡 <span style="color:#d97706; font-weight:700;">Under Maintenance</span>';
-    document.getElementById('bedModalInfo').innerHTML = `
-      <div class="row"><span class="lbl">Bed ID</span><span>${bed.id}</span></div>
-      <div class="row"><span class="lbl">Status</span><span style="color:#d97706; font-weight:700;">Under Maintenance</span></div>
-      <div class="row"><span class="lbl">Ward</span><span>${ward.name}</span></div>
-      <div style="margin-top:12px; font-size:0.85rem; color:var(--color-text-muted);">This bed is currently unavailable for patient admission. Mark it as available once servicing is complete.</div>`;
-    document.getElementById('bedModalBtns').innerHTML = `
-      <button class="btn-success" onclick="markAvailable('${bedId}')">
-        <i class="ph ph-check-circle"></i> Mark as Available
-      </button>
-      <button class="btn-ghost" onclick="closeBedModal()">Close</button>`;
-  }
-
-  modal.style.display = 'flex';
+  document.getElementById('bedModal').style.display = 'flex';
 }
+function closeBedModal() { document.getElementById('bedModal').style.display = 'none'; }
 
-function closeBedModal() {
-  document.getElementById('bedModal').style.display = 'none';
-}
-
-// ═══════════════════════════════════════════════════════
-// BED ACTIONS
-// ═══════════════════════════════════════════════════════
-function dischargePatient(bedId) {
-  const ward = currentWard();
-  const bed  = ward.beds.find(b=>b.id===bedId);
-  if (!bed || bed.status!=='occupied') {
-    showToast('No patient to discharge.', 'error', 'Discharge Failed'); return;
-  }
-  const patName = bed.patient.name;
-  bed.status  = 'available';
-  bed.patient = null;
+// ═══ BED ACTIONS ════════════════════════════════════════
+async function dischargePatient(admissionId, bedId) {
+  if (!admissionId) { showToast('No active admission found.','error'); return; }
   closeBedModal();
-  renderAll();
-  flashBed(bedId);
-  showToast(`${patName} discharged. Bed ${bedId} is now available.`, 'success', 'Patient Discharged');
+  try {
+    await AdmissionsAPI.executeDischrage(admissionId);
+    await reloadBeds(); renderAll(); flashBed(bedId);
+    showToast('Patient discharged. Bed is now available.','success','Discharged');
+  } catch(e) { showToast(e.message||'Could not discharge.','error'); }
 }
-
-function markAvailable(bedId) {
-  const ward = currentWard();
-  const bed  = ward.beds.find(b=>b.id===bedId);
-  if (!bed || bed.status!=='maintenance') {
-    showToast('Bed is not under maintenance.', 'error', 'Action Failed'); return;
-  }
-  bed.status = 'available';
+async function markAvailable(bedId) {
   closeBedModal();
-  renderAll();
-  flashBed(bedId);
-  showToast(`Bed ${bedId} is now available for admission.`, 'success', 'Bed Available');
+  try {
+    await WardsAPI.updateBedStatus(bedId, 'Available');
+    await reloadBeds(); renderAll(); flashBed(bedId);
+    showToast(`BED-${bedId} is now available.`,'success','Bed Available');
+  } catch(e) { showToast(e.message||'Could not update bed.','error'); }
 }
-
-function markMaintenance(bedId) {
-  const ward = currentWard();
-  const bed  = ward.beds.find(b=>b.id===bedId);
-  if (!bed || bed.status!=='available') {
-    showToast('Only available beds can be set to maintenance.', 'error', 'Action Failed'); return;
-  }
-  bed.status = 'maintenance';
+async function markMaintenance(bedId) {
   closeBedModal();
-  renderAll();
-  flashBed(bedId);
-  showToast(`Bed ${bedId} is now under maintenance.`, 'warning', 'Maintenance Scheduled');
+  try {
+    await WardsAPI.updateBedStatus(bedId, 'Maintenance');
+    await reloadBeds(); renderAll(); flashBed(bedId);
+    showToast(`BED-${bedId} set to maintenance.`,'warning','Maintenance');
+  } catch(e) { showToast(e.message||'Could not update bed.','error'); }
 }
-
 function flashBed(bedId) {
-  setTimeout(()=>{
+  setTimeout(() => {
     const el = document.getElementById(`bedcell-${bedId}`);
-    if(el){ el.classList.add('just-changed'); setTimeout(()=>el.classList.remove('just-changed'),500); }
-  },50);
+    if (el) { el.classList.add('just-changed'); setTimeout(() => el.classList.remove('just-changed'), 500); }
+  }, 60);
 }
 
-// ═══════════════════════════════════════════════════════
-// ADMISSION MODAL
-// ═══════════════════════════════════════════════════════
+// ═══ ADMISSION MODAL ════════════════════════════════════
 function openAdmissionModal(bedId) {
   const today = toDateStr(new Date());
   document.getElementById('admPatientId').value   = '';
   document.getElementById('admPatientName').value = '';
   document.getElementById('admReason').value      = '';
   document.getElementById('admDate').value        = today;
-  document.getElementById('admDate').min          = today; // No past dates
-
+  document.getElementById('admDate').min          = today;
   if (bedId) {
-    document.getElementById('admBedId').value = bedId;
-    document.getElementById('admInsightText').textContent =
-      `Bed ${bedId} (${currentWard().name}) will be assigned upon registration.`;
+    document.getElementById('admBedId').value           = `BED-${bedId}`;
+    document.getElementById('admBedId').dataset.bedId   = bedId;
+    document.getElementById('admInsightText').textContent = `BED-${bedId} (${currentWardObj?.name||''}) will be assigned upon registration.`;
   } else {
-    document.getElementById('admBedId').value = '';
-    document.getElementById('admInsightText').textContent =
-      'Click any available bed first, or type a Bed ID manually.';
+    document.getElementById('admBedId').value           = '';
+    document.getElementById('admBedId').dataset.bedId   = '';
+    document.getElementById('admInsightText').textContent = 'Click any available bed first, or enter a Bed ID.';
   }
-
   document.getElementById('admissionModal').style.display = 'flex';
 }
+function closeAdmissionModal() { document.getElementById('admissionModal').style.display = 'none'; }
 
-function closeAdmissionModal() {
-  document.getElementById('admissionModal').style.display = 'none';
+async function registerAdmission() {
+  const patientIdStr = document.getElementById('admPatientId').value.trim();
+  const patientName  = document.getElementById('admPatientName').value.trim();
+  const bedIdRaw     = document.getElementById('admBedId').dataset.bedId;
+  const admDate      = document.getElementById('admDate').value;
+  const reason       = document.getElementById('admReason').value.trim();
+
+  if (!patientIdStr) { showToast('Please enter a Patient ID.','error','Missing Field'); return; }
+  const patientId = parseInt(patientIdStr);
+  if (!patientId || patientId < 1) { showToast('Patient ID must be a valid number.','error'); return; }
+  if (!patientName) { showToast('Please enter the patient name.','error','Missing Field'); return; }
+  if (!bedIdRaw)    { showToast('Please click an available bed first.','error','Missing Field'); return; }
+  if (!admDate)     { showToast('Please select an admission date.','error','Missing Field'); return; }
+  if (!reason)      { showToast('Please enter a reason for the visit.','error','Missing Field'); return; }
+  if (admDate < toDateStr(new Date())) { showToast('Admission date cannot be in the past.','error'); return; }
+
+  const btn = document.querySelector('#admissionModal .btn.btn-primary');
+  if (btn) btn.disabled = true;
+  try {
+    await AdmissionsAPI.create({
+      patientID: patientId,
+      bedID: parseInt(bedIdRaw),
+      admissionDate: new Date(admDate).toISOString(),
+      reason
+    });
+    closeAdmissionModal();
+    await reloadBeds(); renderAll();
+    flashBed(parseInt(bedIdRaw));
+    showToast(`${patientName} admitted successfully.`,'success','Patient Admitted');
+  } catch(e) { showToast(e.message||'Could not register admission.','error'); }
+  finally { if (btn) btn.disabled = false; }
 }
 
-function registerAdmission() {
-  const patId   = document.getElementById('admPatientId').value.trim();
-  const patName = document.getElementById('admPatientName').value.trim();
-  const bedId   = document.getElementById('admBedId').value.trim();
-  const admDate = document.getElementById('admDate').value;
-  const reason  = document.getElementById('admReason').value.trim();
-
-  // Validation
-  if (!patId)   { showToast('Please enter a Patient ID.', 'error', 'Missing Field'); return; }
-  if (!patName) { showToast('Please enter the patient name.', 'error', 'Missing Field'); return; }
-  if (!bedId)   { showToast('Please select or enter a Bed ID.', 'error', 'Missing Field'); return; }
-  if (!admDate) { showToast('Please select an admission date.', 'error', 'Missing Field'); return; }
-  if (!reason)  { showToast('Please enter a reason for the visit.', 'error', 'Missing Field'); return; }
-
-  // Past date check
-  const today = toDateStr(new Date());
-  if (admDate < today) {
-    showToast('Admission date cannot be in the past.', 'error', 'Invalid Date'); return;
-  }
-
-  // Find the bed across all wards (bed might belong to any ward)
-  let targetBed  = null;
-  let targetWard = null;
-  for (const wId of Object.keys(state.wards)) {
-    const found = state.wards[wId].beds.find(b=>b.id===bedId);
-    if (found) { targetBed=found; targetWard=state.wards[wId]; break; }
-  }
-
-  if (!targetBed) { showToast(`Bed ID "${bedId}" not found in any ward.`, 'error', 'Bed Not Found'); return; }
-  if (targetBed.status==='occupied')    { showToast(`Bed ${bedId} is already occupied.`, 'error', 'Bed Occupied'); return; }
-  if (targetBed.status==='maintenance') { showToast(`Bed ${bedId} is under maintenance and cannot be assigned.`, 'warning', 'Bed Unavailable'); return; }
-
-  // Admit!
-  targetBed.status  = 'occupied';
-  targetBed.patient = { name: patName, id: patId, admDate, reason };
-
-  closeAdmissionModal();
-  // Switch to the ward of the admitted bed
-  state.currentWardId = targetWard.id;
-  renderAll();
-  flashBed(bedId);
-  showToast(`${patName} admitted to bed ${bedId} in ${targetWard.name}.`, 'success', 'Patient Admitted');
-}
-
-// ═══════════════════════════════════════════════════════
-// RENDER ALL
-// ═══════════════════════════════════════════════════════
-function renderAll() {
-  renderTabs();
-  renderStats();
-  renderBedGrid();
-}
-
-// ═══════════════════════════════════════════════════════
-// INIT
-// ═══════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  renderAll();
+// ═══ INIT ═══════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', async () => {
+  const session = requireAuth(['HRManager']);
+  if (!session) return;
+  const nameEl = document.querySelector('.user-profile-sm .name');
+  if (nameEl && session.fullName) nameEl.textContent = session.fullName;
+  await loadWards();
 });
 </script>
 </body>
-</html>

@@ -6,6 +6,7 @@
   <title>SmartHospital - Login</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <script src="api.js"></script>
   <style>
     .split-layout {
       display: flex;
@@ -478,37 +479,55 @@
       });
     }
 
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault(); // Stop native form submit (prevents new-tab issues)
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-      const emailInput = loginForm.querySelector('input[type="email"]');
-      if (emailInput && emailInput.value) {
-        let namePrefix = emailInput.value.split('@')[0];
-        namePrefix = namePrefix.replace(/[._]/g, ' ');
-        namePrefix = namePrefix.replace(/\b\w/g, l => l.toUpperCase());
+      const emailInput    = loginForm.querySelector('input[type="email"]');
+      const passwordInput2 = loginForm.querySelector('input[type="password"], input#passwordInput');
+      const submitBtn     = loginForm.querySelector('button[type="submit"]');
 
-        let role = 'Patient Account';
-        let destination = 'dashboard.html';
-        const activeTab = document.querySelector('.role-tab.active');
-        if (activeTab) {
-          if (activeTab.innerText.includes('DOCTOR')) {
-            role = 'Attending Physician';
-            destination = 'doctor-patients.html';
-          } else if (activeTab.innerText.includes('MANAGER')) {
-            role = 'HR Director';
-            destination = 'hr-dashboard.html';
-          }
+      const email    = emailInput?.value?.trim();
+      const password = passwordInput2?.value;
+
+      if (!email || !password) {
+        showToast('Please enter your email and password.', 'warning');
+        return;
+      }
+
+      const originalText = submitBtn ? submitBtn.innerHTML : '';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="ph ph-circle-notch" style="animation:spin 1s linear infinite"></i> Signing in…';
+      }
+
+      // Spin animation
+      if (!document.getElementById('spin-style')) {
+        const s = document.createElement('style');
+        s.id = 'spin-style';
+        s.textContent = '@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}';
+        document.head.appendChild(s);
+      }
+
+      try {
+        const result = await AuthAPI.login(email, password);
+        saveSession({
+          token:          result.token,
+          userId:         result.userId,
+          userType:       result.userType,
+          roleSpecificId: result.roleSpecificId,
+          fullName:       result.fullName,
+          email:          result.email,
+          phoneNumber:    result.phoneNumber,
+          expiresAt:      result.expiresAt
+        });
+        showToast(`Welcome back, ${result.fullName}!`, 'success');
+        setTimeout(() => redirectByRole(result.userType), 800);
+      } catch (err) {
+        showToast(err.message || 'Login failed. Please check your credentials.', 'error');
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalText;
         }
-
-        localStorage.setItem('currentUser', JSON.stringify({
-          fullName: namePrefix,
-          firstName: namePrefix.split(' ')[0],
-          email: emailInput.value,
-          role: role
-        }));
-
-        // Always navigate in the same tab
-        window.location.href = destination;
       }
     });
 
