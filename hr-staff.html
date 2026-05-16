@@ -401,7 +401,7 @@
       <button class="modal-close" onclick="document.getElementById('deactivateModal').style.display='none'"><i class="ph ph-x"></i></button>
       <div class="modal-header">
         <i class="ph-fill ph-warning" style="font-size:2.8rem;color:#f59e0b;margin-bottom:8px;display:block;"></i>
-        <h2>Deactivate Nurse</h2>
+        <h2>Deactivate Staff Member</h2>
         <p>Are you sure you want to deactivate <strong id="deactivateModalName"></strong>?<br>
         They will be marked inactive and cannot be assigned to shifts.</p>
       </div>
@@ -547,7 +547,9 @@
         const wardDisplay = s.wardName
           ? `<span class="ward-assign w-green"><i class="ph-fill ph-circle w-green"></i> ${s.wardName}</span>`
           : `<span class="w-gray">Unassigned</span>`;
-        const inactiveTag = (!isDoc && !s.isActive) ? `<span style="color:#ef4444;">⊘ Inactive</span>` : wardDisplay;
+        const inactiveTag = !s.isActive
+          ? `<span style="color:#ef4444;">⊘ Inactive</span>`
+          : wardDisplay;
         const kpiEncoded = encodeURIComponent(s.kpIs||'');
         const staffId   = isDoc ? s.doctorID : s.nurseID;
         const wardId    = s.wardID || '';
@@ -565,11 +567,20 @@
              <button class="btn-filter" id="autoKpi-${s.doctorID}" title="Auto-compute KPI"
               style="border:none;background:#d1fae5;color:#065f46;"
               onclick="autoComputeKpi(${s.doctorID},'${s.fullName}')"
-              ><i class="ph ph-lightning"></i></button>`
+              ><i class="ph ph-lightning"></i></button>
+             ${s.isActive
+               ? `<button class="btn-filter" title="Deactivate Doctor"
+                   style="border:none;background:#fee2e2;color:#b91c1c;"
+                   onclick="openDeactivateModal(${s.doctorID},'${s.fullName}','Doctor')"
+                   ><i class="ph ph-prohibit"></i></button>`
+               : `<button class="btn-filter" title="Reactivate Doctor"
+                   style="border:none;background:#d1fae5;color:#065f46;"
+                   onclick="activateDoctor(${s.doctorID},'${s.fullName}')"
+                   ><i class="ph ph-check-circle"></i></button>`}`
           : s.isActive
           ? `<button class="btn-filter" title="Deactivate Nurse"
               style="border:none;background:#fee2e2;color:#b91c1c;"
-              onclick="openDeactivateModal(${s.nurseID},'${s.fullName}')"
+              onclick="openDeactivateModal(${s.nurseID},'${s.fullName}','Nurse')"
               ><i class="ph ph-prohibit"></i></button>`
           : `<button class="btn-filter" title="Reactivate Nurse"
               style="border:none;background:#d1fae5;color:#065f46;"
@@ -609,11 +620,12 @@
       finally { btn.disabled = false; }
     }
 
-    let pendingDeactivateId = null, pendingDeactivateName = null;
+    let pendingDeactivateId = null, pendingDeactivateName = null, pendingDeactivateRole = null;
 
-    function openDeactivateModal(nurseId, name) {
-      pendingDeactivateId = nurseId;
+    function openDeactivateModal(staffId, name, role = 'Nurse') {
+      pendingDeactivateId = staffId;
       pendingDeactivateName = name;
+      pendingDeactivateRole = role;
       document.getElementById('deactivateModalName').textContent = name;
       document.getElementById('deactivateModal').style.display = 'flex';
     }
@@ -621,17 +633,23 @@
     async function executeDeactivate() {
       document.getElementById('deactivateModal').style.display = 'none';
       if (!pendingDeactivateId) return;
-      const id = pendingDeactivateId, name = pendingDeactivateName;
-      pendingDeactivateId = null; pendingDeactivateName = null;
+      const id = pendingDeactivateId, name = pendingDeactivateName, role = pendingDeactivateRole;
+      pendingDeactivateId = null; pendingDeactivateName = null; pendingDeactivateRole = null;
       const btn = document.getElementById('confirmDeactivateBtn');
       if (btn) btn.disabled = true;
       try {
-        await NursesAPI.deactivate(id);
-        allNurses = allNurses.map(n => n.nurseID===id
-          ? {...n, isActive:false, wardID:null, wardName:null}
-          : n);
+        if (role === 'Doctor') {
+          await DoctorsAPI.deactivate(id);
+          allDoctors = allDoctors.map(d => d.doctorID===id ? {...d, isActive:false} : d);
+          showToast(`Dr. ${name} has been deactivated.`, 'error', 'Doctor Deactivated');
+        } else {
+          await NursesAPI.deactivate(id);
+          allNurses = allNurses.map(n => n.nurseID===id
+            ? {...n, isActive:false, wardID:null, wardName:null}
+            : n);
+          showToast(`${name} has been deactivated.`, 'error', 'Nurse Deactivated');
+        }
         rebuildCombined(); applyFilters();
-        showToast(`${name} has been deactivated.`, 'error', 'Nurse Deactivated');
       } catch(err) { showToast(err.message||'Could not deactivate.','error'); }
       finally { if (btn) btn.disabled = false; }
     }
@@ -645,16 +663,29 @@
       } catch(err) { showToast(err.message||'Could not reactivate.','error'); }
     }
 
+    async function activateDoctor(doctorId, name) {
+      try {
+        await DoctorsAPI.activate(doctorId);
+        allDoctors = allDoctors.map(d => d.doctorID===doctorId ? {...d, isActive:true} : d);
+        rebuildCombined(); applyFilters();
+        showToast(`Dr. ${name} has been reactivated.`, 'success', 'Doctor Reactivated');
+      } catch(err) { showToast(err.message||'Could not reactivate.','error'); }
+    }
+
     // ── Ward Assignment ────────────────────────────────────────────────────
     function openWardModal(staffId, name, role, currentWardId) {
-      // Guard: inactive nurses cannot be assigned to a ward
+      // Guard: inactive nurses/doctors cannot be assigned to a ward
       if (role === 'Nurse') {
         const nurse = allNurses.find(n => n.nurseID === staffId);
         if (nurse && !nurse.isActive) {
-          showToast(
-            `${name} is currently inactive. Reactivate them first before assigning a ward.`,
-            'warning', 'Cannot Assign Ward'
-          );
+          showToast(`${name} is currently inactive. Reactivate them first before assigning a ward.`, 'warning', 'Cannot Assign Ward');
+          return;
+        }
+      }
+      if (role === 'Doctor') {
+        const doc = allDoctors.find(d => d.doctorID === staffId);
+        if (doc && !doc.isActive) {
+          showToast(`Dr. ${name} is currently inactive. Reactivate them first before assigning a ward.`, 'warning', 'Cannot Assign Ward');
           return;
         }
       }

@@ -111,8 +111,11 @@ const DoctorsAPI = {
     getAll: ()                   => apiFetch('/api/doctors'),
     getById: (id)                => apiFetch(`/api/doctors/${id}`),
     getBySpecialization: (spec)  => apiFetch(`/api/doctors/specialization/${encodeURIComponent(spec)}`),
-    updateProfile: (id, dto)     => apiFetch(`/api/doctors/${id}/profile`, { method: 'PUT', body: JSON.stringify(dto) })
+    updateProfile: (id, dto)     => apiFetch(`/api/doctors/${id}/profile`, { method: 'PUT', body: JSON.stringify(dto) }),
+    activate: (id)               => apiFetch(`/api/doctors/${id}/activate`,   { method: 'PATCH' }),
+    deactivate: (id)             => apiFetch(`/api/doctors/${id}/deactivate`, { method: 'PATCH' })
 };
+
 
 // ── Staff API ──────────────────────────────────────────────────────────────────
 

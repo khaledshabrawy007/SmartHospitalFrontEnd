@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -357,6 +357,13 @@
           tag: 'Optimal', tagBg: '#f1f5f9', tagColor: '#64748b',
           label: 'Appt. Completion Rate',
           value: '96.2', unit: '%'
+        },
+        {
+          icon: 'ph-fill ph-users',
+          iconBg: '#e0f2fe', iconColor: '#0369a1',
+          tag: 'Live', tagBg: '#e0f2fe', tagColor: '#0369a1',
+          label: 'Active Nurses',
+          value: '—', unit: ' nurses'
         }
       ],
 
@@ -661,15 +668,18 @@
 
       // Enrich metric cards with real data
       try {
-        const [doctors, wards, appointments] = await Promise.allSettled([
+        const [doctors, wards, appointments, nurses] = await Promise.allSettled([
           DoctorsAPI.getAll(),
           WardsAPI.getAll(),
-          AppointmentsAPI.getAll()
+          AppointmentsAPI.getAll(),
+          NursesAPI.getAll()
         ]);
 
-        const doctorCount = doctors.status === 'fulfilled' ? doctors.value.length : '—';
-        const wardCount   = wards.status === 'fulfilled'   ? wards.value.length   : '—';
-        const apptCount   = appointments.status === 'fulfilled' ? appointments.value.filter(a => a.status === 'Scheduled').length : '—';
+        const doctorCount = doctors.status === 'fulfilled' ? doctors.value.filter(d => d.isActive !== false).length : '-';
+        const wardCount   = wards.status === 'fulfilled'   ? wards.value.length   : '-';
+        const apptCount   = appointments.status === 'fulfilled' ? appointments.value.filter(a => a.status === 'Scheduled').length : '-';
+        const nurseCount  = nurses.status === 'fulfilled'  ? nurses.value.filter(n => n.isActive !== false).length  : '-';
+
 
         // Patch metric values with live counts
         mockData.metrics[0].value = String(doctorCount);
@@ -684,7 +694,12 @@
         mockData.metrics[2].unit  = ' today';
         mockData.metrics[2].label = 'Scheduled Appointments';
         mockData.metrics[2].tag   = 'Live';
+        mockData.metrics[3].value = String(nurseCount);
+        mockData.metrics[3].unit  = ' nurses';
+        mockData.metrics[3].label = 'Active Nurses';
+        mockData.metrics[3].tag   = 'Live';
         renderMetrics();
+
       } catch (e) {
         console.warn('Could not load live metrics', e);
       }

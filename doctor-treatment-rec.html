@@ -535,23 +535,12 @@
               </div>
             </div>
             
-            <div class="treat-card">
-              <div class="narrative-label-row">
-                <i class="ph-fill ph-note-pencil" style="color:var(--color-primary); font-size:1rem;"></i>
-                <span>Clinician Narrative</span>
-                <span class="edit-badge">Editable</span>
-              </div>
-              <textarea
-                class="narrative-textarea"
-                id="resNarrative"
-                placeholder="AI-generated narrative will appear here. You may edit before finalizing."
-                rows="5"
-              ></textarea>
-              
-              <button class="btn btn-primary" id="btnFinalize" style="padding:12px 24px;">
-                <i class="ph-fill ph-clipboard-text"></i> Finalize Protocol
+            <div style="margin-top: 8px;">
+              <button class="btn btn-primary" id="btnFinalize" style="padding:12px 24px; width:100%;">
+                <i class="ph-fill ph-clipboard-text"></i> Save to Patient Record
               </button>
             </div>
+
           </div>
         </div>
       </div>
@@ -606,7 +595,7 @@
     const resMedDesc = document.getElementById('resMedDesc');
     const resAltMeds = document.getElementById('resAltMeds');
     const resLifestyle = document.getElementById('resLifestyle');
-    const resNarrative = document.getElementById('resNarrative');
+
 
     let state = {
       isGenerated: false,
@@ -791,12 +780,6 @@
         ? steps.map(l => `<div class="life-item"><i class="ph-fill ph-check-circle"></i><p>${l}.</p></div>`).join('')
         : `<div class="life-item"><i class="ph-fill ph-check-circle"></i><p>${lifestyle}</p></div>`;
 
-      // Narrative textarea (editable)
-      let narrative = `Predicted condition: ${disease} (${pct}% — ${conf}).\nPrimary: ${primary}.\nAlternative: ${alt}.\nLifestyle: ${lifestyle}`;
-      if (topPreds.length > 1) {
-        narrative += '\n\nDifferential: ' + topPreds.slice(1,3).map(p=>`${p.disease} ${p.probability_percent.toFixed(1)}%`).join(', ') + '.';
-      }
-      document.getElementById('resNarrative').value = narrative;
     }
 
     // ── Generate Button → real FastAPI call ───────────────────────────────
@@ -871,7 +854,7 @@
       nameEl.placeholder = 'Auto-filled from Patient ID';
       const banner = document.getElementById('patientContextBanner');
       if (banner) banner.style.display = 'none';
-      document.getElementById('resNarrative').value = '';
+
       clearErrors();
       outdatedWarning.classList.remove('show');
       panelResult.classList.remove('show');
