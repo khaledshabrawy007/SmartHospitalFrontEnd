@@ -132,6 +132,7 @@
     .filter-pill.active-available { border-color: #059669; color: #059669; background: #d1fae5; }
     .filter-pill.active-occupied  { border-color: #dc2626; color: #dc2626; background: #fee2e2; }
     .filter-pill.active-maintenance { border-color: #d97706; color: #d97706; background: #fef3c7; }
+    .filter-pill.active-pendingdischarge { border-color: #7c3aed; color: #7c3aed; background: #ede9fe; }
 
     /* ── Bed Grid ────────────────────────────────── */
     .bed-grid {
@@ -154,9 +155,11 @@
     .bed-cell.hidden { display: none; }
 
     /* States */
-    .bed-cell.available  { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
-    .bed-cell.occupied   { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
-    .bed-cell.maintenance{ background: #fef9c3; border-color: #fde047; color: #854d0e; }
+    .bed-cell.available       { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+    .bed-cell.occupied        { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+    .bed-cell.maintenance     { background: #fef9c3; border-color: #fde047; color: #854d0e; }
+    .bed-cell.pendingdischarge{ background: #ede9fe; border-color: #c4b5fd; color: #6d28d9; }
+    .bed-cell.pendingdischarge .bed-icon::after { content: '⏳'; font-size:0.55rem; position:absolute; top:4px; right:4px; }
 
     .bed-cell .bed-icon  { font-size: 1.5rem; }
     .bed-cell .bed-id    { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.02em; }
@@ -268,14 +271,17 @@
         <label class="form-label">Patient ID</label>
         <div class="input-outline">
           <i class="ph-fill ph-identification-card" style="margin-right:10px; color:var(--color-text-muted); align-self:center; flex-shrink:0;"></i>
-          <input type="text" id="admPatientId" placeholder="e.g. PH-2024-8842" style="background:transparent; border:none; outline:none; width:100%;">
+          <input type="number" id="admPatientId" placeholder="e.g. 42" min="1"
+            oninput="lookupPatient()"
+            style="background:transparent; border:none; outline:none; width:100%;">
         </div>
       </div>
       <div class="form-group">
         <label class="form-label">Patient Name</label>
         <div class="input-outline">
           <i class="ph ph-user" style="margin-right:10px; color:var(--color-text-muted); align-self:center; flex-shrink:0;"></i>
-          <input type="text" id="admPatientName" placeholder="Full name" style="background:transparent; border:none; outline:none; width:100%;">
+          <input type="text" id="admPatientName" placeholder="Auto-filled from Patient ID" readonly
+            style="background:transparent; border:none; outline:none; width:100%; color:var(--color-text-dark);">
         </div>
       </div>
     </div>
@@ -432,10 +438,11 @@
           <i class="ph ph-magnifying-glass"></i>
           <input type="text" id="patientSearch" placeholder="Search patient name or bed ID…" oninput="applyFilter()">
         </div>
-        <button class="filter-pill active-all" id="fAll"         onclick="setFilter('all')">All</button>
-        <button class="filter-pill"           id="fAvailable"   onclick="setFilter('available')">🟢 Available</button>
-        <button class="filter-pill"           id="fOccupied"    onclick="setFilter('occupied')">🔴 Occupied</button>
-        <button class="filter-pill"           id="fMaintenance" onclick="setFilter('maintenance')">🟡 Maintenance</button>
+        <button class="filter-pill active-all" id="fAll"             onclick="setFilter('all')">All</button>
+        <button class="filter-pill"           id="fAvailable"       onclick="setFilter('available')">🟢 Available</button>
+        <button class="filter-pill"           id="fOccupied"        onclick="setFilter('occupied')">🔴 Occupied</button>
+        <button class="filter-pill"           id="fMaintenance"     onclick="setFilter('maintenance')">🟡 Maintenance</button>
+        <button class="filter-pill"           id="fPendingDischarge" onclick="setFilter('pendingdischarge')">🟣 Pending Discharge</button>
       </div>
 
       <!-- Bed Grid -->
@@ -479,14 +486,19 @@ function toDateStr(d) {
   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 }
 function bedIcon(sc) {
-  if (sc==='available')   return '<i class="ph-fill ph-bed bed-icon"></i>';
-  if (sc==='occupied')    return '<i class="ph-fill ph-user-circle-gear bed-icon"></i>';
-  if (sc==='maintenance') return '<i class="ph-fill ph-wrench bed-icon"></i>';
+  if (sc==='available')        return '<i class="ph-fill ph-bed bed-icon"></i>';
+  if (sc==='occupied')         return '<i class="ph-fill ph-user-circle-gear bed-icon"></i>';
+  if (sc==='maintenance')      return '<i class="ph-fill ph-wrench bed-icon"></i>';
+  if (sc==='pendingdischarge') return '<i class="ph-fill ph-clock-countdown bed-icon"></i>';
   return '<i class="ph-fill ph-question bed-icon"></i>';
 }
 function cap(s) { return s ? s.charAt(0).toUpperCase()+s.slice(1) : ''; }
 function normBeds(raw) {
-  return raw.map(b => ({ ...b, statusClass: (b.status||'available').toLowerCase() }));
+  return raw.map(b => {
+    let sc = (b.status || 'available').toLowerCase();
+    if (sc === 'occupied' && b.pendingDischarge) sc = 'pendingdischarge';
+    return { ...b, statusClass: sc };
+  });
 }
 
 // ═══ LOAD DATA ══════════════════════════════════════════
@@ -564,9 +576,9 @@ function renderBedGrid() {
 
 function setFilter(f) {
   state.currentFilter = f;
-  ['fAll','fAvailable','fOccupied','fMaintenance'].forEach(id => document.getElementById(id).className='filter-pill');
-  const map={all:'fAll',available:'fAvailable',occupied:'fOccupied',maintenance:'fMaintenance'};
-  const cls={all:'active-all',available:'active-available',occupied:'active-occupied',maintenance:'active-maintenance'};
+  ['fAll','fAvailable','fOccupied','fMaintenance','fPendingDischarge'].forEach(id => document.getElementById(id).className='filter-pill');
+  const map={all:'fAll',available:'fAvailable',occupied:'fOccupied',maintenance:'fMaintenance',pendingdischarge:'fPendingDischarge'};
+  const cls={all:'active-all',available:'active-available',occupied:'active-occupied',maintenance:'active-maintenance',pendingdischarge:'active-pendingdischarge'};
   document.getElementById(map[f]).classList.add(cls[f]);
   renderBedGrid();
 }
@@ -597,15 +609,18 @@ function handleBedClick(bedId) {
        <div style="display:flex;justify-content:flex-end;padding-top:16px;margin-top:16px;border-top:1px solid var(--color-border);">
          <button class="btn-ghost" onclick="closeBedModal()" style="background:#e2e8f0;border-radius:var(--radius-md);color:#374151;">Cancel</button>
        </div>`;
-  } else if (sc === 'occupied') {
-    document.getElementById('bedModalSub').textContent = '🔴 Occupied — Patient Information';
+  } else if (sc === 'occupied' || sc === 'pendingdischarge') {
+    const isPending = sc === 'pendingdischarge';
+    document.getElementById('bedModalSub').textContent = isPending
+      ? '🟣 Pending Discharge — Doctor Approved'
+      : '🔴 Occupied — Patient Information';
     document.getElementById('bedModalInfo').innerHTML =
       `<div class="row"><span class="lbl">Bed ID</span><span>BED-${bed.bedID}</span></div>
-       <div class="row"><span class="lbl">Status</span><span style="color:#dc2626;font-weight:700;">Occupied</span></div>
+       <div class="row"><span class="lbl">Status</span><span style="color:${isPending?'#7c3aed':'#dc2626'};font-weight:700;">${isPending?'Pending Discharge':'Occupied'}</span></div>
        <div class="row"><span class="lbl">Patient</span><span><strong>${bed.patientName||'—'}</strong></span></div>
        <div class="row"><span class="lbl">Admitted</span><span>${admDate||'—'}</span></div>
        <div class="row"><span class="lbl">Admission</span><span>#${bed.admissionID||'—'}</span></div>
-       ${bed.pendingDischarge?'<div style="margin-top:10px;padding:8px 12px;background:#d1fae5;border-radius:8px;font-size:0.82rem;color:#065f46;font-weight:600;">✓ Discharge approved by doctor</div>':''}`;
+       ${isPending?'<div style="margin-top:10px;padding:8px 12px;background:#ede9fe;border-radius:8px;font-size:0.82rem;color:#7c3aed;font-weight:600;">✓ Discharge approved by doctor — ready to free bed</div>':''}`;
     document.getElementById('bedModalBtns').innerHTML =
       `<button class="btn-danger" onclick="dischargePatient(${bed.admissionID},${bed.bedID})"><i class="ph ph-sign-out"></i> Execute Discharge</button>
        <button class="btn-ghost" onclick="closeBedModal()">Close</button>`;
@@ -629,7 +644,7 @@ async function dischargePatient(admissionId, bedId) {
   if (!admissionId) { showToast('No active admission found.','error'); return; }
   closeBedModal();
   try {
-    await AdmissionsAPI.executeDischrage(admissionId);
+    await AdmissionsAPI.executeDischarge(admissionId);
     await reloadBeds(); renderAll(); flashBed(bedId);
     showToast('Patient discharged. Bed is now available.','success','Discharged');
   } catch(e) { showToast(e.message||'Could not discharge.','error'); }
@@ -677,6 +692,16 @@ function openAdmissionModal(bedId) {
   document.getElementById('admissionModal').style.display = 'flex';
 }
 function closeAdmissionModal() { document.getElementById('admissionModal').style.display = 'none'; }
+
+async function lookupPatient() {
+  const id = parseInt(document.getElementById('admPatientId').value.trim());
+  const nameEl = document.getElementById('admPatientName');
+  if (!id || id < 1) { nameEl.value = ''; nameEl.placeholder = 'Auto-filled from Patient ID'; return; }
+  try {
+    const p = await PatientsAPI.getById(id);
+    nameEl.value = p.fullName || '';
+  } catch { nameEl.value = ''; nameEl.placeholder = 'Patient not found'; }
+}
 
 async function registerAdmission() {
   const patientIdStr = document.getElementById('admPatientId').value.trim();
