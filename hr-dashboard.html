@@ -393,14 +393,14 @@
             </div>
             <div>
               <label class="sp-label">Expected Patients</label>
-              <input class="sp-input" id="spPatients" type="number" min="1" value="300" placeholder="e.g. 300">
+              <input class="sp-input" id="spPatients" type="number" min="1" max="290" placeholder="e.g. 250" oninput="validatePatients(this)">
             </div>
           </div>
 
           <!-- Current staff -->
           <div style="margin-bottom:14px;">
             <label class="sp-label">Current Staff on Shift</label>
-            <input class="sp-input" id="spStaff" type="number" min="0" value="80" placeholder="e.g. 80">
+            <input class="sp-input" id="spStaff" type="number" min="0" placeholder="e.g. 80">
           </div>
 
           <!-- Shift type selector cards -->
@@ -800,7 +800,7 @@
         actual.unshift(entries[0].current_occupied_beds);
 
         // Monthly cap reference line (flat line at cap value)
-        const cap = entries[0].monthly_cap;
+        const cap = 290; // Fixed frontend cap (model value overridden)
         const capLine = labels.map(() => cap);
 
         // Push data into chart
@@ -1072,6 +1072,22 @@
     // ═══════════════════════════════════════════════════
     // AI STAFFING PREDICTOR
     // ═══════════════════════════════════════════════════
+
+    function validatePatients(input) {
+      const MAX = 290;
+      const val = parseInt(input.value, 10);
+      if (val > MAX) {
+        input.value = MAX;
+        input.style.borderColor = '#ef4444';
+        input.title = `Maximum is ${MAX} (hospital bed capacity)`;
+        showToast(`Patient count capped at ${MAX} — hospital capacity limit.`, 'error');
+      } else if (val < 1 || isNaN(val)) {
+        input.style.borderColor = '#ef4444';
+      } else {
+        input.style.borderColor = '';
+        input.title = '';
+      }
+    }
 
     function selectShift(card) {
       document.querySelectorAll('.sp-shift-card').forEach(c => c.classList.remove('active'));

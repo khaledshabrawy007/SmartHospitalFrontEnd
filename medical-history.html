@@ -81,6 +81,51 @@
     @keyframes toastSlideIn  { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     @keyframes toastSlideOut { from { transform: translateX(0);    opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
     @keyframes toastProgress { from { width: 100%; } to { width: 0%; } }
+
+    /* ── Admission Cards (follow history-card pattern) ──────────── */
+    .admission-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700;
+      background: rgba(20,184,166,0.12); color: #0f766e; letter-spacing: 0.04em;
+    }
+    .admission-date-range {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.8rem; color: var(--color-text-muted); margin-top: 4px;
+    }
+    .history-icon.teal { background: rgba(20,184,166,0.12); color: #0f766e; }
+
+    /* ── Admission Detail Modal ──────────────────────────────────── */
+    .adm-section {
+      background: var(--color-bg-light); border-radius: 10px;
+      padding: 16px 18px; margin-bottom: 14px;
+    }
+    .adm-section-title {
+      font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--color-primary); margin-bottom: 10px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .adm-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .adm-field label {
+      font-size: 0.65rem; font-weight: 700; color: var(--color-text-muted);
+      text-transform: uppercase; display: block; margin-bottom: 3px;
+    }
+    .adm-field span {
+      font-size: 0.88rem; font-weight: 600; color: var(--color-text-dark);
+    }
+    .adm-text {
+      font-size: 0.88rem; color: var(--color-text-dark); line-height: 1.6;
+      white-space: pre-wrap;
+    }
+    .adm-none {
+      font-size: 0.85rem; color: var(--color-text-muted);
+      font-style: italic;
+    }
+    .adm-risk-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 700;
+    }
+    .adm-risk-badge.high { background: rgba(220,38,38,0.1); color: #dc2626; }
+    .adm-risk-badge.low  { background: rgba(16,185,129,0.1); color: #059669; }
   </style>
 </head>
 <body>
@@ -138,13 +183,17 @@
             <div class="history-tab active">Scheduled</div>
             <div class="history-tab">Completed</div>
             <div class="history-tab">Cancelled</div>
+            <div class="history-tab">Admissions</div>
           </div>
         </div>
       </div>
 
       <div class="history-layout">
         <div class="history-list" id="historyList">
-          <!-- Dynamic history cards injected here via JS -->
+          <!-- Dynamic appointment cards injected here via JS -->
+        </div>
+        <div class="history-list" id="admissionList" style="display:none;">
+          <!-- Dynamic admission cards injected here via JS -->
         </div>
 
         <div class="history-sidebar">
@@ -225,29 +274,50 @@
     </div>
   </div>
 
+  <!-- Admission Detail Modal -->
+  <div class="modal-overlay" id="admissionModal" style="display:none; justify-content:center; align-items:center;">
+    <div class="modal-container" style="max-width:560px; max-height:85vh; overflow-y:auto;">
+      <button class="modal-close" onclick="closeModal('admissionModal')"><i class="ph ph-x"></i></button>
+      <div class="modal-header" style="margin-bottom:4px;">
+        <h2 id="admModalTitle">Admission Record</h2>
+        <div id="admModalBadge" style="margin-top:6px;"></div>
+      </div>
+      <div id="admModalBody">
+        <div style="padding:40px;text-align:center;color:var(--color-text-muted);">Loading…</div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closeModal('admissionModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script>
-    let allAppointments = [];
-    let ratedMap        = {}; // appointmentID → ratingValue (already submitted)
+    let allAppointments  = [];
+    let allAdmissions    = [];   // full list; filtered to Discharged on render
+    let ratedMap         = {};   // appointmentID → ratingValue (already submitted)
     let currentActiveTab = 'Scheduled';
-    let activeCancelId  = null;
-    let activeRatingId  = null;
-    let activeDoctorId  = null;
-    let selectedStarVal = 0;
+    let activeCancelId   = null;
+    let activeRatingId   = null;
+    let activeDoctorId   = null;
+    let selectedStarVal  = 0;
 
     document.addEventListener('DOMContentLoaded', async () => {
       const session = getSession();
       if (!session) { window.location.href = 'index.html'; return; }
 
-      // Load appointments + existing ratings in parallel
+      // Load appointments, ratings, and admissions in parallel
       try {
-        const [appts, ratings] = await Promise.all([
+        const [appts, ratings, admissions] = await Promise.allSettled([
           AppointmentsAPI.getByPatient(session.roleSpecificId),
-          RatingsAPI.getByPatient(session.roleSpecificId)
+          RatingsAPI.getByPatient(session.roleSpecificId),
+          AdmissionsAPI.getByPatient(session.roleSpecificId)
         ]);
-        allAppointments = appts;
-        ratings.forEach(r => { ratedMap[r.appointmentID] = r.ratingValue; });
+        if (appts.status === 'fulfilled')      allAppointments = appts.value;
+        if (admissions.status === 'fulfilled') allAdmissions   = admissions.value;
+        if (ratings.status === 'fulfilled')    ratings.value.forEach(r => { ratedMap[r.appointmentID] = r.ratingValue; });
+        if (appts.status === 'rejected')       showToast('Could not load appointment history.', 'error');
       } catch (err) {
-        showToast('Could not load appointment history.', 'error');
+        showToast('Could not load history.', 'error');
         console.error(err);
       }
 
@@ -258,7 +328,15 @@
           tabs.forEach(t => t.classList.remove('active'));
           tab.classList.add('active');
           currentActiveTab = tab.textContent.trim();
-          renderList();
+          if (currentActiveTab === 'Admissions') {
+            document.getElementById('historyList').style.display   = 'none';
+            document.getElementById('admissionList').style.display = 'block';
+            renderAdmissions();
+          } else {
+            document.getElementById('historyList').style.display   = 'block';
+            document.getElementById('admissionList').style.display = 'none';
+            renderList();
+          }
         });
       });
 
@@ -428,6 +506,147 @@
         card.innerHTML = topHtml + bottomHtml;
         list.appendChild(card);
       });
+    }
+
+    // ── Admission rendering ──────────────────────────────────────────────────
+
+    function fmtDate(dateStr) {
+      if (!dateStr) return '—';
+      return new Date(dateStr).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+    }
+
+    function renderAdmissions() {
+      const list = document.getElementById('admissionList');
+      const discharged = allAdmissions.filter(a => a.status === 'Discharged');
+
+      if (discharged.length === 0) {
+        list.innerHTML = `<div style="padding:40px;text-align:center;color:var(--color-text-muted);">
+          <i class="ph ph-hospital" style="font-size:3rem;margin-bottom:12px;opacity:0.4;"></i>
+          <p>No completed admissions on record.</p></div>`;
+        return;
+      }
+
+      list.innerHTML = discharged.map(adm => `
+        <div class="history-card">
+          <div class="history-card-top">
+            <div class="history-card-left">
+              <div class="history-icon teal"><i class="ph-fill ph-hospital"></i></div>
+              <div class="history-details">
+                <h4>Hospital Admission</h4>
+                <p>${adm.wardName || 'Ward'} &bull; ${adm.reason || ''}</p>
+                <div class="admission-date-range">
+                  <i class="ph ph-calendar-blank"></i>
+                  ${fmtDate(adm.admissionDate)}
+                  <i class="ph ph-arrow-right"></i>
+                  ${fmtDate(adm.dischargeDate)}
+                </div>
+              </div>
+            </div>
+            <div class="history-card-right">
+              <span class="admission-badge"><i class="ph-fill ph-check-circle"></i> DISCHARGED</span>
+            </div>
+          </div>
+          <div class="history-card-bottom">
+            <div style="font-size:0.78rem;color:var(--color-text-muted);">
+              Admission #${adm.admissionID} &bull; Bed ${adm.bedID}
+            </div>
+            <div class="button-group">
+              <button class="btn btn-dark" onclick="viewAdmission(${adm.admissionID})">
+                <i class="ph ph-file-text"></i> View Full Report
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function viewAdmission(id) {
+      document.getElementById('admissionModal').style.display = 'flex';
+      document.getElementById('admModalTitle').textContent    = 'Admission Record';
+      document.getElementById('admModalBadge').innerHTML      = '';
+      document.getElementById('admModalBody').innerHTML       =
+        '<div style="padding:40px;text-align:center;color:var(--color-text-muted);">Loading…</div>';
+
+      try {
+        const a = await AdmissionsAPI.getById(id);
+
+        document.getElementById('admModalTitle').textContent = `${a.wardName || 'Hospital'} — Admission #${a.admissionID}`;
+        document.getElementById('admModalBadge').innerHTML   =
+          `<span class="admission-badge"><i class="ph-fill ph-check-circle"></i> DISCHARGED</span>`;
+
+        // ── Vitals ────────────────────────────────────────
+        const hasVitals = a.bloodPressure || a.heartRate || a.oxygenSaturation;
+        const vitalsHtml = hasVitals ? `
+          <div class="adm-section">
+            <div class="adm-section-title"><i class="ph-fill ph-heartbeat"></i> Vitals</div>
+            <div class="adm-grid">
+              <div class="adm-field"><label>Blood Pressure</label><span>${a.bloodPressure || '—'}</span></div>
+              <div class="adm-field"><label>Heart Rate</label><span>${a.heartRate != null ? a.heartRate + ' bpm' : '—'}</span></div>
+              <div class="adm-field"><label>O₂ Saturation</label><span>${a.oxygenSaturation != null ? a.oxygenSaturation + '%' : '—'}</span></div>
+            </div>
+          </div>` : '';
+
+        // ── Doctor Report ──────────────────────────────────
+        const hasReport = a.doctorNotes || a.followUpPlan;
+        const reportHtml = `
+          <div class="adm-section">
+            <div class="adm-section-title"><i class="ph-fill ph-stethoscope"></i> Doctor Report</div>
+            ${hasReport ? `
+              <div style="margin-bottom:12px;">
+                <div class="adm-section-title" style="font-size:0.62rem;color:var(--color-text-muted);margin-bottom:6px;">CLINICAL NOTES</div>
+                <div class="adm-text">${a.doctorNotes || '<span class="adm-none">No notes provided</span>'}</div>
+              </div>
+              <div>
+                <div class="adm-section-title" style="font-size:0.62rem;color:var(--color-text-muted);margin-bottom:6px;">FOLLOW-UP PLAN</div>
+                <div class="adm-text">${a.followUpPlan || '<span class="adm-none">No follow-up plan specified</span>'}</div>
+              </div>` :
+              '<div class="adm-none">No report submitted for this admission.</div>'}
+          </div>`;
+
+        // ── AI Risk ────────────────────────────────────────
+        const aiRiskHtml = a.readmissionRiskScore != null ? `
+          <div class="adm-section">
+            <div class="adm-section-title"><i class="ph-fill ph-brain"></i> AI Readmission Risk</div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+              <span class="adm-risk-badge ${a.isHighRisk ? 'high' : 'low'}">
+                <i class="ph-fill ${a.isHighRisk ? 'ph-warning' : 'ph-shield-check'}"></i>
+                ${(a.readmissionRiskScore * 100).toFixed(1)}% — ${a.isHighRisk ? 'High Risk' : 'Low Risk'}
+              </span>
+              ${a.riskCalculatedAt ? `<span style="font-size:0.75rem;color:var(--color-text-muted);">Assessed ${fmtDate(a.riskCalculatedAt)}</span>` : ''}
+            </div>
+          </div>` : '';
+
+        // ── AI Treatment ───────────────────────────────────
+        const aiTreatHtml = a.chronicTreatmentRecommendation ? `
+          <div class="adm-section">
+            <div class="adm-section-title"><i class="ph-fill ph-pills"></i> AI Treatment Recommendation</div>
+            <div class="adm-text" style="margin-bottom:8px;">${a.chronicTreatmentRecommendation}</div>
+            ${a.treatmentAlternatives ? `<div style="margin-bottom:6px;"><span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;color:var(--color-text-muted);">Alternatives</span><div class="adm-text" style="margin-top:4px;">${a.treatmentAlternatives}</div></div>` : ''}
+            ${a.treatmentConfidenceScore != null ? `<div style="font-size:0.78rem;color:var(--color-text-muted);">Confidence: ${a.treatmentConfidenceScore.toFixed(1)}%</div>` : ''}
+          </div>` : '';
+
+        // ── Overview ───────────────────────────────────────
+        const overviewHtml = `
+          <div class="adm-section">
+            <div class="adm-section-title"><i class="ph-fill ph-info"></i> Admission Details</div>
+            <div class="adm-grid">
+              <div class="adm-field"><label>Admitted</label><span>${fmtDate(a.admissionDate)}</span></div>
+              <div class="adm-field"><label>Discharged</label><span>${fmtDate(a.dischargeDate)}</span></div>
+              <div class="adm-field"><label>Ward</label><span>${a.wardName || '—'}</span></div>
+              <div class="adm-field"><label>Bed</label><span>#${a.bedID}</span></div>
+            </div>
+            <div style="margin-top:10px;">
+              <div class="adm-field"><label>Reason for Admission</label><span>${a.reason || '—'}</span></div>
+            </div>
+          </div>`;
+
+        document.getElementById('admModalBody').innerHTML =
+          overviewHtml + vitalsHtml + reportHtml + aiRiskHtml + aiTreatHtml;
+
+      } catch (err) {
+        document.getElementById('admModalBody').innerHTML =
+          `<div style="color:#dc2626;padding:20px;">${err.message === 'HTTP 404' ? 'Admission record not found.' : err.message}</div>`;
+      }
     }
 
     // Cancel via API
