@@ -150,8 +150,10 @@ const AdmissionsAPI = {
     saveReport: (id, dto)         => apiFetch(`/api/admissions/${id}/report`, { method: 'PUT', body: JSON.stringify(dto) }),
     runRiskAssessment: (id, dto)  => apiFetch(`/api/admissions/${id}/ai/risk-assessment`, { method: 'POST', body: JSON.stringify(dto) }),
     runChronicTreatment: (id, dto)=> apiFetch(`/api/admissions/${id}/ai/chronic-treatment`, { method: 'POST', body: JSON.stringify(dto) }),
-    saveRiskResult: (patientId, dto) => apiFetch(`/api/admissions/patient/${patientId}/risk-result`, { method: 'POST', body: JSON.stringify(dto) })
+    saveRiskResult: (patientId, dto) => apiFetch(`/api/admissions/patient/${patientId}/risk-result`, { method: 'POST', body: JSON.stringify(dto) }),
+    saveTreatmentResult: (patientId, dto) => apiFetch(`/api/admissions/patient/${patientId}/treatment-result`, { method: 'POST', body: JSON.stringify(dto) })
 };
+
 
 // ── Medical History API ────────────────────────────────────────────────────────
 

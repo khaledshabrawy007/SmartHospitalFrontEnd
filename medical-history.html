@@ -150,37 +150,16 @@
         <div class="history-sidebar">
           <div class="recent-widget">
             <h4>Recent Specialists</h4>
-            
-            <div class="recent-doc">
-              <img src="https://ui-avatars.com/api/?name=Eleanor+Vance&background=075242&color=fff" alt="Dr. Eleanor Vance">
-              <div class="recent-doc-info">
-                <h5>Dr. Eleanor Vance</h5>
-                <p>Radiology • 12 Visits</p>
-              </div>
-            </div>
-            
-            <div class="recent-doc">
-              <img src="https://ui-avatars.com/api/?name=Julian+Thorne&background=64748b&color=fff" alt="Dr. Julian Thorne">
-              <div class="recent-doc-info">
-                <h5>Dr. Julian Thorne</h5>
-                <p>Internal Medicine • 4 Visits</p>
-              </div>
-            </div>
-            
-            <div class="recent-doc">
-              <img src="https://ui-avatars.com/api/?name=Marcus+Aurelius&background=0284c7&color=fff" alt="Dr. Marcus Aurelius">
-              <div class="recent-doc-info">
-                <h5>Dr. Marcus Aurelius</h5>
-                <p>Cardiac Surgery • 2 Visits</p>
-              </div>
+            <div id="recentSpecialistsList">
+              <p style="font-size:0.82rem; color:var(--color-text-muted); padding:8px 0;">Loading...</p>
             </div>
           </div>
 
-          <div class="health-tip">
+          <div class="health-tip" id="healthTipBox">
             <i class="ph-fill ph-lightbulb"></i>
             <div>
               <h5>HEALTH TIP</h5>
-              <p>Keep scan results ready for your next follow-up on Jan 12.</p>
+              <p id="healthTipText">Stay hydrated — drink at least 8 glasses of water daily.</p>
             </div>
           </div>
         </div>
@@ -285,7 +264,82 @@
 
       renderList();
       bindRatingModal();
+      renderRecentSpecialists();
+      startHealthTipRotation();
     });
+
+    // ── Recent Specialists: built from real appointment data ─────────────────
+    function renderRecentSpecialists() {
+      const container = document.getElementById('recentSpecialistsList');
+      if (!allAppointments || allAppointments.length === 0) {
+        container.innerHTML = '<p style="font-size:0.82rem; color:var(--color-text-muted); padding:8px 0;">No appointments yet.</p>';
+        return;
+      }
+
+      // Group by doctorId, count visits, capture name + specialty
+      const map = {};
+      allAppointments.forEach(a => {
+        const key = a.doctorId || a.doctorID || (a.doctorName || 'unknown');
+        if (!map[key]) {
+          map[key] = {
+            name:      a.doctorName  || 'Unknown Doctor',
+            specialty: a.specialty   || a.department || '',
+            visits: 0
+          };
+        }
+        map[key].visits++;
+      });
+
+      // Sort by visit count descending, take top 4
+      const sorted = Object.values(map).sort((a, b) => b.visits - a.visits).slice(0, 4);
+
+      const COLORS = ['075242','0284c7','64748b','b45309','7c3aed','0e7490'];
+      container.innerHTML = sorted.map((d, idx) => {
+        const nameSlug = encodeURIComponent(d.name.replace('Dr. ', ''));
+        const color    = COLORS[idx % COLORS.length];
+        const visitTxt = d.visits === 1 ? '1 Visit' : `${d.visits} Visits`;
+        const specTxt  = d.specialty ? `${d.specialty} &middot; ${visitTxt}` : visitTxt;
+        return `
+          <div class="recent-doc">
+            <img src="https://ui-avatars.com/api/?name=${nameSlug}&background=${color}&color=fff" alt="${d.name}">
+            <div class="recent-doc-info">
+              <h5>${d.name}</h5>
+              <p>${specTxt}</p>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    // ── Health Tip rotation ───────────────────────────────────────────────────
+    const HEALTH_TIPS = [
+      'Stay hydrated — aim for 8 glasses of water daily, especially after procedures.',
+      'Take medications at the same time each day to maintain consistent blood levels.',
+      'Track your blood pressure at home and bring the log to every appointment.',
+      'Light 20-minute walks after meals help regulate blood sugar and digestion.',
+      'Sleep 7–9 hours — poor sleep raises blood pressure and weakens immunity.',
+      'Keep your latest lab results and scan reports accessible at all times.',
+      'Follow up with your specialist within 2 weeks of any hospital discharge.',
+      'Never stop a prescribed medication without consulting your doctor first.'
+    ];
+
+    let _tipIdx = Math.floor(Math.random() * HEALTH_TIPS.length);
+
+    function startHealthTipRotation() {
+      const el  = document.getElementById('healthTipText');
+      const box = document.getElementById('healthTipBox');
+      if (!el) return;
+      el.textContent = HEALTH_TIPS[_tipIdx];
+      setInterval(() => {
+        // Fade out
+        box.style.transition = 'opacity 0.4s';
+        box.style.opacity = '0';
+        setTimeout(() => {
+          _tipIdx = (_tipIdx + 1) % HEALTH_TIPS.length;
+          el.textContent = HEALTH_TIPS[_tipIdx];
+          box.style.opacity = '1';
+        }, 420);
+      }, 6000);
+    }
 
     function renderList() {
       const list = document.getElementById('historyList');

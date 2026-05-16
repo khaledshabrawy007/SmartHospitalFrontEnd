@@ -346,49 +346,61 @@
 
               <div class="form-grid-2" style="margin-bottom: 20px;">
                 <div class="form-group" style="margin-bottom: 0;">
-                  <label class="form-label">Blood Pressure (e.g. 120/80)</label>
+                  <label class="form-label">Systolic BP (mmHg)</label>
                   <div class="input-outline">
-                    <input type="text" id="fBp" required placeholder="e.g. 120/80">
+                    <input type="number" id="fSystolic" min="80" max="220" required placeholder="e.g. 145">
                   </div>
-                  <div class="field-error" id="errBp">Format like 120/80</div>
+                  <div class="field-error" id="errSystolic">Valid range 80-220</div>
                 </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Diastolic BP (mmHg)</label>
+                  <div class="input-outline">
+                    <input type="number" id="fDiastolic" min="40" max="140" required placeholder="e.g. 92">
+                  </div>
+                  <div class="field-error" id="errDiastolic">Valid range 40-140</div>
+                </div>
+
+              </div>
+
+              <div class="form-grid-2" style="margin-bottom: 20px;">
                 <div class="form-group" style="margin-bottom: 0;">
                   <label class="form-label">Sugar Level (mg/dL)</label>
                   <div class="input-outline">
-                    <input type="number" id="fSugar" min="20" max="600" required placeholder="e.g. 95">
+                    <input type="number" id="fSugar" min="50" max="400" required placeholder="e.g. 155">
                   </div>
-                  <div class="field-error" id="errSugar">Valid range 20-600</div>
+                  <div class="field-error" id="errSugar">Valid range 50-400</div>
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                  <label class="form-label">Total Cholesterol (mg/dL)</label>
+                  <div class="input-outline">
+                    <input type="number" id="fCholesterol" min="100" max="400" required placeholder="e.g. 245">
+                  </div>
+                  <div class="field-error" id="errCholesterol">Valid range 100-400</div>
                 </div>
               </div>
 
               <div class="form-grid-2" style="margin-bottom: 20px;">
                 <div class="form-group" style="margin-bottom: 0;">
-                  <label class="form-label">Cholesterol (mg/dL)</label>
-                  <div class="input-outline">
-                    <input type="number" id="fCholesterol" min="50" max="500" required placeholder="e.g. 180">
-                  </div>
-                  <div class="field-error" id="errCholesterol">Valid range 50-500</div>
-                </div>
-                <div class="form-group" style="margin-bottom: 0;">
                   <label class="form-label">BMI</label>
                   <div class="input-outline">
-                    <input type="number" id="fBmi" step="0.1" min="10" max="80" required placeholder="e.g. 24.5">
+                    <input type="number" id="fBmi" step="0.1" min="10" max="60" required placeholder="e.g. 31.2">
                   </div>
-                  <div class="field-error" id="errBmi">Valid range 10-80</div>
+                  <div class="field-error" id="errBmi">Valid range 10-60</div>
                 </div>
               </div>
+
               
               <div class="form-group" style="margin-bottom: 32px;">
                 <label class="form-label">Physical Activity Level</label>
                 <div class="input-outline">
                   <select id="fActivity" required>
-                    <option value="Sedentary">Sedentary (Little to no exercise)</option>
-                    <option value="Lightly Active">Lightly Active</option>
-                    <option value="Moderately Active">Moderately Active</option>
-                    <option value="Very Active">Very Active</option>
+                    <option value="Low">Low</option>
+                    <option value="Medium" selected>Medium</option>
+                    <option value="High">High</option>
                   </select>
                 </div>
               </div>
+
               
               <div class="switch-bg-row">
                 <div class="s-label">
@@ -419,16 +431,17 @@
                   <div class="form-group" style="margin-bottom:0;">
                     <label class="form-label">Patient ID</label>
                     <div class="input-outline" id="wrapPatientId">
-                      <input type="text" id="fPatientId" placeholder="e.g. PT-0012">
+                      <input type="number" id="fPatientId" placeholder="Enter Patient ID" min="1">
                     </div>
                     <div class="field-error" id="errPatientId">Enter a valid Patient ID</div>
                   </div>
                   <div class="form-group" style="margin-bottom:0;">
-                    <label class="form-label">Patient Name <span style="font-weight:400; color:var(--color-text-muted);">(optional)</span></label>
+                    <label class="form-label">Patient Name <span style="font-weight:400; color:var(--color-text-muted);">(auto-filled)</span></label>
                     <div class="input-outline">
-                      <input type="text" id="fPatientName" placeholder="e.g. Sarah Jenkins">
+                      <input type="text" id="fPatientName" placeholder="Auto-filled from Patient ID" readonly style="cursor:default; color:var(--color-text-muted);">
                     </div>
                   </div>
+
                 </div>
                 <div id="patientContextBanner" style="display:none; margin-top:12px; padding:10px 14px; background:rgba(10,111,86,0.07); border-radius:8px; font-size:0.83rem; color:var(--color-primary); font-weight:600; align-items:center; gap:8px;">
                   <i class="ph-fill ph-link-simple"></i>
@@ -569,7 +582,9 @@
     </div>
   </div>
 
+  <script src="api.js"></script>
   <script src="auth-session.js"></script>
+
   <script>
     // Elements
     const form = document.getElementById('vitalsForm');
@@ -637,45 +652,53 @@
     function checkFormValidity() {
       clearErrors();
       let isValid = true;
-      
-      const vAge = document.getElementById('fAge').value;
-      if (!vAge || vAge < 0 || vAge > 120) {
+
+      const vAge = parseFloat(document.getElementById('fAge').value);
+      if (!vAge || vAge < 1 || vAge > 100) {
         document.getElementById('fAge').closest('.input-outline').classList.add('has-error');
         document.getElementById('errAge').classList.add('show');
         isValid = false;
       }
-      
-      const vBp = document.getElementById('fBp').value;
-      if (!/^\d{2,3}\/\d{2,3}$/.test(vBp)) {
-        document.getElementById('fBp').closest('.input-outline').classList.add('has-error');
-        document.getElementById('errBp').classList.add('show');
+
+      const vSys = parseFloat(document.getElementById('fSystolic').value);
+      if (!vSys || vSys < 80 || vSys > 220) {
+        document.getElementById('fSystolic').closest('.input-outline').classList.add('has-error');
+        document.getElementById('errSystolic').classList.add('show');
         isValid = false;
       }
-      
-      const vSugar = document.getElementById('fSugar').value;
-      if (!vSugar || vSugar < 20 || vSugar > 600) {
+
+      const vDia = parseFloat(document.getElementById('fDiastolic').value);
+      if (!vDia || vDia < 40 || vDia > 140) {
+        document.getElementById('fDiastolic').closest('.input-outline').classList.add('has-error');
+        document.getElementById('errDiastolic').classList.add('show');
+        isValid = false;
+      }
+
+      const vSugar = parseFloat(document.getElementById('fSugar').value);
+      if (!vSugar || vSugar < 50 || vSugar > 400) {
         document.getElementById('fSugar').closest('.input-outline').classList.add('has-error');
         document.getElementById('errSugar').classList.add('show');
         isValid = false;
       }
-      
-      const vChol = document.getElementById('fCholesterol').value;
-      if (!vChol || vChol < 50 || vChol > 500) {
+
+      const vChol = parseFloat(document.getElementById('fCholesterol').value);
+      if (!vChol || vChol < 100 || vChol > 400) {
         document.getElementById('fCholesterol').closest('.input-outline').classList.add('has-error');
         document.getElementById('errCholesterol').classList.add('show');
         isValid = false;
       }
 
-      const vBmi = document.getElementById('fBmi').value;
-      if (!vBmi || vBmi < 10 || vBmi > 80) {
+      const vBmi = parseFloat(document.getElementById('fBmi').value);
+      if (!vBmi || vBmi < 10 || vBmi > 60) {
         document.getElementById('fBmi').closest('.input-outline').classList.add('has-error');
         document.getElementById('errBmi').classList.add('show');
         isValid = false;
       }
-      
+
       btnGenerate.disabled = !isValid;
       return isValid;
     }
+
 
     // Track input changes
     inputs.forEach(input => {
@@ -689,169 +712,255 @@
       });
     });
 
-    // Mock AI generator logic
-    function getMockRecommendation() {
-      const isHighSugar = document.getElementById('fSugar').value > 125;
-      const bpParts = document.getElementById('fBp').value.split('/');
-      const isHighBp = parseInt(bpParts[0]) > 130 || parseInt(bpParts[1]) > 80;
-      
-      let diseaseHtml = `Hypertension<br>Type II`;
-      let confidence = `94% CONFIDENCE`;
-      let medName = `Lisinopril 10mg`;
-      let medDesc = `Take once daily in the morning with food. Monitor BP bi-weekly for initial 14-day titration period.`;
-      
-      let alts = [
-        { name: "Amlodipine Besylate", desc: "Calcium Channel Blocker" },
-        { name: "Hydrochlorothiazide", desc: "Diuretic / Water Pill" }
-      ];
-      
-      let lstyles = [
-        "Reduce sodium intake to < 2,300 mg per day.",
-        "Engage in 150 min of moderate aerobic activity weekly.",
-        "DASH diet (Dietary Approaches to Stop Hypertension)."
-      ];
+    // ── FASTAPI TREATMENT RECOMMENDATION ──────────────────────────────────
+    const TREATMENT_API = 'http://127.0.0.1:8002/predict';
 
-      let narrative = `"The patient presents with compounding risk factors. Given the BP readings, Lisinopril is the optimal starting point. If BP doesn't stabilize in 3 weeks, consider combining with a low-dose diuretic."`;
+    let lastPrediction = null;
 
-      // Variation based on input values!
-      if (isHighSugar && !isHighBp) {
-        diseaseHtml = `Type 2<br>Diabetes`;
-        confidence = `91% CONFIDENCE`;
-        medName = `Metformin 500mg`;
-        medDesc = `Take twice daily with meals. Monitor HbA1c closely over next 3 months.`;
-        alts = [ { name: "Glipizide", desc: "Sulfonylurea" }, { name: "Sitagliptin", desc: "DPP-4 Inhibitor" } ];
-        lstyles = [
-          "Maintain carbohydrate-consistent diet regimen.",
-          "Check blood glucose levels fasting and 2 hours post-meal.",
-          "Daily aerobic exercise for 30 minutes."
-        ];
-        narrative = `"Due to elevated blood glucose indicating uncontrolled diabetes, Metformin is recommended as the first-line medication alongside strict lifestyle interventions."`;
-      } else if (isHighSugar && isHighBp) {
-        diseaseHtml = `Metabolic<br>Syndrome`;
-        confidence = `88% CONFIDENCE`;
-        medName = `Metformin & Lisinopril`;
-        medDesc = `Begin dual-therapy. Metformin 500mg BID and Lisinopril 10mg QD.`;
-        narrative = `"Patient exhibits elevated BP and blood glucose simultaneously. Early intervention on both fronts is required to mitigate cardiovascular risk."`;
-      }
+    // ── Validation helper  ────────────────────────────────────────────────
+    function getNumVal(id)  { return parseFloat(document.getElementById(id).value); }
+    function getStrVal(id)  { return document.getElementById(id).value.trim(); }
 
-      return { diseaseHtml, confidence, medName, medDesc, alts, lstyles, narrative };
+    function validateAndBuild() {
+      let ok = true;
+      clearErrors();
+
+      const age       = getNumVal('fAge');
+      const systolic  = getNumVal('fSystolic');
+      const diastolic = getNumVal('fDiastolic');
+      const sugar     = getNumVal('fSugar');
+      const chol      = getNumVal('fCholesterol');
+      const bmi       = parseFloat(document.getElementById('fBmi').value);
+
+      if (!age  || age  < 1  || age  > 100) { markErr('errAge', 'wrapAge');   ok = false; }
+      if (!systolic  || systolic  < 80  || systolic  > 220) { markErr('errSystolic',  null); ok = false; }
+      if (!diastolic || diastolic < 40  || diastolic > 140) { markErr('errDiastolic', null); ok = false; }
+      if (!sugar || sugar < 50 || sugar > 400)  { markErr('errSugar', null);       ok = false; }
+      if (!chol  || chol  < 100|| chol  > 400)  { markErr('errCholesterol', null); ok = false; }
+      if (!bmi   || bmi   < 10 || bmi   > 60)   { markErr('errBmi', null);         ok = false; }
+
+      if (!ok) return null;
+
+      const smoking  = document.getElementById('fSmoking').checked  ? 'Yes' : 'No';
+      const family   = document.getElementById('fFamily').checked   ? 'Yes' : 'No';
+      const gender   = getStrVal('fGender');
+      const activity = getStrVal('fActivity');
+
+      return { Age: age, Gender: gender, Systolic_BP: systolic, Diastolic_BP: diastolic,
+               Sugar_Level: sugar, Total_Cholesterol: chol, BMI: bmi,
+               Smoking: smoking, Physical_Activity: activity, Family_History: family };
     }
 
-    // Generate Button
-    btnGenerate.addEventListener('click', () => {
-      if (!checkFormValidity()) return;
-      
+    function markErr(errId, wrapId) {
+      const e = document.getElementById(errId);
+      if (e) e.classList.add('show');
+      if (wrapId) { const w = document.getElementById(wrapId); if (w) w.classList.add('has-error'); }
+    }
+
+    // ── Display real API result ────────────────────────────────────────────
+    function displayResult(data) {
+      lastPrediction = data;
+      const disease   = data.predicted_disease || 'Unknown';
+      const pct       = (data.probability_percent || 0).toFixed(1);
+      const conf      = data.confidence_level   || '';
+      const recs      = data.recommendations    || {};
+      const primary   = recs.primary_treatment  || '—';
+      const alt       = recs.alternative_treatment || '—';
+      const lifestyle = recs.lifestyle_advice   || '';
+      const note      = recs.note               || '';
+      const topPreds  = data.top_predictions    || [];
+
+      // Disease title + confidence
+      document.getElementById('resDiseaseTitle').textContent = disease;
+      document.getElementById('resConfidence').textContent   = `${pct}% — ${conf}`;
+
+      // Primary treatment
+      document.getElementById('resMedName').textContent = primary;
+      document.getElementById('resMedDesc').textContent = note;
+
+      // Alternative treatment
+      document.getElementById('resAltMeds').innerHTML = `
+        <div class="alt-row">
+          <div class="alt-info"><h5>${alt}</h5><p>Alternative Therapy</p></div>
+          <i class="ph ph-caret-right" style="color:var(--color-text-muted);"></i>
+        </div>`;
+
+      // Lifestyle advice
+      const steps = lifestyle.split(/[.,;]/).map(s=>s.trim()).filter(s=>s.length>4);
+      document.getElementById('resLifestyle').innerHTML = steps.length
+        ? steps.map(l => `<div class="life-item"><i class="ph-fill ph-check-circle"></i><p>${l}.</p></div>`).join('')
+        : `<div class="life-item"><i class="ph-fill ph-check-circle"></i><p>${lifestyle}</p></div>`;
+
+      // Narrative textarea (editable)
+      let narrative = `Predicted condition: ${disease} (${pct}% — ${conf}).\nPrimary: ${primary}.\nAlternative: ${alt}.\nLifestyle: ${lifestyle}`;
+      if (topPreds.length > 1) {
+        narrative += '\n\nDifferential: ' + topPreds.slice(1,3).map(p=>`${p.disease} ${p.probability_percent.toFixed(1)}%`).join(', ') + '.';
+      }
+      document.getElementById('resNarrative').value = narrative;
+    }
+
+    // ── Generate Button → real FastAPI call ───────────────────────────────
+    btnGenerate.addEventListener('click', async () => {
+      console.log('[Treatment] Generate clicked');
+
+      // Show loading immediately so the user sees feedback
       outdatedWarning.classList.remove('show');
       panelAwaiting.classList.remove('show');
       panelResult.classList.remove('show');
       panelLoading.classList.add('show');
-      
       btnGenerate.disabled = true;
 
-      // Simulate API Response delay
-      setTimeout(() => {
-        const data = getMockRecommendation();
-        
-        resDiseaseTitle.innerHTML = data.diseaseHtml;
-        resConfidence.textContent = data.confidence;
-        resMedName.textContent = data.medName;
-        resMedDesc.textContent = data.medDesc;
-        
-        resAltMeds.innerHTML = data.alts.map(a => `
-          <div class="alt-row">
-            <div class="alt-info">
-              <h5>${a.name}</h5>
-              <p>${a.desc}</p>
-            </div>
-            <i class="ph ph-caret-right" style="color:var(--color-text-muted);"></i>
-          </div>
-        `).join('');
-        
-        resLifestyle.innerHTML = data.lstyles.map(l => `
-          <div class="life-item">
-            <i class="ph-fill ph-check-circle"></i>
-            <p>${l}</p>
-          </div>
-        `).join('');
+      let payload = null;
+      try {
+        payload = validateAndBuild();
+        console.log('[Treatment] Payload:', payload);
+      } catch (validErr) {
+        console.error('[Treatment] validateAndBuild threw:', validErr);
+        panelLoading.classList.remove('show');
+        panelAwaiting.classList.add('show');
+        btnGenerate.disabled = false;
+        showToast('Form validation error: ' + validErr.message, 'error', 'Validation Error');
+        return;
+      }
 
-        resNarrative.value = data.narrative;
-        
-        const disease = data.diseaseHtml.replace('<br>', ' ');
-        showToast(`Neural network generated a ${disease} protocol with ${data.confidence.toLowerCase()}.`, 'success', 'Recommendation Generated');
-        
+      if (!payload) {
+        console.warn('[Treatment] Validation failed — payload is null');
+        panelLoading.classList.remove('show');
+        panelAwaiting.classList.add('show');
+        btnGenerate.disabled = false;
+        showToast('Please fill all required fields correctly before generating.', 'warning', 'Incomplete Form');
+        return;
+      }
+
+      try {
+        console.log('[Treatment API Payload]', JSON.stringify(payload));
+        const res = await fetch(TREATMENT_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || `HTTP ${res.status}`);
+        }
+        const data = await res.json();
+        console.log('[Treatment API Response]', data);
+        displayResult(data);
         panelLoading.classList.remove('show');
         panelResult.classList.add('show');
-        
         state.isGenerated = true;
         state.inputsChangedAfterGen = false;
+        showToast(`${data.predicted_disease} — ${data.probability_percent.toFixed(1)}% (${data.confidence_level})`, 'success', 'Recommendation Generated');
+      } catch (err) {
+        console.error('[Treatment API Error]', err);
+        panelLoading.classList.remove('show');
+        panelAwaiting.classList.add('show');
+        showToast(err.message || 'Could not reach Treatment API. Make sure it is running on port 8002.', 'error', 'Prediction Failed');
+      } finally {
         btnGenerate.disabled = false;
-        
-      }, 1500);
+      }
     });
 
-    // Reset Form
+
+    // ── Reset Form ─────────────────────────────────────────────────────────
     btnReset.addEventListener('click', () => {
       form.reset();
-      resNarrative.value = '';
+      document.getElementById('fPatientId').value   = '';
+      const nameEl = document.getElementById('fPatientName');
+      nameEl.value       = '';
+      nameEl.placeholder = 'Auto-filled from Patient ID';
+      const banner = document.getElementById('patientContextBanner');
+      if (banner) banner.style.display = 'none';
+      document.getElementById('resNarrative').value = '';
       clearErrors();
       outdatedWarning.classList.remove('show');
       panelResult.classList.remove('show');
       panelLoading.classList.remove('show');
       panelAwaiting.classList.add('show');
+      lastPrediction = null;
       state.isGenerated = false;
       state.inputsChangedAfterGen = false;
-      showToast('Patient vitals form has been cleared. Ready for a new assessment.', 'success', 'Form Reset');
+      showToast('Patient vitals form cleared. Ready for a new assessment.', 'success', 'Form Reset');
       btnGenerate.disabled = true;
     });
 
-    // Finalize Protocol
-    btnFinalize.addEventListener('click', () => {
-      const patientId = document.getElementById('fPatientId').value.trim();
-      if (!patientId) {
+    // ── Finalize Protocol → save to ASP.NET backend ───────────────────────
+    btnFinalize.addEventListener('click', async () => {
+      if (!lastPrediction) {
+        showToast('Generate a recommendation first before finalizing.', 'warning', 'No Result Yet');
+        return;
+      }
+      const patientIdRaw = document.getElementById('fPatientId').value;
+      const patientId    = parseInt(patientIdRaw);
+      if (!patientId || patientId < 1) {
         document.getElementById('wrapPatientId').classList.add('has-error');
         document.getElementById('errPatientId').classList.add('show');
-        showToast('Please enter a Patient ID before finalizing the protocol.', 'error', 'Patient ID Required');
+        showToast('Please enter a valid Patient ID before finalizing.', 'error', 'Patient ID Required');
         return;
       }
       document.getElementById('wrapPatientId').classList.remove('has-error');
       document.getElementById('errPatientId').classList.remove('show');
 
-      const protocol = {
-        type: 'treatmentProtocol',
-        patientId,
-        patientName: document.getElementById('fPatientName').value.trim() || 'Unknown',
-        date: new Date().toISOString(),
-        disease: document.getElementById('resDiseaseTitle').innerText.replace('\n', ' '),
-        primaryMed: document.getElementById('resMedName').textContent,
-        narrative: document.getElementById('resNarrative').value
+      const dto = {
+        predictedDisease:    lastPrediction.predicted_disease,
+        primaryTreatment:    (lastPrediction.recommendations || {}).primary_treatment || '',
+        alternativeTreatment:(lastPrediction.recommendations || {}).alternative_treatment || '',
+        confidenceScore:     lastPrediction.probability_percent || 0
       };
-      
-      const key = 'smartHospital_PatientRecords';
-      let saved = JSON.parse(localStorage.getItem(key) || '[]');
-      saved.push(protocol);
-      localStorage.setItem(key, JSON.stringify(saved));
-      
-      const patName = document.getElementById('fPatientName').value.trim();
-      const displayName = patName ? ` (${patName})` : '';
-      showToast(`Treatment protocol saved to patient ${patientId}${displayName} successfully.`, 'success', 'Protocol Finalized');
+
+      const btn = document.getElementById('btnFinalize');
+      btn.disabled = true;
+      try {
+        await AdmissionsAPI.saveTreatmentResult(patientId, dto);
+        const patName    = document.getElementById('fPatientName').value.trim();
+        const displayName = patName ? ` (${patName})` : '';
+        showToast(`Treatment protocol saved for patient ${patientId}${displayName}.`, 'success', 'Protocol Finalized');
+      } catch(err) {
+        showToast(err.message || 'Could not save treatment result. Check the patient ID.', 'error', 'Save Failed');
+      } finally {
+        btn.disabled = false;
+      }
     });
 
+    // ── Patient name auto-load ─────────────────────────────────────────────
     (function prefillFromUrl() {
       const params = new URLSearchParams(window.location.search);
-      const pid = params.get('patientId');
-      const pname = params.get('patientName');
+      const pid    = params.get('patientId');
+      const pname  = params.get('patientName');
       if (pid) {
         document.getElementById('fPatientId').value = pid;
         const banner = document.getElementById('patientContextBanner');
-        banner.style.display = 'flex';
+        if (banner) banner.style.display = 'flex';
         const nameStr = pname ? ` — ${pname}` : '';
-        document.getElementById('patientContextText').textContent =
-          `Auto-linked to patient: ${pid}${nameStr}`;
+        document.getElementById('patientContextText').textContent = `Auto-linked: ${pid}${nameStr}`;
         if (pname) document.getElementById('fPatientName').value = pname;
+        else loadPatientName(parseInt(pid));
       }
     })();
 
-    // Initial state: generate is disabled until form is valid
+    let _nameTimer = null;
+    function triggerNameLoad() {
+      const nameEl = document.getElementById('fPatientName');
+      nameEl.value = ''; nameEl.placeholder = 'Loading...';
+      clearTimeout(_nameTimer);
+      _nameTimer = setTimeout(() => loadPatientName(parseInt(document.getElementById('fPatientId').value)), 500);
+    }
+    document.getElementById('fPatientId').addEventListener('input',  triggerNameLoad);
+    document.getElementById('fPatientId').addEventListener('change', triggerNameLoad);
+
+    async function loadPatientName(id) {
+      const nameEl = document.getElementById('fPatientName');
+      if (!id || id < 1) { nameEl.value = ''; nameEl.placeholder = 'Auto-filled from Patient ID'; return; }
+      try {
+        const p = await PatientsAPI.getById(id);
+        nameEl.value = p.fullName || '';
+        nameEl.placeholder = 'Auto-filled from Patient ID';
+      } catch {
+        nameEl.value = ''; nameEl.placeholder = 'Patient not found';
+      }
+    }
+
+    // Initial state
     btnGenerate.disabled = true;
   </script>
 </body>
