@@ -13,7 +13,7 @@
     /* ── Metric Cards ────────────────────────────── */
     .metric-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, 1fr);
       gap: 24px;
       margin-bottom: 24px;
     }
@@ -201,6 +201,68 @@
       color: var(--color-text-dark);
       cursor: default;
     }
+
+    /* ── AI Staffing Predictor ───────────────────────────── */
+    .sp-label {
+      font-size: 0.65rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--color-text-muted);
+      display: block; margin-bottom: 5px;
+    }
+    .sp-select, .sp-input {
+      width: 100%; padding: 7px 10px;
+      border: 1.5px solid #e2e8f0; border-radius: 8px;
+      font-size: 0.82rem; font-weight: 600; color: #1e293b;
+      background: #f8fafc; outline: none;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    .sp-select:focus, .sp-input:focus { border-color: var(--color-primary); background: white; }
+
+    /* Shift cards */
+    .sp-shift-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+    .sp-shift-card {
+      border: 1.5px solid #e2e8f0; border-radius: 10px;
+      padding: 10px 4px; text-align: center; cursor: pointer;
+      transition: all 0.18s; display: flex; flex-direction: column;
+      align-items: center; gap: 3px;
+      background: white;
+    }
+    .sp-shift-card:hover { border-color: var(--color-primary); background: rgba(10,111,86,0.04); }
+    .sp-shift-card.active {
+      border-color: var(--color-primary);
+      background: rgba(10,111,86,0.08);
+      box-shadow: 0 0 0 3px rgba(10,111,86,0.12);
+    }
+    .sp-shift-icon { font-size: 1.3rem; line-height: 1; }
+    .sp-shift-name { font-size: 0.7rem; font-weight: 800; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.04em; }
+    .sp-shift-time { font-size: 0.6rem; color: var(--color-text-muted); font-weight: 600; }
+
+    /* Predict button */
+    .sp-predict-btn {
+      width: 100%; padding: 10px;
+      background: var(--color-primary); color: white;
+      border: none; border-radius: 10px;
+      font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center;
+      justify-content: center; gap: 8px;
+      transition: background 0.2s, transform 0.15s;
+      margin-bottom: 14px;
+    }
+    .sp-predict-btn:hover { background: #085c47; transform: translateY(-1px); }
+    .sp-predict-btn:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+
+    /* Result card */
+    .sp-result {
+      border-radius: 10px; padding: 14px 16px;
+      font-size: 0.85rem; line-height: 1.5;
+      border-left: 4px solid transparent;
+    }
+    .sp-result.shortage { background: #fff1f2; border-left-color: #ef4444; color: #991b1b; }
+    .sp-result.surplus  { background: #f0fdf4; border-left-color: #22c55e; color: #15803d; }
+    .sp-result.balanced { background: #f0fdfa; border-left-color: #14b8a6; color: #0f766e; }
+    .sp-result .sp-gap-num  { font-size: 1.8rem; font-weight: 800; display: block; margin-bottom: 2px; }
+    .sp-result .sp-gap-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.75; }
+    .sp-result .sp-rec  { margin-top: 8px; font-size: 0.77rem; opacity: 0.9; border-top: 1px solid rgba(0,0,0,0.08); padding-top: 8px; }
   </style>
 </head>
 <body>
@@ -309,12 +371,65 @@
           </div>
         </div>
         
-        <!-- Staff Needs Panel -->
-        <div class="chart-card">
-          <div class="chart-title" style="margin-bottom:20px;">
-            <i class="ph-fill ph-users" style="color:var(--color-primary);"></i> Staff Needs Prediction
+        <!-- AI Staffing Predictor Panel -->
+        <div class="chart-card" id="staffingPredictorCard">
+          <div class="chart-title" style="margin-bottom:16px;">
+            <i class="ph-fill ph-users" style="color:var(--color-primary);"></i>
+            AI Staffing Predictor
           </div>
-          <div id="staffNeedsPanel"></div>
+
+          <!-- Month + Patient count row -->
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px;">
+            <div>
+              <label class="sp-label">Month</label>
+              <select class="sp-select" id="spMonth">
+                <option>January</option><option>February</option><option>March</option>
+                <option>April</option>
+                <option selected>May</option>
+                <option>June</option><option>July</option><option>August</option>
+                <option>September</option><option>October</option><option>November</option>
+                <option>December</option>
+              </select>
+            </div>
+            <div>
+              <label class="sp-label">Expected Patients</label>
+              <input class="sp-input" id="spPatients" type="number" min="1" value="300" placeholder="e.g. 300">
+            </div>
+          </div>
+
+          <!-- Current staff -->
+          <div style="margin-bottom:14px;">
+            <label class="sp-label">Current Staff on Shift</label>
+            <input class="sp-input" id="spStaff" type="number" min="0" value="80" placeholder="e.g. 80">
+          </div>
+
+          <!-- Shift type selector cards -->
+          <label class="sp-label" style="margin-bottom:8px; display:block;">Shift Type</label>
+          <div class="sp-shift-row" id="spShiftRow">
+            <div class="sp-shift-card active" data-shift="Morning" onclick="selectShift(this)">
+              <span class="sp-shift-icon">🌅</span>
+              <span class="sp-shift-name">Morning</span>
+              <span class="sp-shift-time">06:00 – 14:00</span>
+            </div>
+            <div class="sp-shift-card" data-shift="Evening" onclick="selectShift(this)">
+              <span class="sp-shift-icon">🌤️</span>
+              <span class="sp-shift-name">Afternoon</span>
+              <span class="sp-shift-time">14:00 – 22:00</span>
+            </div>
+            <div class="sp-shift-card" data-shift="Night" onclick="selectShift(this)">
+              <span class="sp-shift-icon">🌙</span>
+              <span class="sp-shift-name">Night</span>
+              <span class="sp-shift-time">22:00 – 06:00</span>
+            </div>
+          </div>
+
+          <!-- Predict button -->
+          <button class="sp-predict-btn" id="spPredictBtn" onclick="runStaffingPredict()">
+            <i class="ph-fill ph-lightning"></i> Predict Staffing Gap
+          </button>
+
+          <!-- Result area -->
+          <div id="spResult" class="sp-result" style="display:none;"></div>
         </div>
       </div>
       
@@ -734,7 +849,7 @@
         </div>
       `).join('');
     }
-    renderStaffNeeds();
+    // renderStaffNeeds removed – panel replaced by AI Staffing Predictor
 
     function openStaffModal(idx) {
       const s = mockData.staffNeeds[idx];
@@ -749,7 +864,90 @@
     // ═══════════════════════════════════════════════════
     // ALERTS
     // ═══════════════════════════════════════════════════
-    let activeAlerts = [...mockData.alerts];
+    // ── Dynamic Alert Generator ─────────────────────────────────────────────
+    // Builds context-aware alerts from current time, day of week, and live data.
+    // Called once on load, then enriched after metrics arrive.
+
+    function buildDynamicAlerts(liveData = {}) {
+      const now     = new Date();
+      const hour    = now.getHours();
+      const dayName = now.toLocaleDateString('en-US', { weekday: 'long' });
+      const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+      const doctorCount = liveData.doctors ?? null;
+      const nurseCount  = liveData.nurses  ?? null;
+      const apptCount   = liveData.appts   ?? null;
+      const wardCount   = liveData.wards   ?? null;
+
+      const alerts = [];
+
+      // ── Shift-change warning (06:00-07:30, 13:30-14:30, 21:30-22:30)
+      const shiftWindows = [[6,0,7,30,'Morning','06:00'], [13,30,14,30,'Afternoon','14:00'], [21,30,22,30,'Night','22:00']];
+      const inShiftChange = shiftWindows.find(([sh,sm,eh,em,name]) => {
+        const start = sh*60+sm, end = eh*60+em, cur = hour*60+now.getMinutes();
+        return cur >= start && cur <= end;
+      });
+      if (inShiftChange) {
+        alerts.push({ id:'dyn-shift', severity:'critical', icon:'ph-fill ph-arrows-clockwise',
+          title: `${inShiftChange[4]} Shift Handover`, time: 'Now',
+          desc: `Shift changeover to ${inShiftChange[4]} shift begins at ${inShiftChange[5]}. Ensure all wards report current patient status.`,
+          detail: 'Clinical leads must complete bed-state handover report and confirm staffing assignments for the incoming shift before the changeover deadline.' });
+      }
+
+      // ── Weekend staffing advisory
+      if (['Saturday','Sunday'].includes(dayName)) {
+        alerts.push({ id:'dyn-wknd', severity:'critical', icon:'ph-fill ph-calendar-x',
+          title: 'Weekend Reduced Staffing', time: dayName,
+          desc: 'Weekend roster active. Verify float-pool availability for all wards.',
+          detail: 'Weekend staffing operates at 70% of weekday capacity. All ward managers should confirm at least one senior nurse is on duty per ward and that on-call physician coverage is confirmed.' });
+      }
+
+      // ── Low active doctor count (if live data available)
+      if (doctorCount !== null && doctorCount < 5) {
+        alerts.push({ id:'dyn-dr', severity:'critical', icon:'ph-fill ph-user-minus',
+          title: 'Low Active Doctor Count', time: timeStr,
+          desc: `Only ${doctorCount} active doctor(s) on record. Review availability immediately.`,
+          detail: `The system shows ${doctorCount} active doctors. If this reflects real availability, activate the on-call protocol and notify department heads.` });
+      }
+
+      // ── High scheduled appointments (busy day)
+      if (apptCount !== null && apptCount > 30) {
+        alerts.push({ id:'dyn-appt', severity:'critical', icon:'ph-fill ph-calendar-dots',
+          title: 'High Appointment Volume', time: timeStr,
+          desc: `${apptCount} appointments scheduled today. Consider adding support staff to reception.`,
+          detail: `${apptCount} scheduled consultations detected. Peak load may occur 09:00-12:00. Ensure triage nurses are briefed and waiting-area management protocols are active.` });
+      }
+
+      // ── End-of-day report reminder (after 15:00)
+      if (hour >= 15) {
+        alerts.push({ id:'dyn-eod', severity:'info', icon:'ph-fill ph-clipboard-text',
+          title: 'End-of-Day Report Due', time: timeStr,
+          desc: 'Ward managers: submit daily occupancy and incident summary by 18:00.',
+          detail: 'All ward managers are required to submit the daily bed occupancy report, incident log, and staff attendance sheet to the HR portal before 18:00. Reports submitted after this time require a reason code.' });
+      }
+
+      // ── Standard operational info alerts
+      alerts.push({ id:'dyn-supply', severity:'info', icon:'ph-fill ph-first-aid-kit',
+        title: 'Weekly Supply Check', time: `${dayName}`,
+        desc: 'Pharmacy and medical supply audit scheduled this week.',
+        detail: 'Standing weekly audit covers ICU consumables, OR surgical kits, and ward medication dispensers. Submit discrepancy reports to Procurement by end of week.' });
+
+      if (wardCount !== null) {
+        alerts.push({ id:'dyn-wards', severity:'info', icon:'ph-fill ph-buildings',
+          title: `${wardCount} Wards Operational`, time: timeStr,
+          desc: `All ${wardCount} registered wards are active. Bed assignment system is live.`,
+          detail: `Ward management system shows ${wardCount} active wards. Any ward needing emergency closure should be flagged through the Ward Management portal immediately.` });
+      } else {
+        alerts.push({ id:'dyn-roster', severity:'info', icon:'ph-fill ph-calendar-check',
+          title: 'Roster Review Pending', time: 'This week',
+          desc: 'Next week\'s shift roster requires HR sign-off before Friday.',
+          detail: 'Shift roster for the upcoming week must be finalized and approved by the HR Manager before Friday 17:00. Any open slots must be filled via the voluntary overtime process.' });
+      }
+
+      return alerts;
+    }
+
+    let activeAlerts = buildDynamicAlerts();
 
     function renderAlerts() {
       const grid = document.getElementById('alertGrid');
@@ -854,6 +1052,15 @@
         mockData.metrics[3].tag   = 'Live';
         renderMetrics();
 
+        // Rebuild alerts now that we have live data
+        activeAlerts = buildDynamicAlerts({
+          doctors: doctorCount,
+          nurses:  nurseCount,
+          appts:   apptCount,
+          wards:   wardCount
+        });
+        renderAlerts();
+
       } catch (e) {
         console.warn('Could not load live metrics', e);
       }
@@ -861,6 +1068,83 @@
       // Load bed occupancy forecast chart (runs independently of metrics)
       loadBedForecast();
     });
+
+    // ═══════════════════════════════════════════════════
+    // AI STAFFING PREDICTOR
+    // ═══════════════════════════════════════════════════
+
+    function selectShift(card) {
+      document.querySelectorAll('.sp-shift-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+    }
+
+    async function runStaffingPredict() {
+      const btn       = document.getElementById('spPredictBtn');
+      const resultEl  = document.getElementById('spResult');
+
+      // Read inputs
+      const month     = document.getElementById('spMonth').value;
+      const patients  = parseInt(document.getElementById('spPatients').value, 10);
+      const staff     = parseInt(document.getElementById('spStaff').value, 10);
+      const shiftCard = document.querySelector('.sp-shift-card.active');
+      const shift     = shiftCard ? shiftCard.dataset.shift : 'Morning';
+
+      // Validate
+      if (!patients || patients < 1) { showToast('Enter a valid patient count.', 'error'); return; }
+      if (isNaN(staff) || staff < 0)  { showToast('Enter a valid staff count.', 'error'); return; }
+
+      // Loading state
+      btn.disabled = true;
+      btn.innerHTML = '<span class="chart-spinner"></span> Predicting…';
+      resultEl.style.display = 'none';
+
+      try {
+        const data = await StaffingAPI.predict({
+          prediction_month:    month,
+          patient_count:       patients,
+          current_staff_count: staff,
+          shift_type:          shift
+        });
+
+        const gap       = data.net_gap;           // negative = shortage
+        const required  = data.required_staff_count ?? '—';
+        const rec       = data.recommendation ?? '';
+        const clsLevel  = data.predicted_class ?? '';
+
+        // Classify
+        let stateClass, gapLabel, gapDisplay;
+        if (gap < 0) {
+          stateClass = 'shortage';
+          gapLabel   = 'Staff Shortage';
+          gapDisplay = `−${Math.abs(gap)}`;
+        } else if (gap > 0) {
+          stateClass = 'surplus';
+          gapLabel   = 'Staff Surplus';
+          gapDisplay = `+${gap}`;
+        } else {
+          stateClass = 'balanced';
+          gapLabel   = 'Perfectly Balanced';
+          gapDisplay = '0';
+        }
+
+        resultEl.className = `sp-result ${stateClass}`;
+        resultEl.innerHTML = `
+          <span class="sp-gap-num">${gapDisplay}</span>
+          <span class="sp-gap-label">${gapLabel} · Required: ${required} staff · Level: ${clsLevel}</span>
+          <div class="sp-rec">${rec}</div>
+        `;
+        resultEl.style.display = 'block';
+
+      } catch (err) {
+        console.error('Staffing predict error:', err);
+        resultEl.className = 'sp-result shortage';
+        resultEl.innerHTML = `<span style="font-size:0.82rem;"><i class="ph ph-warning-circle"></i> Could not reach Staffing AI (port 8004). Start the API and try again.<br><small>${err.message}</small></span>`;
+        resultEl.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph-fill ph-lightning"></i> Predict Staffing Gap';
+      }
+    }
   </script>
 </body>
 </html>

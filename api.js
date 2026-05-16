@@ -332,3 +332,46 @@ const BedOccupancyAPI = {
         return fetch(`${BED_AI_BASE}/health`).then(r => r.json());
     }
 };
+
+// ── Staffing Prediction AI API (FastAPI – port 8004) ──────────────────────────
+
+const STAFFING_AI_BASE = 'http://localhost:8004';
+
+const StaffingAPI = {
+    /**
+     * POST /predict
+     * Static fields (prediction_scope, department_specialty, profile_label,
+     * patient_count_source) are injected automatically.
+     *
+     * @param {object} opts
+     * @param {string}  opts.prediction_month   e.g. "May"
+     * @param {number}  opts.patient_count       e.g. 300
+     * @param {number}  opts.current_staff_count e.g. 80
+     * @param {string}  opts.shift_type          "Morning" | "Afternoon" | "Night"
+     * @returns {Promise<object>}  full prediction response (use net_gap field)
+     */
+    predict({ prediction_month, patient_count, current_staff_count, shift_type }) {
+        const body = {
+            prediction_scope:     'general',
+            department_specialty: 'null',
+            profile_label:        'null',
+            patient_count_source: 'Manual Input',
+            prediction_month,
+            patient_count,
+            current_staff_count,
+            shift_type
+        };
+        return fetch(`${STAFFING_AI_BASE}/predict`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        }).then(r => {
+            if (!r.ok) throw new Error(`Staffing API error ${r.status}`);
+            return r.json();
+        });
+    },
+
+    health() {
+        return fetch(`${STAFFING_AI_BASE}/health`).then(r => r.json());
+    }
+};
