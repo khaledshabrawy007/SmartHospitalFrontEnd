@@ -132,6 +132,11 @@
       color: #34d399;
     }
     .risk-level-badge.moderate {
+      background: rgba(245,158,11,0.15);
+      color: #f59e0b;
+    }
+    .risk-percentage.moderate { color: #f59e0b; }
+    .risk-level-badge.moderate {
       background: rgba(251,191,36,0.15);
       color: #fbbf24;
     }
@@ -299,7 +304,7 @@
   <div class="app-container">
     <!-- Sidebar -->
     <div class="sidebar">
-      <a href="doctor-patients.html" class="logo">
+      <a href="doctor-appointments.html" class="logo">
         <div class="nav-logo-icon"><i class="ph-fill ph-first-aid"></i></div>
         SmartHospital
       </a>
@@ -307,9 +312,6 @@
       <div class="nav-menu">
         <a href="doctor-appointments.html" class="nav-item">
           <i class="ph ph-calendar-blank"></i> Appointments
-        </a>
-        <a href="doctor-patients.html" class="nav-item">
-          <i class="ph ph-user"></i> Patients
         </a>
         <a href="doctor-admissions.html" class="nav-item">
           <i class="ph ph-hospital"></i> Admissions
@@ -362,11 +364,10 @@
                 <label class="form-label">Race</label>
                 <div class="input-outline">
                   <select id="fRace">
-                    <option value="">Select...</option>
                     <option value="Caucasian">Caucasian</option>
                     <option value="AfricanAmerican">African American</option>
-                    <option value="Asian">Asian</option>
                     <option value="Hispanic">Hispanic</option>
+                    <option value="Asian">Asian</option>
                     <option value="Other">Other</option>
                   </select>
                 </div>
@@ -375,16 +376,16 @@
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label">Gender</label>
                 <div class="toggle-group" id="genderToggle">
-                  <div class="toggle-btn active" data-value="Male">Male</div>
-                  <div class="toggle-btn" data-value="Female">Female</div>
+                  <div class="toggle-btn active" data-value="1">Male</div>
+                  <div class="toggle-btn" data-value="0">Female</div>
                 </div>
               </div>
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label">Age</label>
                 <div class="input-outline" id="wrapAge">
-                  <input type="number" id="fAge" placeholder="e.g. 65" min="0" max="120">
+                  <input type="number" id="fAge" placeholder="e.g. 65" min="0" max="100">
                 </div>
-                <div class="field-error" id="errAge">Enter a valid age (0-120)</div>
+                <div class="field-error" id="errAge">Enter a valid age (0-100)</div>
               </div>
             </div>
           </div>
@@ -399,12 +400,12 @@
                 <label class="form-label">Admission Type</label>
                 <div class="input-outline">
                   <select id="fAdmType">
-                    <option value="">Select...</option>
-                    <option value="Emergency">Emergency</option>
-                    <option value="Urgent">Urgent</option>
-                    <option value="Elective">Elective</option>
-                    <option value="Newborn">Newborn</option>
-                    <option value="Trauma">Trauma Center</option>
+                    <option value="1">Emergency</option>
+                    <option value="2">Urgent</option>
+                    <option value="3">Elective</option>
+                    <option value="4">Newborn</option>
+                    <option value="7">Trauma Center</option>
+                    <option value="-1">Other</option>
                   </select>
                 </div>
                 <div class="field-error" id="errAdmType">Required</div>
@@ -413,13 +414,34 @@
                 <label class="form-label">Discharge Disposition</label>
                 <div class="input-outline">
                   <select id="fDischarge">
-                    <option value="">Select...</option>
-                    <option value="Home">Discharged to home</option>
-                    <option value="SNF">Short-term hospital → SNF</option>
-                    <option value="Rehab">Transferred to rehab</option>
-                    <option value="HomeHealth">Home with health service</option>
-                    <option value="AMA">Left against medical advice</option>
-                    <option value="Other">Other / Expired</option>
+                    <option value="1">Discharged to home</option>
+                    <option value="2">Transferred to another short-term hospital</option>
+                    <option value="3">Transferred to skilled nursing facility</option>
+                    <option value="4">Transferred to intermediate care facility</option>
+                    <option value="5">Transferred to another inpatient care institution</option>
+                    <option value="6">Home with home health service</option>
+                    <option value="7">Left against medical advice</option>
+                    <option value="8">Home under care of home IV provider</option>
+                    <option value="9">Admitted as inpatient to this hospital</option>
+                    <option value="10">Neonate discharged to another hospital</option>
+                    <option value="11">Expired</option>
+                    <option value="12">Still patient / outpatient services</option>
+                    <option value="13">Hospice - home</option>
+                    <option value="14">Hospice - medical facility</option>
+                    <option value="15">Swing bed</option>
+                    <option value="16">Referred to another institution for outpatient services</option>
+                    <option value="17">Referred to this institution for outpatient services</option>
+                    <option value="19">Expired at home</option>
+                    <option value="20">Expired in medical facility</option>
+                    <option value="21">Expired, place unknown</option>
+                    <option value="22">Transferred to rehab facility</option>
+                    <option value="23">Transferred to long-term care hospital</option>
+                    <option value="24">Transferred to Medicaid nursing facility</option>
+                    <option value="27">Federal health care facility</option>
+                    <option value="28">Psychiatric hospital / psychiatric unit</option>
+                    <option value="29">Critical Access Hospital</option>
+                    <option value="30">Other health care institution</option>
+                    <option value="-1">Other</option>
                   </select>
                 </div>
                 <div class="field-error" id="errDischarge">Required</div>
@@ -428,12 +450,27 @@
                 <label class="form-label">Admission Source</label>
                 <div class="input-outline">
                   <select id="fAdmSource">
-                    <option value="">Select...</option>
-                    <option value="ER">Emergency Room</option>
-                    <option value="Referral">Physician Referral</option>
-                    <option value="Transfer">Transfer from another facility</option>
-                    <option value="Clinic">Clinic Referral</option>
-                    <option value="Other">Other</option>
+                    <option value="1">Physician Referral</option>
+                    <option value="2">Clinic Referral</option>
+                    <option value="3">HMO Referral</option>
+                    <option value="4">Transfer from hospital</option>
+                    <option value="5">Transfer from skilled nursing facility</option>
+                    <option value="6">Transfer from another health care facility</option>
+                    <option value="7">Emergency Room</option>
+                    <option value="8">Court / Law Enforcement</option>
+                    <option value="10">Transfer from critical access hospital</option>
+                    <option value="11">Normal Delivery</option>
+                    <option value="12">Premature Delivery</option>
+                    <option value="13">Sick Baby</option>
+                    <option value="14">Extramural Birth</option>
+                    <option value="18">Transfer from another home health agency</option>
+                    <option value="19">Readmission to same home health agency</option>
+                    <option value="22">Transfer from hospital inpatient</option>
+                    <option value="23">Born inside this hospital</option>
+                    <option value="24">Born outside this hospital</option>
+                    <option value="25">Transfer from ambulatory surgery center</option>
+                    <option value="26">Transfer from hospice</option>
+                    <option value="-1">Other</option>
                   </select>
                 </div>
                 <div class="field-error" id="errAdmSource">Required</div>
@@ -441,9 +478,9 @@
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label">Time in Hospital (Days)</label>
                 <div class="input-outline" id="wrapHospDays">
-                  <input type="number" id="fHospDays" placeholder="e.g. 5" min="1" max="30">
+                  <input type="number" id="fHospDays" placeholder="e.g. 5" min="1" max="14">
                 </div>
-                <div class="field-error" id="errHospDays">Enter a valid number (1-30)</div>
+                <div class="field-error" id="errHospDays">Enter a valid number (1-14)</div>
               </div>
             </div>
           </div>
@@ -457,15 +494,15 @@
               
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <span class="text-sm"># Lab Procedures</span>
-                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fLabs" value="0" min="0" max="99" class="input-num"></div>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fLabs" value="0" min="0" max="132" class="input-num"></div>
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <span class="text-sm"># Procedures</span>
-                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fProcs" value="0" min="0" max="99" class="input-num"></div>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fProcs" value="0" min="0" max="6" class="input-num"></div>
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span class="text-sm"># Medications</span>
-                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fMeds" value="0" min="0" max="99" class="input-num"></div>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fMeds" value="0" min="0" max="81" class="input-num"></div>
               </div>
             </div>
 
@@ -477,15 +514,15 @@
               
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <span class="text-sm"># Outpatient</span>
-                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fOutpatient" value="0" min="0" max="99" class="input-num"></div>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fOutpatient" value="0" min="0" max="42" class="input-num"></div>
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
                 <span class="text-sm"># Emergency</span>
-                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fEmergency" value="0" min="0" max="99" class="input-num"></div>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fEmergency" value="0" min="0" max="76" class="input-num"></div>
               </div>
               <div style="display:flex; justify-content:space-between; align-items:center;">
                 <span class="text-sm"># Inpatient</span>
-                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fInpatient" value="0" min="0" max="99" class="input-num"></div>
+                <div class="input-outline" style="width:60px; height:36px; padding:8px;"><input type="number" id="fInpatient" value="0" min="0" max="21" class="input-num"></div>
               </div>
             </div>
           </div>
@@ -498,7 +535,7 @@
             
             <div class="input-outline" style="align-items:center; justify-content:space-between; margin-bottom:20px; font-weight:600; font-size:0.85rem;">
               <span>Total Number of Diagnoses</span>
-              <div style="width:60px;"><input type="number" id="fDiagCount" value="1" min="0" max="20" class="input-num" style="text-align:center; font-weight:700;"></div>
+              <div style="width:60px;"><input type="number" id="fDiagCount" value="1" min="1" max="16" class="input-num" style="text-align:center; font-weight:700;"></div>
             </div>
             
             <div class="form-grid-2">
@@ -506,14 +543,13 @@
                 <label class="form-label">Primary Group</label>
                 <div class="input-outline">
                   <select id="fDiag1">
-                    <option value="">Select...</option>
+                    <option value="Diabetes">Diabetes</option>
                     <option value="Circulatory">Circulatory</option>
                     <option value="Respiratory">Respiratory</option>
                     <option value="Digestive">Digestive</option>
-                    <option value="Diabetes">Diabetes</option>
-                    <option value="Injury">Injury / Poisoning</option>
-                    <option value="Musculoskeletal">Musculoskeletal</option>
                     <option value="Genitourinary">Genitourinary</option>
+                    <option value="Injury">Injury</option>
+                    <option value="Musculoskeletal">Musculoskeletal</option>
                     <option value="Neoplasms">Neoplasms</option>
                     <option value="Other">Other</option>
                   </select>
@@ -524,14 +560,13 @@
                 <label class="form-label">Secondary Group</label>
                 <div class="input-outline">
                   <select id="fDiag2">
-                    <option value="">None</option>
+                    <option value="Diabetes">Diabetes</option>
                     <option value="Circulatory">Circulatory</option>
                     <option value="Respiratory">Respiratory</option>
                     <option value="Digestive">Digestive</option>
-                    <option value="Diabetes">Diabetes</option>
-                    <option value="Injury">Injury / Poisoning</option>
-                    <option value="Musculoskeletal">Musculoskeletal</option>
                     <option value="Genitourinary">Genitourinary</option>
+                    <option value="Injury">Injury</option>
+                    <option value="Musculoskeletal">Musculoskeletal</option>
                     <option value="Neoplasms">Neoplasms</option>
                     <option value="Other">Other</option>
                   </select>
@@ -543,16 +578,15 @@
               <label class="form-label">Tertiary Group</label>
               <div class="input-outline">
                 <select id="fDiag3">
-                  <option value="">None</option>
-                  <option value="Circulatory">Circulatory</option>
-                  <option value="Respiratory">Respiratory</option>
-                  <option value="Digestive">Digestive</option>
-                  <option value="Diabetes">Diabetes</option>
-                  <option value="Injury">Injury / Poisoning</option>
-                  <option value="Musculoskeletal">Musculoskeletal</option>
-                  <option value="Genitourinary">Genitourinary</option>
-                  <option value="Neoplasms">Neoplasms</option>
-                  <option value="Other">Other</option>
+                    <option value="Diabetes">Diabetes</option>
+                    <option value="Circulatory">Circulatory</option>
+                    <option value="Respiratory">Respiratory</option>
+                    <option value="Digestive">Digestive</option>
+                    <option value="Genitourinary">Genitourinary</option>
+                    <option value="Injury">Injury</option>
+                    <option value="Musculoskeletal">Musculoskeletal</option>
+                    <option value="Neoplasms">Neoplasms</option>
+                    <option value="Other">Other</option>
                 </select>
               </div>
             </div>
@@ -567,21 +601,20 @@
               <div class="form-group" style="margin-bottom:0;">
                 <label class="form-label">Patient ID</label>
                 <div class="input-outline" id="wrapPatientId">
-                  <input type="text" id="fPatientId" placeholder="e.g. PT-0012">
+                  <input type="number" id="fPatientId" placeholder="Enter Patient ID" min="1">
                 </div>
                 <div class="field-error" id="errPatientId">Enter a valid Patient ID</div>
               </div>
               <div class="form-group" style="margin-bottom:0;">
-                <label class="form-label">Patient Name <span style="font-weight:400; color:var(--color-text-muted);">(optional)</span></label>
+                <label class="form-label">Patient Name <span style="font-weight:400; color:var(--color-text-muted);">(auto-filled)</span></label>
                 <div class="input-outline">
-                  <input type="text" id="fPatientName" placeholder="e.g. Sarah Jenkins">
+                  <input type="text" id="fPatientName" placeholder="Auto-filled from Patient ID" readonly style="cursor:default; color:var(--color-text-muted);">
                 </div>
               </div>
             </div>
             <div id="patientContextBanner" style="display:none; margin-top:12px; padding:10px 14px; background:rgba(10,111,86,0.07); border-radius:8px; font-size:0.83rem; color:var(--color-primary); font-weight:600; align-items:center; gap:8px;">
               <i class="ph-fill ph-link-simple"></i>
               <span id="patientContextText"></span>
-              <a href="doctor-patients.html" style="margin-left:auto; font-size:0.78rem; color:var(--color-primary); text-decoration:underline;">← Back to Patients</a>
             </div>
           </div>
 
@@ -664,20 +697,25 @@
       </div>
     </div>
   </div>
+  <script src="api.js"></script>
   <script src="auth-session.js"></script>
-</body>
-</html>
   <script>
-    // ── DOM Refs ────────────────────────────────────────────────
-    const runBtn = document.getElementById('runBtn');
-    const resetBtn = document.getElementById('resetBtn');
-    const diagCountEl = document.getElementById('fDiagCount');
+    document.addEventListener('DOMContentLoaded', () => {
+      const session = getSession();
+      if (!session) { window.location.href = 'index.html'; return; }
+      const name = session.fullName || 'Doctor';
+      const displayName = name.toLowerCase().startsWith('dr') ? name : 'Dr. ' + name;
+      document.getElementById('sidebarName').textContent = displayName;
+      const ini = name.split(' ').map(p => p[0]).join('').slice(0,2).toUpperCase();
+      document.getElementById('sidebarAvatar').textContent = ini;
+    });
 
-    // Form fields
+    const runBtn   = document.getElementById('runBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
     const fields = {
       race:       document.getElementById('fRace'),
       age:        document.getElementById('fAge'),
-      diagCount:  document.getElementById('fDiagCount'),
       admType:    document.getElementById('fAdmType'),
       discharge:  document.getElementById('fDischarge'),
       admSource:  document.getElementById('fAdmSource'),
@@ -688,81 +726,38 @@
       outpatient: document.getElementById('fOutpatient'),
       emergency:  document.getElementById('fEmergency'),
       inpatient:  document.getElementById('fInpatient'),
+      diagCount:  document.getElementById('fDiagCount'),
       diag1:      document.getElementById('fDiag1'),
       diag2:      document.getElementById('fDiag2'),
       diag3:      document.getElementById('fDiag3')
     };
 
-    let gender = 'Male';
+    let gender = 1;
 
-    // ── Gender Toggle ──────────────────────────────────────────
     const genderBtns = document.querySelectorAll('#genderToggle .toggle-btn');
     genderBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         genderBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        gender = btn.dataset.value;
+        gender = parseInt(btn.dataset.value);
       });
     });
 
-    // ── Numeric enforcement for diagnosis count ────────────────
-    fields.diagCount.addEventListener('input', () => {
-      fields.diagCount.value = fields.diagCount.value.replace(/[^0-9]/g, '');
-    });
-
-    // ── Numeric Validation on Input ────────────────────────────
-    const numericFields = [fields.age, fields.hospDays, fields.labs, fields.procs, fields.meds, fields.outpatient, fields.emergency, fields.inpatient];
-    numericFields.forEach(f => {
-      f.addEventListener('input', () => {
-        f.value = f.value.replace(/[^0-9]/g, '');
-      });
-    });
-
-    // ── Toast ──────────────────────────────────────────────────
-    function showToast(message, type = 'success', title) {
-      const container = document.getElementById('toastContainer');
-      const toast = document.createElement('div');
-      toast.className = `toast toast-${type}`;
-      const icons  = { success: 'ph-fill ph-check-circle', error: 'ph-fill ph-x-circle', warning: 'ph-fill ph-warning' };
-      const titles = { success: title || 'Success', error: title || 'Error', warning: title || 'Warning' };
-      toast.innerHTML = `
-        <div class="toast-icon"><i class="${icons[type]}"></i></div>
-        <div class="toast-body">
-          <div class="toast-title">${titles[type]}</div>
-          <div class="toast-msg">${message}</div>
-        </div>
-        <button class="toast-close" onclick="dismissToast(this)"><i class="ph ph-x"></i></button>
-        <div class="toast-progress"><div class="toast-progress-bar"></div></div>
-      `;
-      container.appendChild(toast);
-      setTimeout(() => {
-        if (toast.parentNode) { toast.classList.add('toast-hide'); setTimeout(() => toast.remove(), 400); }
-      }, 4000);
-    }
-    function dismissToast(btn) {
-      const toast = btn.closest('.toast');
-      toast.classList.add('toast-hide');
-      setTimeout(() => toast.remove(), 400);
-    }
-
-    // ── Validation ─────────────────────────────────────────────
     function clearErrors() {
-      document.querySelectorAll('.has-error').forEach(el => el.classList.remove('has-error'));
-      document.querySelectorAll('.field-error').forEach(el => el.classList.remove('show'));
+      document.querySelectorAll('.input-outline.has-error').forEach(el => el.classList.remove('has-error'));
+      document.querySelectorAll('.field-error.show').forEach(el => el.classList.remove('show'));
     }
 
     function validate() {
       clearErrors();
       let valid = true;
-
       const required = [
-        { field: fields.race, err: 'errRace' },
-        { field: fields.admType, err: 'errAdmType' },
+        { field: fields.race,      err: 'errRace'      },
+        { field: fields.admType,   err: 'errAdmType'   },
         { field: fields.discharge, err: 'errDischarge' },
         { field: fields.admSource, err: 'errAdmSource' },
-        { field: fields.diag1, err: 'errDiag1' }
+        { field: fields.diag1,     err: 'errDiag1'     }
       ];
-
       required.forEach(({ field, err }) => {
         if (!field.value) {
           field.closest('.input-outline').classList.add('has-error');
@@ -770,174 +765,123 @@
           valid = false;
         }
       });
-
-      // Age
       const ageVal = parseInt(fields.age.value);
-      if (!fields.age.value || isNaN(ageVal) || ageVal < 0 || ageVal > 120) {
+      if (!fields.age.value || isNaN(ageVal) || ageVal < 0 || ageVal > 100) {
         document.getElementById('wrapAge').classList.add('has-error');
         document.getElementById('errAge').classList.add('show');
         valid = false;
       }
-
-      // Hospital days
       const days = parseInt(fields.hospDays.value);
-      if (!fields.hospDays.value || isNaN(days) || days < 1 || days > 30) {
+      if (!fields.hospDays.value || isNaN(days) || days < 1 || days > 14) {
         document.getElementById('wrapHospDays').classList.add('has-error');
         document.getElementById('errHospDays').classList.add('show');
         valid = false;
       }
-
-      if (!valid) {
-        showToast('Please fill in all required fields before running the prediction.', 'error', 'Validation Failed');
-      }
-
+      if (!valid) showToast('Please fill in all required fields before running the prediction.', 'error', 'Validation Failed');
       return valid;
     }
 
-    // ── Mock AI Prediction ─────────────────────────────────────
-    function calculateMockRisk() {
-      let score = 15; // base
+    // Stores the last raw FastAPI response
+    let lastPrediction = null;
 
-      // Age factor
-      const age = parseInt(fields.age.value) || 0;
-      if (age >= 70) score += 18;
-      else if (age >= 60) score += 12;
-      else if (age >= 50) score += 7;
-      else if (age >= 40) score += 3;
-
-      // Admission type
-      if (fields.admType.value === 'Emergency') score += 12;
-      else if (fields.admType.value === 'Urgent') score += 8;
-      else if (fields.admType.value === 'Trauma') score += 15;
-
-      // Discharge disposition
-      if (fields.discharge.value === 'AMA') score += 18;
-      else if (fields.discharge.value === 'SNF') score += 10;
-      else if (fields.discharge.value === 'HomeHealth') score += 6;
-      else if (fields.discharge.value === 'Home') score -= 3;
-
-      // Hospital days
-      const days = parseInt(fields.hospDays.value) || 0;
-      if (days >= 10) score += 14;
-      else if (days >= 7) score += 9;
-      else if (days >= 4) score += 4;
-
-      // Medical activity
-      const meds = parseInt(fields.meds.value) || 0;
-      const labs = parseInt(fields.labs.value) || 0;
-      const procs = parseInt(fields.procs.value) || 0;
-      if (meds >= 10) score += 10;
-      else if (meds >= 5) score += 5;
-      if (labs >= 5) score += 4;
-      if (procs >= 3) score += 5;
-
-      // Visit history
-      const emergency = parseInt(fields.emergency.value) || 0;
-      const inpatient = parseInt(fields.inpatient.value) || 0;
-      if (emergency >= 3) score += 10;
-      else if (emergency >= 1) score += 5;
-      if (inpatient >= 3) score += 12;
-      else if (inpatient >= 1) score += 6;
-
-      // Diagnosis complexity
-      const diagCount = parseInt(fields.diagCount.value) || 0;
-      if (diagCount >= 5) score += 12;
-      else if (diagCount >= 3) score += 8;
-      else if (diagCount >= 2) score += 4;
-      
-      // Specific high-risk diagnoses
-      const allDiags = [fields.diag1.value, fields.diag2.value, fields.diag3.value];
-      if (allDiags.includes('Circulatory')) score += 5;
-      if (allDiags.includes('Diabetes')) score += 6;
-      if (allDiags.includes('Respiratory')) score += 4;
-
-      // Clamp and add small randomness
-      const noise = (Math.random() * 6) - 3;
-      score = Math.max(5, Math.min(95, Math.round(score + noise)));
-
-      return score;
+    async function runFastAPIPredict() {
+      const payload = {
+        race:                     fields.race.value,
+        gender:                   gender,
+        age:                      parseInt(fields.age.value),
+        admission_type_id:        parseInt(fields.admType.value),
+        discharge_disposition_id: parseInt(fields.discharge.value),
+        admission_source_id:      parseInt(fields.admSource.value),
+        time_in_hospital:         parseInt(fields.hospDays.value),
+        num_lab_procedures:       parseInt(fields.labs.value)       || 0,
+        num_procedures:           parseInt(fields.procs.value)      || 0,
+        num_medications:          parseInt(fields.meds.value)       || 0,
+        number_outpatient:        parseInt(fields.outpatient.value) || 0,
+        number_emergency:         parseInt(fields.emergency.value)  || 0,
+        number_inpatient:         parseInt(fields.inpatient.value)  || 0,
+        number_diagnoses:         parseInt(fields.diagCount.value)  || 1,
+        diag_1_group:             fields.diag1.value,
+        diag_2_group:             fields.diag2.value || 'Other',
+        diag_3_group:             fields.diag3.value || 'Other'
+      };
+      console.log('[FastAPI Payload]', JSON.stringify(payload, null, 2));
+      const res = await fetch('http://127.0.0.1:8001/predict/readmission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) throw new Error(`API error ${res.status}`);
+      return await res.json();
     }
 
-    function getRiskLevel(score) {
-      if (score >= 50) return { level: 'High', cls: 'high' };
-      return { level: 'Low', cls: 'low' };
-    }
-
-    function displayResult(score) {
-      const risk = getRiskLevel(score);
-
-      document.getElementById('riskPct').textContent = score + '%';
-      document.getElementById('riskPct').className = `risk-percentage ${risk.cls}`;
-      document.getElementById('riskBadge').textContent = `${risk.level} Risk`;
-      document.getElementById('riskBadge').className = `risk-level-badge ${risk.cls}`;
-
-      // Swap panels
+    function displayResult(data) {
+      lastPrediction = data;
+      const pct = (data.readmission_probability * 100).toFixed(1);
+      // Model returns exactly 'High' (prediction=1, prob>=0.25) or 'Low' (prediction=0)
+      const cls = (data.risk_level || '').toLowerCase() === 'high' ? 'high' : 'low';
+      document.getElementById('riskPct').textContent   = pct + '%';
+      document.getElementById('riskPct').className     = `risk-percentage ${cls}`;
+      document.getElementById('riskBadge').textContent = data.risk_level + ' Risk';
+      document.getElementById('riskBadge').className   = `risk-level-badge ${cls}`;
       document.getElementById('aiAwaiting').style.display = 'none';
       document.getElementById('aiLoading').classList.remove('show');
       document.getElementById('aiResult').classList.add('show');
     }
 
-    // ── Run Prediction ─────────────────────────────────────────
-    runBtn.addEventListener('click', () => {
+    runBtn.addEventListener('click', async () => {
       if (!validate()) return;
-
-      // Show loading
       document.getElementById('aiAwaiting').style.display = 'none';
       document.getElementById('aiResult').classList.remove('show');
       document.getElementById('aiLoading').classList.add('show');
-
-      // Simulate AI processing delay
-      setTimeout(() => {
-        const score = calculateMockRisk();
-        displayResult(score);
-        const risk = getRiskLevel(score);
-        const riskLabel = risk.level === 'High' ? 'warning' : 'success';
-        showToast(`AI model returned a ${risk.level} Risk score of ${score}% for this patient.`, riskLabel, 'Prediction Complete');
-      }, 1800);
+      try {
+        const data = await runFastAPIPredict();
+        displayResult(data);
+        const pct = (data.readmission_probability * 100).toFixed(1);
+        const toastType = (data.risk_level || '').toLowerCase() === 'high' ? 'warning' : 'success';
+        showToast(`${data.risk_level} Risk — ${pct}% 30-day readmission probability.`, toastType, 'Prediction Complete');
+      } catch(err) {
+        document.getElementById('aiLoading').classList.remove('show');
+        document.getElementById('aiAwaiting').style.display = 'block';
+        showToast('Could not reach AI model. Is FastAPI running on port 8001?', 'error', 'Connection Error');
+      }
     });
 
-    // ── Reset Form ─────────────────────────────────────────────
     resetBtn.addEventListener('click', () => {
-      // Reset dropdowns
-      fields.race.value = '';
-      fields.age.value = '';
+      fields.race.value      = '';
+      fields.age.value       = '';
       fields.diagCount.value = '1';
-      fields.admType.value = '';
+      fields.admType.value   = '';
       fields.discharge.value = '';
       fields.admSource.value = '';
-      fields.diag1.value = '';
-      fields.diag2.value = '';
-      fields.diag3.value = '';
-
-      // Reset numeric inputs
-      fields.hospDays.value = '';
-      fields.labs.value = '0';
-      fields.procs.value = '0';
-      fields.meds.value = '0';
-      fields.outpatient.value = '0';
+      fields.diag1.value     = '';
+      fields.diag2.value     = '';
+      fields.diag3.value     = '';
+      fields.hospDays.value  = '';
+      fields.labs.value      = '0';
+      fields.procs.value     = '0';
+      fields.meds.value      = '0';
+      fields.outpatient.value= '0';
       fields.emergency.value = '0';
       fields.inpatient.value = '0';
-
-      // Reset gender
+      // Clear patient assignment fields
+      document.getElementById('fPatientId').value      = '';
+      const nameEl = document.getElementById('fPatientName');
+      nameEl.value       = '';
+      nameEl.placeholder = 'Auto-filled from Patient ID';
+      // Hide patient context banner if visible
+      const banner = document.getElementById('patientContextBanner');
+      if (banner) banner.style.display = 'none';
       genderBtns.forEach(b => b.classList.remove('active'));
       genderBtns[0].classList.add('active');
-      gender = 'Male';
-
-      // Reset diagnosis count
-      // diagCount already reset above
-
-      // Clear validation errors
+      gender = 1;
       clearErrors();
-
-      // Reset AI output
+      lastPrediction = null;
       document.getElementById('aiAwaiting').style.display = 'block';
       document.getElementById('aiLoading').classList.remove('show');
       document.getElementById('aiResult').classList.remove('show');
-
       showToast('Clinical form has been cleared. Ready for a new assessment.', 'success', 'Form Reset');
     });
 
-    // ── URL Param Pre-fill ──────────────────────────────────────
     (function prefillFromUrl() {
       const params = new URLSearchParams(window.location.search);
       const pid = params.get('patientId');
@@ -947,46 +891,98 @@
         const banner = document.getElementById('patientContextBanner');
         banner.style.display = 'flex';
         const nameStr = pname ? ` — ${pname}` : '';
-        document.getElementById('patientContextText').textContent =
-          `Auto-linked to patient: ${pid}${nameStr}`;
+        document.getElementById('patientContextText').textContent = `Auto-linked to patient: ${pid}${nameStr}`;
         if (pname) document.getElementById('fPatientName').value = pname;
+        // Auto-load name from backend if not in URL
+        if (!pname) loadPatientName(parseInt(pid));
       }
     })();
 
-    // ── Save Risk Result to Patient ────────────────────────────
-    document.getElementById('btnSaveRisk').addEventListener('click', () => {
-      const patientId = document.getElementById('fPatientId').value.trim();
-      if (!patientId) {
+    // ── Auto-load patient name when ID is entered ───────────────────────────
+    let _nameTimer = null;
+    function triggerNameLoad() {
+      const nameEl = document.getElementById('fPatientName');
+      nameEl.value = '';                         // clear old name immediately
+      nameEl.placeholder = 'Loading...';
+      clearTimeout(_nameTimer);
+      _nameTimer = setTimeout(() => {
+        const id = parseInt(document.getElementById('fPatientId').value);
+        loadPatientName(id);
+      }, 500);
+    }
+    // 'input' fires while typing; 'change' fires on spinner clicks & blur
+    document.getElementById('fPatientId').addEventListener('input',  triggerNameLoad);
+    document.getElementById('fPatientId').addEventListener('change', triggerNameLoad);
+
+    async function loadPatientName(id) {
+      const nameEl = document.getElementById('fPatientName');
+      if (!id || id < 1) { nameEl.value = ''; nameEl.placeholder = 'e.g. Sarah Jenkins'; return; }
+      nameEl.placeholder = 'Loading...';
+      try {
+        const p = await PatientsAPI.getById(id);
+        nameEl.value = p.fullName || '';
+        nameEl.placeholder = 'e.g. Sarah Jenkins';
+      } catch {
+        nameEl.value = '';
+        nameEl.placeholder = 'Patient not found';
+      }
+    }
+
+    document.getElementById('btnSaveRisk').addEventListener('click', async () => {
+      if (!lastPrediction) {
+        showToast('Run a prediction first before saving.', 'warning', 'No Result Yet');
+        return;
+      }
+      const patientIdRaw = document.getElementById('fPatientId').value.trim();
+      if (!patientIdRaw) {
         document.getElementById('wrapPatientId').classList.add('has-error');
         document.getElementById('errPatientId').classList.add('show');
         showToast('Please enter a Patient ID to save the result.', 'error', 'Patient ID Required');
         return;
       }
+      const patientId = parseInt(patientIdRaw);
+      if (isNaN(patientId) || patientId <= 0) {
+        document.getElementById('wrapPatientId').classList.add('has-error');
+        document.getElementById('errPatientId').classList.add('show');
+        showToast('Patient ID must be a valid number.', 'error', 'Invalid Patient ID');
+        return;
+      }
       document.getElementById('wrapPatientId').classList.remove('has-error');
       document.getElementById('errPatientId').classList.remove('show');
 
-      const score = document.getElementById('riskPct').textContent;
-      const level = document.getElementById('riskBadge').textContent;
-      const record = {
-        type: 'riskAssessment',
-        patientId,
-        patientName: document.getElementById('fPatientName').value.trim() || 'Unknown',
-        riskScore: score,
-        riskLevel: level,
-        date: new Date().toISOString()
-      };
+      const riskScore  = lastPrediction.readmission_probability;
+      const isHighRisk = (lastPrediction.risk_level || '').toLowerCase() === 'high';
 
-      const key = 'smartHospital_PatientRecords';
-      const saved = JSON.parse(localStorage.getItem(key) || '[]');
-      saved.push(record);
-      localStorage.setItem(key, JSON.stringify(saved));
-
-      const patName = document.getElementById('fPatientName').value.trim();
-      const displayName = patName ? ` (${patName})` : '';
-      showToast(`Risk assessment saved to patient ${patientId}${displayName} successfully.`, 'success', 'Result Saved');
+      const btn = document.getElementById('btnSaveRisk');
+      btn.disabled = true;
+      try {
+        await AdmissionsAPI.saveRiskResult(patientId, { riskScore, isHighRisk });
+        const patName = document.getElementById('fPatientName').value.trim();
+        const nameTag = patName ? ` (${patName})` : '';
+        if (isHighRisk) {
+          showToast(`High-Risk result saved. Patient ${patientId}${nameTag} admission escalated to Critical.`, 'warning', 'Result Saved — Critical');
+        } else {
+          showToast(`Risk assessment saved for patient ${patientId}${nameTag} successfully.`, 'success', 'Result Saved');
+        }
+      } catch(err) {
+        showToast(err.message || 'Could not save risk result. Check the patient ID.', 'error', 'Save Failed');
+      } finally {
+        btn.disabled = false;
+      }
     });
 
-    // ── Init ───────────────────────────────────────────────────
+    function showToast(message, type, title) {
+      const container = document.getElementById('toastContainer');
+      const t = document.createElement('div');
+      t.className = `toast toast-${type}`;
+      const icons  = { success: 'ph-fill ph-check-circle', error: 'ph-fill ph-x-circle', warning: 'ph-fill ph-warning' };
+      const titles = { success: title || 'Success', error: title || 'Error', warning: title || 'Warning' };
+      t.innerHTML = `<div class="toast-icon"><i class="${icons[type]}"></i></div>
+        <div class="toast-body"><div class="toast-title">${titles[type]}</div><div class="toast-msg">${message}</div></div>
+        <div class="toast-progress"><div class="toast-progress-bar"></div></div>`;
+      container.appendChild(t);
+      setTimeout(() => { t.classList.add('toast-hide'); setTimeout(() => t.remove(), 400); }, 4500);
+    }
   </script>
 </body>
 </html>
