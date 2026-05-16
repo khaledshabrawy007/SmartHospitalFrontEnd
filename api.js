@@ -305,3 +305,30 @@ function timeAgo(dateStr) {
     if (hrs < 24) return `${hrs}h ago`;
     return `${Math.floor(hrs / 24)}d ago`;
 }
+
+// ── Bed Occupancy AI API (FastAPI – port 8000) ─────────────────────────────────
+
+const BED_AI_BASE = 'http://localhost:8003';
+
+const BedOccupancyAPI = {
+    /**
+     * POST /forecast
+     * @param {number} days  1–30 forecast days
+     * @returns {Promise<{status:string, requested_days:number, forecast:Array}>}
+     */
+    forecast(days = 7) {
+        return fetch(`${BED_AI_BASE}/forecast`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ days })
+        }).then(r => {
+            if (!r.ok) throw new Error(`Bed Occupancy API error ${r.status}`);
+            return r.json();
+        });
+    },
+
+    /** GET /health – quick liveness probe */
+    health() {
+        return fetch(`${BED_AI_BASE}/health`).then(r => r.json());
+    }
+};

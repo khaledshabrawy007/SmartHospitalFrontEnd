@@ -42,6 +42,23 @@
     .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
     .chart-title { font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 8px; }
 
+    /* Day selector */
+    .day-selector-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .day-selector-label { font-size: 0.72rem; font-weight: 700; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    .day-selector {
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      border: 1.5px solid #e2e8f0;
+      background: white;
+      color: #334155;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .day-selector:focus { border-color: var(--color-primary); }
+
     /* Chart toggle buttons */
     .chart-toggles { display: flex; gap: 6px; }
     .chart-toggle-btn {
@@ -59,7 +76,14 @@
     .chart-toggle-btn .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .chart-toggle-btn.active-predicted { border-color: var(--color-primary); color: var(--color-primary); background: rgba(10,111,86,0.06); }
     .chart-toggle-btn.active-actual { border-color: #94a3b8; color: #334155; background: #f8fafc; }
-    .chart-toggle-btn:not(.active-predicted):not(.active-actual):hover { border-color: #94a3b8; color: #334155; }
+    .chart-toggle-btn.active-cap { border-color: #f59e0b; color: #92400e; background: #fffbeb; }
+    .chart-toggle-btn:not(.active-predicted):not(.active-actual):not(.active-cap):hover { border-color: #94a3b8; color: #334155; }
+
+    /* Chart status bar */
+    .chart-status { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--color-text-muted); margin-bottom: 12px; min-height: 22px; }
+    .chart-status.error { color: #ef4444; }
+    .chart-spinner { width: 14px; height: 14px; border: 2px solid #e2e8f0; border-top-color: var(--color-primary); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Staff Needs ─────────────────────────────── */
     .needs-item {
@@ -251,17 +275,35 @@
           <div class="chart-header">
             <div class="chart-title">
               <i class="ph-fill ph-sparkle" style="color:var(--color-primary);"></i>
-              AI Bed Occupancy Forecast (7-Day)
+              <span id="chartTitleText">AI Bed Occupancy Forecast</span>
             </div>
-            <div class="chart-toggles">
-              <button class="chart-toggle-btn active-predicted" id="btnPredicted" onclick="toggleSeries('predicted')">
-                <span class="dot" style="background:var(--color-primary);"></span> Predicted
-              </button>
-              <button class="chart-toggle-btn active-actual" id="btnActual" onclick="toggleSeries('actual')">
-                <span class="dot" style="background:#94a3b8;"></span> Actual
-              </button>
+            <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+              <!-- Day selector -->
+              <div class="day-selector-group">
+                <span class="day-selector-label">Forecast</span>
+                <select class="day-selector" id="forecastDaysSelect" onchange="loadBedForecast()">
+                  <option value="5">5 days</option>
+                  <option value="7" selected>7 days</option>
+                  <option value="10">10 days</option>
+                  <option value="14">14 days</option>
+                </select>
+              </div>
+              <!-- Toggles -->
+              <div class="chart-toggles">
+                <button class="chart-toggle-btn active-predicted" id="btnPredicted" onclick="toggleSeries('predicted')">
+                  <span class="dot" style="background:var(--color-primary);"></span> Predicted
+                </button>
+                <button class="chart-toggle-btn active-actual" id="btnActual" onclick="toggleSeries('actual')">
+                  <span class="dot" style="background:#94a3b8;"></span> Actual
+                </button>
+                <button class="chart-toggle-btn active-cap" id="btnCap" onclick="toggleSeries('cap')">
+                  <span class="dot" style="background:#f59e0b;"></span> Capacity
+                </button>
+              </div>
             </div>
           </div>
+          <!-- Status / spinner / error -->
+          <div class="chart-status" id="chartStatus"></div>
           <div style="position:relative; height:220px;">
             <canvas id="occupancyChart"></canvas>
           </div>
@@ -474,22 +516,25 @@
     // ═══════════════════════════════════════════════════
     // CHART.JS – Bed Occupancy Forecast
     // ═══════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════
+    // CHART INIT (empty shell – data loaded by loadBedForecast)
+    // ═══════════════════════════════════════════════════
     const ctx = document.getElementById('occupancyChart').getContext('2d');
-    const d = mockData.occupancy;
 
     const chartColors = {
       predicted: { line: '#0a6f56', fill: 'rgba(10,111,86,0.10)' },
-      actual:    { line: '#94a3b8', fill: 'rgba(148,163,184,0.10)' }
+      actual:    { line: '#64748b', fill: 'rgba(100,116,139,0.10)' },
+      cap:       { line: '#f59e0b', fill: 'rgba(0,0,0,0)' }
     };
 
     const occupancyChart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: d.labels,
+        labels: [],
         datasets: [
           {
             label: 'Predicted',
-            data: d.predicted,
+            data: [],
             borderColor: chartColors.predicted.line,
             backgroundColor: chartColors.predicted.fill,
             borderWidth: 2.5,
@@ -497,27 +542,47 @@
             pointRadius: 5,
             pointHoverRadius: 7,
             tension: 0.4,
-            fill: true
+            fill: true,
+            spanGaps: true,
+            order: 2
           },
           {
             label: 'Actual',
-            data: d.actual,
-            borderColor: chartColors.actual.line,
-            backgroundColor: chartColors.actual.fill,
-            borderWidth: 2.5,
-            pointBackgroundColor: chartColors.actual.line,
-            pointRadius: 5,
-            pointHoverRadius: 7,
-            tension: 0.4,
-            fill: true,
-            spanGaps: false
+            data: [],
+            borderColor: '#475569',
+            backgroundColor: 'rgba(0,0,0,0)',
+            borderWidth: 2,
+            // White ring with dark border — clearly visible on top of predicted dot
+            pointBackgroundColor: 'white',
+            pointBorderColor: '#1e293b',
+            pointBorderWidth: 2.5,
+            pointRadius: 9,
+            pointHoverRadius: 11,
+            pointStyle: 'circle',
+            tension: 0.3,
+            fill: false,
+            spanGaps: false,
+            order: 1    // render on top of Predicted
+          },
+          {
+            label: 'Monthly Cap',
+            data: [],
+            borderColor: chartColors.cap.line,
+            backgroundColor: 'rgba(0,0,0,0)',
+            borderWidth: 2,
+            borderDash: [7, 4],
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            tension: 0,
+            fill: false,
+            order: 3
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 900, easing: 'easeOutQuart' },
+        animation: { duration: 800, easing: 'easeOutQuart' },
         interaction: { mode: 'index', intersect: false },
         plugins: {
           legend: { display: false },
@@ -527,38 +592,127 @@
             bodyColor: '#cbd5e1',
             padding: 12,
             callbacks: {
-              label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y != null ? ctx.parsed.y + '%' : 'N/A'}`
+              label: c => {
+                if (c.parsed.y == null) return null;
+                return ` ${c.dataset.label}: ${c.parsed.y} beds`;
+              }
             }
           }
         },
         scales: {
           x: {
             grid: { display: false },
-            ticks: { font: { size:11, weight:'600' }, color:'#94a3b8' }
+            ticks: { font: { size: 11, weight: '600' }, color: '#94a3b8' }
           },
           y: {
-            min: 50, max: 100,
             grid: { color: '#f1f5f9' },
             ticks: {
-              font: { size:11 }, color:'#94a3b8',
-              callback: v => v + '%'
+              font: { size: 11 }, color: '#94a3b8',
+              callback: v => v + ' beds'
             }
           }
         }
       }
     });
 
-    // Toggle predicted / actual datasets
-    let seriesVisible = { predicted: true, actual: true };
-    function toggleSeries(series) {
-      const idx = series === 'predicted' ? 0 : 1;
-      seriesVisible[series] = !seriesVisible[series];
-      occupancyChart.data.datasets[idx].hidden = !seriesVisible[series];
-      occupancyChart.update();
+    // ── Series visibility ───────────────────────────────────────────────────
+    const seriesVisible = { predicted: true, actual: true, cap: true };
+    const seriesBtnMap  = { predicted: 'btnPredicted', actual: 'btnActual', cap: 'btnCap' };
+    const seriesIdxMap  = { predicted: 0, actual: 1, cap: 2 };
+    const seriesClass   = { predicted: 'active-predicted', actual: 'active-actual', cap: 'active-cap' };
 
-      const btn = document.getElementById(series === 'predicted' ? 'btnPredicted' : 'btnActual');
-      const activeClass = series === 'predicted' ? 'active-predicted' : 'active-actual';
-      btn.classList.toggle(activeClass, seriesVisible[series]);
+    function toggleSeries(series) {
+      seriesVisible[series] = !seriesVisible[series];
+      occupancyChart.data.datasets[seriesIdxMap[series]].hidden = !seriesVisible[series];
+      occupancyChart.update();
+      const btn = document.getElementById(seriesBtnMap[series]);
+      btn.classList.toggle(seriesClass[series], seriesVisible[series]);
+    }
+
+    // ── Bed Occupancy Forecast Loader ───────────────────────────────────────
+    let forecastLoading = false;
+
+    function setChartStatus(type, msg) {
+      const el = document.getElementById('chartStatus');
+      el.className = 'chart-status' + (type === 'error' ? ' error' : '');
+      el.innerHTML = type === 'loading'
+        ? `<span class="chart-spinner"></span> ${msg}`
+        : type === 'error'
+          ? `<i class="ph ph-warning-circle"></i> ${msg}`
+          : msg;
+    }
+
+    function formatChartDate(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    async function loadBedForecast() {
+      if (forecastLoading) return;
+      forecastLoading = true;
+
+      const days = parseInt(document.getElementById('forecastDaysSelect').value, 10);
+      document.getElementById('chartTitleText').textContent = `AI Bed Occupancy Forecast (${days}-Day)`;
+      setChartStatus('loading', 'Fetching forecast from AI model…');
+
+      try {
+        const result = await BedOccupancyAPI.forecast(days);
+        const entries = result.forecast; // array of N items
+
+        if (!entries || entries.length === 0) {
+          setChartStatus('error', 'No forecast data returned by the model.');
+          return;
+        }
+
+        // Build labels: today (reference of entry[0]) + each forecast_date
+        const labels    = [formatChartDate(entries[0].current_reference_date),
+                           ...entries.map(e => formatChartDate(e.forecast_date))];
+
+        // Predicted: today's actual as anchor, then each predicted_occupied_beds
+        const predicted = [entries[0].current_occupied_beds,
+                           ...entries.map(e => e.predicted_occupied_beds)];
+
+        // Actual: only today's real value; future = null (won't be plotted)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const actual = entries.map((e, i) => {
+          // current_reference_date is the "real" day for each step
+          const refDay = new Date(e.current_reference_date + 'T00:00:00');
+          refDay.setHours(0, 0, 0, 0);
+          return refDay <= today ? e.current_occupied_beds : null;
+        });
+        // Prepend today's actual as the first anchor point
+        actual.unshift(entries[0].current_occupied_beds);
+
+        // Monthly cap reference line (flat line at cap value)
+        const cap = entries[0].monthly_cap;
+        const capLine = labels.map(() => cap);
+
+        // Push data into chart
+        occupancyChart.data.labels                  = labels;
+        occupancyChart.data.datasets[0].data        = predicted;  // Predicted
+        occupancyChart.data.datasets[1].data        = actual;     // Actual
+        occupancyChart.data.datasets[2].data        = capLine;    // Cap
+
+        // Auto-fit Y axis with some padding
+        const allVals = [...predicted, ...actual.filter(v => v != null), cap];
+        const yMin = Math.max(0, Math.min(...allVals) - 20);
+        const yMax = Math.max(...allVals) + 20;
+        occupancyChart.options.scales.y.min = yMin;
+        occupancyChart.options.scales.y.max = yMax;
+
+        occupancyChart.update();
+
+        const todayStr = formatChartDate(entries[0].current_reference_date);
+        const currentBeds = entries[0].current_occupied_beds;
+        setChartStatus('', `<i class="ph-fill ph-check-circle" style="color:#10b981;"></i>&nbsp; Live · Reference: <strong>${todayStr} (${currentBeds} beds occupied)</strong> &nbsp;·&nbsp; <span style="color:#f59e0b;">━━</span> Monthly capacity ceiling: <strong>${cap} beds</strong> &nbsp;·&nbsp; <span style="background:#fff;border:2.5px solid #1e293b;display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;"></span> Actual = today's real count`);
+
+      } catch (err) {
+        console.error('Bed forecast error:', err);
+        setChartStatus('error', `Could not reach AI model. Make sure the bed occupancy API is running on port 8003. (${err.message})`);
+      } finally {
+        forecastLoading = false;
+      }
     }
 
     // ═══════════════════════════════════════════════════
@@ -703,6 +857,9 @@
       } catch (e) {
         console.warn('Could not load live metrics', e);
       }
+
+      // Load bed occupancy forecast chart (runs independently of metrics)
+      loadBedForecast();
     });
   </script>
 </body>
